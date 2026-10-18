@@ -301,6 +301,12 @@ th{color:var(--sub);font-size:12px}
   </div>
 
   <div class="card">
+    <h3 style="font-size:16px;margin-bottom:6px">已归档 <span class="small muted" id="set-archn"></span></h3>
+    <div class="small muted" style="margin-bottom:8px">不需要或出得不好的题可以归档：归档后不再出现在练习、今日复习、错题本、收藏夹和统计里。随时可以点「恢复」放回来。</div>
+    <div class="list" id="set-archlist"></div>
+  </div>
+
+  <div class="card">
     <h3 style="font-size:16px;margin-bottom:10px">数据</h3>
     <div class="grid2">
       <button class="btn ghost" onclick="exportData()">导出学习进度</button>
@@ -325,7 +331,7 @@ th{color:var(--sub);font-size:12px}
       <tr><td>连续答对 4 次</td><td>15 天后</td></tr>
       <tr><td>连续答对 5 次及以上</td><td>30 天后（低频抽查）</td></tr>
     </table>
-    <div class="small muted" style="margin-top:8px">已掌握的题不会消失，会以低概率混入练习长期抽查。</div>
+    <div class="small muted" style="margin-top:8px">已掌握的题不会消失，会以低概率混入练习长期抽查。归档的题则彻底不再出现（题库页可恢复）。</div>
   </div>
 </section>
 
@@ -356,14 +362,14 @@ function load(){
     var s=JSON.parse(localStorage.getItem(KEY)||'null');
     if(!s||typeof s!=='object') throw 0;
     s.cards=s.cards||{}; s.daily=s.daily||{}; s.custom=s.custom||[];
-    s.off=s.off||{}; s.set=s.set||{};
+    s.off=s.off||{}; s.set=s.set||{}; s.arch=s.arch||{};
     if(s.set.newCap==null)s.set.newCap=20;
     if(s.set.rep==null)s.set.rep=4;
     if(s.set.shuffle==null)s.set.shuffle=1;
     if(s.set.dark==null)s.set.dark=0;
     return s;
   }catch(e){
-    return {cards:{},daily:{},custom:[],off:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
+    return {cards:{},daily:{},custom:[],off:{},arch:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
   }
 }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){ toast('存储空间不足，请导出备份后清理'); } }
@@ -377,11 +383,20 @@ function allBanks(){
   (S.custom||[]).forEach(function(b,i){ if(!S.off['c'+i]) out.push({key:'c'+i,name:b.name||('自定义'+(i+1)),qs:b.questions||[],builtin:false}); });
   return out;
 }
-function allQ(){
+function allQAll(){
   var out=[];
   allBanks().forEach(function(b){ b.qs.forEach(function(q){ out.push(q); }); });
   return out;
 }
+/* 全部原始题目（忽略题库启用开关），用于归档列表与 id 查重 */
+function everyQ(){
+  var out=[];
+  BANK.forEach(function(b){ (b.questions||[]).forEach(function(q){ out.push(q); }); });
+  (S.custom||[]).forEach(function(b){ (b.questions||[]).forEach(function(q){ out.push(q); }); });
+  return out;
+}
+/* 归档的题不进练习、统计、错题本、收藏夹 */
+function allQ(){ return allQAll().filter(function(q){ return !S.arch[q.id]; }); }
 var TAGLIST=['基础语法','指针与引用','内存管理','面向对象','STL容器','智能指针','新特性','模板泛型','编译链接'];
 function tagsOfPool(){
   var t=Object.create(null);
@@ -458,6 +473,8 @@ function countMaster(){ var c=0; allQ().forEach(function(q){ var x=S.cards[q.id]
 function esc(s){ return String(s).replace(/[&<>]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
 function render(){
   if(qi>=Q.length){ finish(); return; }
+  var _inp=document.getElementById('q-input');
+  if(_inp&&document.activeElement===_inp) _inp.blur();   // 换题时收起手机键盘
   var q=Q[qi], c=S.cards[q.id]||{lv:0,due:0,ok:0,bad:0,seen:0,star:0};
   document.getElementById('q-prog').textContent=(qi+1)+' / '+Q.length;
   document.getElementById('q-bar').style.width=((qi+1)/Q.length*100)+'%';
@@ -468,7 +485,8 @@ function render(){
   if(isDue(c)) meta.push('到期复习');
   document.getElementById('q-meta').textContent=meta.join(' · ');
   document.getElementById('q-tags').innerHTML=(q.tags||[]).map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join('')
-    + '<span class="chip" style="margin-left:auto" onclick="toggleStar(\''+q.id+'\')">'+(c.star?'★ 已收藏':'☆ 收藏')+'</span>';
+    + '<span class="chip" style="margin-left:auto" onclick="toggleStar(\''+q.id+'\')">'+(c.star?'★ 已收藏':'☆ 收藏')+'</span>'
+    + '<span class="chip" style="margin-left:6px" onclick="archiveQ(\''+q.id+'\')">🗄 归档</span>';
   document.getElementById('q-text').innerHTML=esc(q.q).replace(/______/g,'<span class="blank">?</span>');
   document.getElementById('q-why').innerHTML='';
   document.getElementById('q-actions').innerHTML='';
@@ -476,7 +494,7 @@ function render(){
   var opts=document.getElementById('q-opts'), fill=document.getElementById('q-fill');
   if(q.type==='fill'){
     opts.innerHTML=''; fill.style.display='';
-    var inp=document.getElementById('q-input'); inp.value=''; inp.focus();
+    var inp=document.getElementById('q-input'); inp.value=''; inp.blur();   // 不自动聚焦，点输入框才弹键盘
   }else{
     fill.style.display='none';
     var idx=q.options.map(function(_,i){ return i; });
@@ -560,6 +578,29 @@ function quit(){
 }
 function toggleStar(id){
   var c=card(id); c.star=c.star?0:1; save(); render();
+}
+/* ---------- 归档 ---------- */
+function escAttr(s){ return esc(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function archiveQ(id){
+  S.arch[id]=S.arch[id]||Date.now();
+  reinsert=reinsert.filter(function(x){ return x.id!==id; });
+  if(session&&session.mode==='peek'){
+    save(); go('home'); toast('已归档，不再出现（题库页可恢复）'); return;
+  }
+  var cur=-1;
+  for(var i=0;i<Q.length;i++){ if(Q[i].id===id){ cur=i; break; } }
+  if(cur>=qi&&cur>=0){ Q.splice(cur,1); if(session) session.n=Q.length; }
+  save();
+  if(cur===qi&&document.getElementById('p-quiz').classList.contains('on')){
+    if(!Q.length){ finish(); } else { render(); }
+  }
+  home(); stat(); setting();
+  toast('已归档，不再出现（题库页可恢复）');
+}
+function archFromEl(el){ if(window.event) window.event.stopPropagation(); archiveQ(el.getAttribute('data-id')); }
+function restoreArch(el){
+  var id=el.getAttribute('data-id');
+  delete S.arch[id]; save(); setting(); home(); stat(); toast('已恢复，后续会重新出现');
 }
 function finish(){
   window.__curQ=null; reinsert=[];
@@ -670,13 +711,17 @@ function stat(){
     .map(function(t){ return '<button class="chip" onclick="quickWrong(\''+t+'\')">'+esc(t)+' '+wtags[t]+'</button>'; }).join('');
   document.getElementById('s-wronglist').innerHTML=wl.length?wl.slice(0,50).map(function(q){
     var c=S.cards[q.id];
-    return '<div class="item" onclick="peek(\''+q.id+'\')"><div class="small muted">错 '+c.bad+' 次 · 对 '+c.ok+' 次 · '+(q.tags||[]).join('/')+'</div><div style="font-weight:600;margin-top:3px">'+esc(q.q).replace(/______/g,'____')+'</div></div>';
+    return '<div class="item" onclick="peek(\''+q.id+'\')" style="display:flex;gap:8px;align-items:flex-start">'
+      +'<div style="flex:1;min-width:0"><div class="small muted">错 '+c.bad+' 次 · 对 '+c.ok+' 次 · '+(q.tags||[]).join('/')+'</div><div style="font-weight:600;margin-top:3px">'+esc(q.q).replace(/______/g,'____')+'</div></div>'
+      +'<span class="chip" data-id="'+escAttr(q.id)+'" onclick="event.stopPropagation();archFromEl(this)">归档</span></div>';
   }).join(''):'<div class="small muted">错题本是空的，保持住 💪</div>';
 
   var sl=qs.filter(function(q){ var c=S.cards[q.id]; return c&&c.star; });
   set('s-starn','('+sl.length+')');
   document.getElementById('s-starlist').innerHTML=sl.length?sl.map(function(q){
-    return '<div class="item" onclick="peek(\''+q.id+'\')"><div style="font-weight:600">★ '+esc(q.q).replace(/______/g,'____')+'</div></div>';
+    return '<div class="item" onclick="peek(\''+q.id+'\')" style="display:flex;gap:8px;align-items:flex-start">'
+      +'<div style="flex:1;min-width:0;font-weight:600">★ '+esc(q.q).replace(/______/g,'____')+'</div>'
+      +'<span class="chip" data-id="'+escAttr(q.id)+'" onclick="event.stopPropagation();archFromEl(this)">归档</span></div>';
   }).join(''):'<div class="small muted">还没有收藏的题目</div>';
 }
 function quickWrong(t){ start(0,'wrong',[t]); }
@@ -706,6 +751,16 @@ function setting(){
   seg('set-rep',[3,4,6,0],S.set.rep,function(v){ S.set.rep=v; save(); },function(v){ return v?'隔'+v+'题':'关闭'; });
   seg('set-shuffle',[1,0],S.set.shuffle,function(v){ S.set.shuffle=v; save(); },function(v){ return v?'开':'关'; });
   seg('set-dark',[0,1],S.set.dark,function(v){ S.set.dark=v; save(); applyDark(); },function(v){ return v?'开':'关'; });
+  // 已归档题目
+  var ids=Object.keys(S.arch||{}).sort(function(a,b){ return S.arch[b]-S.arch[a]; });
+  var byId={}; everyQ().forEach(function(q){ byId[q.id]=q; });
+  set('set-archn','('+ids.length+')');
+  document.getElementById('set-archlist').innerHTML=ids.length?ids.map(function(id){
+    var q=byId[id], txt=q?q.q:'（题库中已无此题）';
+    return '<div class="item" style="display:flex;gap:8px;align-items:flex-start">'
+      +'<div style="flex:1;min-width:0;font-weight:600">'+esc(txt).replace(/______/g,'____')+'</div>'
+      +'<span class="chip" data-id="'+escAttr(id)+'" onclick="restoreArch(this)">恢复</span></div>';
+  }).join(''):'<div class="small muted">没有归档的题目</div>';
 }
 function seg(id,vals,cur,cb,lab){
   document.getElementById(id).innerHTML=vals.map(function(v){
@@ -720,7 +775,7 @@ function segSet(id,v){
 function applyDark(){ document.body.classList.toggle('dark',!!S.set.dark); }
 function toggleBank(k){ S.off[k]=!S.off[k]; save(); setting(); home(); }
 function exportData(){
-  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
+  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,arch:S.arch,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
   dl(blob,'刷题进度_'+todayKey()+'.json'); toast('已导出');
 }
 function dl(blob,name){
@@ -736,7 +791,7 @@ function importData(f){
   r.onload=function(){
     try{
       var d=JSON.parse(r.result);
-      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.set) S.set=Object.assign(S.set,d.set);
+      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.arch) S.arch=d.arch; if(d.set) S.set=Object.assign(S.set,d.set);
       save(); home(); stat(); setting(); toast('进度已导入');
     }catch(e){ toast('文件格式不正确'); }
   };
@@ -752,7 +807,7 @@ function importBank(f){
         var qs=b.questions||(Array.isArray(b)?b:null);
         if(!qs) throw 0;
         var name=b.name||f.name.replace(/\.json$/i,'');
-        var used={}; allQ().forEach(function(x){ used[x.id]=1; });
+        var used={}; everyQ().forEach(function(x){ used[x.id]=1; });
         qs.forEach(function(q,i){ if(used[q.id]) q.id=name.replace(/\s/g,'')+'_'+(q.id||i); });
         S.custom.push({name:name,questions:qs});
       });
@@ -789,6 +844,7 @@ document.addEventListener('keydown',function(e){
 window.start=start; window.next=next; window.pick=pick; window.grade=grade; window.go=go;
 window.submitFill=submitFill; window.tagToggle=tagToggle; window.startByTag=startByTag;
 window.quit=quit; window.toggleStar=toggleStar; window.quickWrong=quickWrong; window.peek=peek; window.segSet=segSet;
+window.archiveQ=archiveQ; window.archFromEl=archFromEl; window.restoreArch=restoreArch;
 window.toggleBank=toggleBank; window.exportData=exportData; window.resetAll=resetAll;
 applyDark(); home();
 })();
