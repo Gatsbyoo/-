@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261018-1406">
+<meta name="build" content="20261018-1415">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -596,6 +596,7 @@ function render(){
   renderHist(q, c);
   document.getElementById('q-why').innerHTML='';
   document.getElementById('q-actions').innerHTML='';
+  orderActions(false);   // 默认顺序：解析在上、按钮在下
 
   var st=Qans[qi];
   if(st&&st.graded){ revealQ(q,c,st); window.__curQ=q; window.scrollTo(0,0); return; }
@@ -618,8 +619,15 @@ function render(){
   window.__curQ=q; window.scrollTo(0,0);
 }
 /* 已作答状态：显示所选项、正确项、答案与解析 + 上一题/下一题 */
+function orderActions(beforeWhy){
+  var act=document.getElementById('q-actions'), why=document.getElementById('q-why');
+  if(!act||!why) return;
+  if(beforeWhy){ if(act.nextElementSibling!==why) why.parentNode.insertBefore(act,why); }
+  else { if(why.nextElementSibling!==act) why.parentNode.insertBefore(act,why.nextElementSibling); }
+}
 function revealQ(q,c,st){
   var opts=document.getElementById('q-opts'), fill=document.getElementById('q-fill'), act=document.getElementById('q-actions');
+  orderActions(q.type==='choice');   // 选择题：按钮紧跟选项，解析放最后，方便快速连刷
   if(q.type==='fill'){
     opts.innerHTML=''; fill.style.display='';
     var inp=document.getElementById('q-input'); inp.value=st.text||''; inp.disabled=true; inp.blur();
