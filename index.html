@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261018-1348">
+<meta name="build" content="20261018-1354">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -403,7 +403,8 @@ th{color:var(--sub);font-size:12px}
     <div class="small muted" id="drawer-stat" style="margin-bottom:8px"></div>
     <div class="fabrow" id="drawer-filters" style="margin-bottom:8px"></div>
     <input type="text" id="drawer-search" placeholder="搜索题干关键字…" autocomplete="off" oninput="renderDrawer()">
-    <div class="list" id="drawer-list" style="margin-top:10px;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+    <div class="list" id="drawer-list" style="margin-top:10px;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+    <button class="btn" id="drawer-start" style="margin-top:12px" onclick="startDrawerQuiz()">开始刷题</button>
   </div>
 </div>
 
@@ -690,7 +691,7 @@ function restoreArch(el){
   delete S.arch[id]; save(); setting(); home(); stat(); toast('已恢复，后续会重新出现');
 }
 /* ---------- 标签目录（题库页入口 + 统计页入口 + 抽屉） ---------- */
-var drawerTag=null, df={unmastered:0,wrong:0,archived:0,newbie:0};
+var drawerTag=null, df={unmastered:0,wrong:0,archived:0,newbie:0}, drawerQs=[];
 function tagQs(tag){ return allQ().filter(function(q){ return (q.tags||[]).indexOf(tag)>=0; }); }
 function tagQsAll(tag){ return everyQ().filter(function(q){ return (q.tags||[]).indexOf(tag)>=0; }); }
 function tagCounts(){
@@ -745,6 +746,13 @@ function renderDrawer(){
     +'<button class="chip'+(df.archived?' on':'')+'" onclick="toggleDrawerFilter(\'archived\')">显示已归档</button>';
   document.getElementById('drawer-list').innerHTML=qs.length? qs.map(function(q){ return drawerRow(q); }).join('')
     :'<div class="small muted">没有符合条件的题目</div>';
+  drawerQs=qs;
+  var btn=document.getElementById('drawer-start');
+  if(btn){
+    if(df.archived){ btn.textContent='已归档的题不参与刷题，先关掉「显示已归档」'; btn.disabled=true; }
+    else if(!qs.length){ btn.textContent='没有可刷的题目'; btn.disabled=true; }
+    else { btn.textContent='▶ 开始刷这 '+qs.length+' 题'; btn.disabled=false; }
+  }
 }
 function drawerRow(q){
   var c=S.cards[q.id]||{}, st, cls;
@@ -763,6 +771,22 @@ function drawerRow(q){
     +'<div class="acts"><span class="tag '+cls+'">'+st+'</span>'+act+'</div></div>';
 }
 function peekFromDrawer(id){ closeTagDrawer(); peek(id); }
+/* 把抽屉里筛选出来的题目直接组成本轮 */
+function startDrawerQuiz(){
+  if(df.archived){ toast('已归档的题不参与刷题，请先关掉「显示已归档」'); return; }
+  if(!drawerQs.length){ toast('当前筛选没有可刷的题目'); return; }
+  startList(drawerQs, drawerTag);
+}
+function startList(list,label){
+  if(!list||!list.length){ toast('没有可刷的题目'); return; }
+  Q=list.slice(); qi=0; reinsert=[]; repCount={}; sinceIns=0;
+  session={n:Q.length,mode:'list',label:label||'',t0:Date.now(),ok:0,bad:0,ids:[],results:[],masterBefore:countMaster()};
+  closeTagDrawer();
+  document.getElementById('q-lastcard').style.display='none';
+  document.getElementById('q-card').style.display='';
+  go('quiz'); render();
+  toast('开始刷 '+(label?label+' · ':'')+Q.length+' 题');
+}
 function finish(){
   window.__curQ=null; reinsert=[];
   var sec=Math.round((Date.now()-session.t0)/1000);
@@ -1045,6 +1069,7 @@ window.quit=quit; window.toggleStar=toggleStar; window.quickWrong=quickWrong; wi
 window.archiveQ=archiveQ; window.archFromEl=archFromEl; window.restoreArch=restoreArch;
 window.openTagDrawer=openTagDrawer; window.closeTagDrawer=closeTagDrawer; window.toggleDrawerFilter=toggleDrawerFilter;
 window.renderDrawer=renderDrawer; window.renderTagIndex=renderTagIndex; window.peekFromDrawer=peekFromDrawer;
+window.startDrawerQuiz=startDrawerQuiz; window.startList=startList;
 window.toggleBank=toggleBank; window.exportData=exportData; window.resetAll=resetAll;
 window.checkUpdate=checkUpdate; window.applyUpdate=applyUpdate;
 applyDark(); home(); checkUpdate(false);
