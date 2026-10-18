@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261018-1424">
+<meta name="build" content="20261018-1433">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -215,11 +215,12 @@ th{color:var(--sub);font-size:12px}
       <span class="small muted" id="h-bankname"></span>
     </div>
     <div class="grid2">
-      <button class="btn" onclick="start(10)">10 题速刷</button>
-      <button class="btn ghost" onclick="start(20)">20 题</button>
-      <button class="btn ghost" onclick="start(50)">50 题</button>
-      <button class="btn ghost" onclick="start(100)">100 题</button>
+      <button class="btn" onclick="start(10,'new')">10 题速刷</button>
+      <button class="btn ghost" onclick="start(20,'new')">20 题</button>
+      <button class="btn ghost" onclick="start(50,'new')">50 题</button>
+      <button class="btn ghost" onclick="start(100,'new')">100 题</button>
     </div>
+    <div class="small muted" style="margin-top:8px">这四档<b>只出没做过的新题</b>（新题不足时给多少算多少）；复习旧题用下面的「今日复习 / 错题攻坚」。</div>
     <div class="hr"></div>
     <div class="grid2">
       <button class="btn ok" onclick="start(0,'due')">今日复习 <span id="h-due2">0</span></button>
@@ -525,6 +526,9 @@ function buildQueue(n,mode,tags){
   wrong.sort(function(a,b){ return (S.cards[b.id].bad-S.cards[b.id].ok)-(S.cards[a.id].bad-S.cards[a.id].ok); });
   shuffle(fresh); shuffle(master); shuffle(wrong);
 
+  // 只要新题：不混入到期复习/错题/已掌握
+  if(mode==='new'){ return n>0? fresh.slice(0,n) : fresh; }
+
   var out=[], used={};
   function push(q){ if(used[q.id])return; used[q.id]=1; out.push(q); }
   function take(arr,k){ var t=0; for(var i=0;i<arr.length&&t<k;i++){ if(!used[arr[i].id]){ push(arr[i]); t++; } } return t; }
@@ -551,7 +555,10 @@ function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random
 function start(n,mode,tags){
   if(!allQ().length){ toast('当前没有可用题库，请先导入'); go('set'); return; }
   var q=buildQueue(n||10,mode,tags);
-  if(!q.length){ toast('没有符合条件的题目'); return; }
+  if(!q.length){
+    toast(mode==='new'?'新题已经全部刷完了，去「今日复习」或「错题攻坚」吧':'没有符合条件的题目'); return;
+  }
+  if(mode==='new'&&n>0&&q.length<n) toast('新题只剩 '+q.length+' 道，已全部放入本轮');
   Q=q; qi=0; reinsert=[]; repCount={}; sinceIns=0; Qans=[];
   session={n:Q.length,mode:mode||'mix',t0:Date.now(),ok:0,bad:0,ids:[],results:[],masterBefore:countMaster()};
   document.getElementById('q-lastcard').style.display='none';
