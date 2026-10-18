@@ -118,6 +118,25 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
 .seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
 .fabrow{display:flex;gap:8px;flex-wrap:wrap}
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* ---- 标签目录抽屉 ---- */
+.drawer{position:fixed;left:0;right:0;top:0;bottom:0;z-index:80;display:none}
+.drawer.on{display:block}
+.drawer-mask{position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(12,14,22,.45)}
+.drawer-panel{
+  position:absolute;left:0;right:0;bottom:0;max-height:86vh;background:var(--card);
+  border-radius:18px 18px 0 0;padding:16px 16px calc(14px + env(safe-area-inset-bottom));
+  box-shadow:0 -10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column
+}
+.qitem{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--bg);cursor:pointer}
+.qitem .body{flex:1;min-width:0}
+.qitem .t{font-weight:600;font-size:14px;line-height:1.45;word-break:break-word}
+.qitem .m{font-size:11.5px;color:var(--sub);margin-top:3px}
+.qitem .acts{display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex:0 0 auto}
+/* ---- 单题历史方块 ---- */
+.hist{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:0 0 10px}
+.hist .sq{width:13px;height:13px;border-radius:4px;background:var(--line);display:inline-block}
+.hist .sq.g{background:var(--ok)}
+.hist .sq.r{background:var(--bad)}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
 th{color:var(--sub);font-size:12px}
@@ -203,6 +222,7 @@ th{color:var(--sub);font-size:12px}
   <div class="card" id="q-card">
     <div class="fabrow" style="margin-bottom:6px" id="q-tags"></div>
     <div class="q" id="q-text"></div>
+    <div id="q-hist" class="hist"></div>
     <div id="q-opts"></div>
     <div id="q-fill" style="display:none">
       <input type="text" id="q-input" placeholder="输入答案后回车提交" autocomplete="off">
@@ -281,6 +301,15 @@ th{color:var(--sub);font-size:12px}
   </div>
 
   <div class="card">
+    <div class="between" style="margin-bottom:6px">
+      <h3 style="font-size:16px">标签目录</h3>
+      <span class="small muted" id="set-tagtotal"></span>
+    </div>
+    <div class="small muted" style="margin-bottom:10px">点标签查看该模块下的题目：可直接单题刷、归档、恢复。带交叉标签的题会重复计入。</div>
+    <div class="fabrow" id="set-tagindex"></div>
+  </div>
+
+  <div class="card">
     <h3 style="font-size:16px;margin-bottom:10px">学习设置</h3>
     <div class="between" style="padding:8px 0">
       <div><div>每轮新题上限</div><div class="small muted">一次练习中最多引入多少道没见过的新题</div></div>
@@ -337,6 +366,20 @@ th{color:var(--sub);font-size:12px}
 
 </div>
 
+<div class="drawer" id="tag-drawer">
+  <div class="drawer-mask" onclick="closeTagDrawer()"></div>
+  <div class="drawer-panel">
+    <div class="between" style="margin-bottom:6px">
+      <h3 id="drawer-title" style="font-size:16px">题目</h3>
+      <span class="chip" onclick="closeTagDrawer()">关闭 ✕</span>
+    </div>
+    <div class="small muted" id="drawer-stat" style="margin-bottom:8px"></div>
+    <div class="fabrow" id="drawer-filters" style="margin-bottom:8px"></div>
+    <input type="text" id="drawer-search" placeholder="搜索题干关键字…" autocomplete="off" oninput="renderDrawer()">
+    <div class="list" id="drawer-list" style="margin-top:10px;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+  </div>
+</div>
+
 <nav class="nav">
   <button class="on" id="n-home" onclick="go('home')"><span class="ic">🏠</span>首页</button>
   <button id="n-quiz" onclick="go('quiz')"><span class="ic">✏️</span>刷题</button>
@@ -362,14 +405,14 @@ function load(){
     var s=JSON.parse(localStorage.getItem(KEY)||'null');
     if(!s||typeof s!=='object') throw 0;
     s.cards=s.cards||{}; s.daily=s.daily||{}; s.custom=s.custom||[];
-    s.off=s.off||{}; s.set=s.set||{}; s.arch=s.arch||{};
+    s.off=s.off||{}; s.set=s.set||{}; s.arch=s.arch||{}; s.hist=s.hist||{};
     if(s.set.newCap==null)s.set.newCap=20;
     if(s.set.rep==null)s.set.rep=4;
     if(s.set.shuffle==null)s.set.shuffle=1;
     if(s.set.dark==null)s.set.dark=0;
     return s;
   }catch(e){
-    return {cards:{},daily:{},custom:[],off:{},arch:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
+    return {cards:{},daily:{},custom:[],off:{},arch:{},hist:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
   }
 }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){ toast('存储空间不足，请导出备份后清理'); } }
@@ -471,6 +514,19 @@ function countMaster(){ var c=0; allQ().forEach(function(q){ var x=S.cards[q.id]
 
 /* ---------- 渲染答题 ---------- */
 function esc(s){ return String(s).replace(/[&<>]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+/* 单题历史：绿色=答对，红色=答错，最多显示最近 30 次 */
+function renderHist(q,c){
+  var box=document.getElementById('q-hist'); if(!box) return;
+  var h=S.hist[q.id]||'';
+  if(!h.length){
+    box.innerHTML='<span class="small muted">'+(c&&c.seen?'此前答过 '+(c.seen)+' 次，历史方块从本次更新后开始记录':'首次作答，暂无历史记录')+'</span>';
+    return;
+  }
+  var ok=0; for(var i=0;i<h.length;i++) if(h[i]==='1') ok++;
+  var sq=h.split('').map(function(b){ return '<i class="sq '+(b==='1'?'g':'r')+'"></i>'; }).join('');
+  box.innerHTML='<span class="small muted">最近 '+h.length+' 次</span>'+sq
+    +'<span class="small muted">对 <b style="color:var(--ok)">'+ok+'</b> · 错 <b style="color:var(--bad)">'+(h.length-ok)+'</b></span>';
+}
 function render(){
   if(qi>=Q.length){ finish(); return; }
   var _inp=document.getElementById('q-input');
@@ -488,6 +544,7 @@ function render(){
     + '<span class="chip" style="margin-left:auto" onclick="toggleStar(\''+q.id+'\')">'+(c.star?'★ 已收藏':'☆ 收藏')+'</span>'
     + '<span class="chip" style="margin-left:6px" onclick="archiveQ(\''+q.id+'\')">🗄 归档</span>';
   document.getElementById('q-text').innerHTML=esc(q.q).replace(/______/g,'<span class="blank">?</span>');
+  renderHist(q, c);
   document.getElementById('q-why').innerHTML='';
   document.getElementById('q-actions').innerHTML='';
 
@@ -550,6 +607,8 @@ function grade(right){
   if(qi>=Q.length||!Q.length) return;
   var q=Q[qi], c=card(q.id);
   c.seen++; c.last=Date.now();
+  // 单题历史：1=对 0=错，最多留最近 30 次
+  S.hist[q.id]=((S.hist[q.id]||'')+(right?'1':'0')).slice(-30);
   if(right){ c.ok++; c.lv=Math.min(7,c.lv+1); }
   else{ c.bad++; c.lv=1; }
   c.due=Date.now()+GAP[Math.min(7,c.lv||1)]*DAY;
@@ -558,6 +617,7 @@ function grade(right){
   session.ids.push(q.id); session.results.push({id:q.id,ok:right,q:q.q});
   right?session.ok++:session.bad++;
   save();
+  renderHist(q,c);   // 把这次的对错也画进方块
   document.getElementById('q-actions').innerHTML='<button class="btn" onclick="next()">下一题 →</button>';
   document.getElementById('q-actions').innerHTML+='<div class="small muted center" style="margin-top:8px">'
     +(right?'下次出现：'+GAP[Math.min(7,c.lv)]+' 天后':'已加入本轮重出 + 明天再复习')+'</div>';
@@ -585,7 +645,7 @@ function archiveQ(id){
   S.arch[id]=S.arch[id]||Date.now();
   reinsert=reinsert.filter(function(x){ return x.id!==id; });
   if(session&&session.mode==='peek'){
-    save(); go('home'); toast('已归档，不再出现（题库页可恢复）'); return;
+    save(); go('home'); home(); stat(); setting(); toast('已归档，不再出现（题库页可恢复）'); return;
   }
   var cur=-1;
   for(var i=0;i<Q.length;i++){ if(Q[i].id===id){ cur=i; break; } }
@@ -602,6 +662,78 @@ function restoreArch(el){
   var id=el.getAttribute('data-id');
   delete S.arch[id]; save(); setting(); home(); stat(); toast('已恢复，后续会重新出现');
 }
+/* ---------- 标签目录（题库页入口 + 统计页入口 + 抽屉） ---------- */
+var drawerTag=null, df={unmastered:0,wrong:0,archived:0};
+function tagQs(tag){ return allQ().filter(function(q){ return (q.tags||[]).indexOf(tag)>=0; }); }
+function tagQsAll(tag){ return everyQ().filter(function(q){ return (q.tags||[]).indexOf(tag)>=0; }); }
+function tagCounts(){
+  var m={}; allQ().forEach(function(q){ (q.tags||[]).forEach(function(t){ m[t]=(m[t]||0)+1; }); }); return m;
+}
+function renderTagIndex(){
+  var box=document.getElementById('set-tagindex'); if(!box) return;
+  var tags=tagsOfPool(), cnt=tagCounts(), tot=0;
+  Object.keys(cnt).forEach(function(t){ tot+=cnt[t]; });
+  set('set-tagtotal','去重 '+allQ().length+' 题 / 含交叉合计 '+tot);
+  box.innerHTML=tags.map(function(t){
+    return '<button class="chip" onclick="openTagDrawer(\''+t+'\')">'+esc(t)+'<b style="margin-left:5px">'+(cnt[t]||0)+'</b></button>';
+  }).join('')||'<div class="small muted">暂无标签</div>';
+}
+function openTagDrawer(tag){
+  drawerTag=tag; df={unmastered:0,wrong:0,archived:0};
+  document.getElementById('drawer-search').value='';
+  document.getElementById('tag-drawer').classList.add('on');
+  renderDrawer();
+}
+function closeTagDrawer(){ document.getElementById('tag-drawer').classList.remove('on'); }
+function toggleDrawerFilter(k){ df[k]=df[k]?0:1; renderDrawer(); }
+function tagAcc(qs){
+  var o=0,b=0; qs.forEach(function(q){ var c=S.cards[q.id]; if(c){ o+=c.ok; b+=c.bad; } });
+  return (o+b)?Math.round(o/(o+b)*100)+'%':'—';
+}
+function renderDrawer(){
+  if(!drawerTag) return;
+  var kw=document.getElementById('drawer-search').value.trim();
+  var src=df.archived? tagQsAll(drawerTag) : tagQs(drawerTag);
+  var qs=src.filter(function(q){
+    var arch=!!S.arch[q.id];
+    if(df.archived&&!arch) return false;
+    if(!df.archived&&arch) return false;
+    var c=S.cards[q.id];
+    if(df.unmastered&&c&&isMaster(c)) return false;
+    if(df.wrong&&!(c&&c.bad>0)) return false;
+    if(kw&&q.q.indexOf(kw)<0) return false;
+    return true;
+  });
+  var m=0,newN=0,wrongN=0,ch=0;
+  qs.forEach(function(q){ var c=S.cards[q.id]; if(q.type==='choice')ch++;
+    if(!c||!c.seen)newN++; else if(isMaster(c))m++; if(c&&c.bad>0&&!isMaster(c))wrongN++; });
+  document.getElementById('drawer-title').textContent=drawerTag;
+  document.getElementById('drawer-stat').innerHTML='共 <b>'+qs.length+'</b> 题（选 '+ch+' / 填 '+(qs.length-ch)+'）· 正确率 '+tagAcc(qs)
+    +' · 未学 '+newN+' / 已掌握 '+m+' / 错题 '+wrongN;
+  document.getElementById('drawer-filters').innerHTML=
+     '<button class="chip'+(df.unmastered?' on':'')+'" onclick="toggleDrawerFilter(\'unmastered\')">只看未掌握</button>'
+    +'<button class="chip'+(df.wrong?' on':'')+'" onclick="toggleDrawerFilter(\'wrong\')">只看错题</button>'
+    +'<button class="chip'+(df.archived?' on':'')+'" onclick="toggleDrawerFilter(\'archived\')">显示已归档</button>';
+  document.getElementById('drawer-list').innerHTML=qs.length? qs.map(function(q){ return drawerRow(q); }).join('')
+    :'<div class="small muted">没有符合条件的题目</div>';
+}
+function drawerRow(q){
+  var c=S.cards[q.id]||{}, st, cls;
+  if(S.arch[q.id]){ st='已归档'; cls='y'; }
+  else if(!c.seen){ st='新'; cls=''; }
+  else if(isMaster(c)){ st='已掌握'; cls='g'; }
+  else if(c.bad>0){ st='错 '+c.bad+' 次'; cls='r'; }
+  else { st='学习中'; cls=''; }
+  var others=(q.tags||[]).filter(function(t){ return t!==drawerTag; });
+  var act=S.arch[q.id]
+    ? '<span class="chip" data-id="'+escAttr(q.id)+'" onclick="event.stopPropagation();restoreArch(this);renderDrawer()">恢复</span>'
+    : '<span class="chip" onclick="event.stopPropagation();archiveQ(\''+q.id+'\');renderDrawer()">归档</span>';
+  return '<div class="qitem" onclick="peekFromDrawer(\''+q.id+'\')">'
+    +'<div class="body"><div class="t">'+esc(q.q).replace(/______/g,'____')+'</div>'
+    +'<div class="m">'+(q.type==='choice'?'选择':'填空')+' · '+esc(q.id)+(others.length?' · '+esc(others.join(' / ')):'')+'</div></div>'
+    +'<div class="acts"><span class="tag '+cls+'">'+st+'</span>'+act+'</div></div>';
+}
+function peekFromDrawer(id){ closeTagDrawer(); peek(id); }
 function finish(){
   window.__curQ=null; reinsert=[];
   var sec=Math.round((Date.now()-session.t0)/1000);
@@ -688,7 +820,7 @@ function stat(){
   var arr=Object.keys(agg).map(function(t){ var a=agg[t],nn=a.o+a.b; return {t:t,r:Math.round(a.o/nn*100),n:nn,b:a.b}; }).sort(function(x,y){return x.r-y.r;});
   document.getElementById('s-tags').innerHTML=arr.length?arr.map(function(x){
     var color=x.r>=80?'var(--ok)':(x.r>=60?'var(--warn)':'var(--bad)');
-    return '<div style="margin:10px 0"><div class="between small"><span>'+esc(x.t)+'</span><span class="muted">'+x.r+'% · 错 '+x.b+' 次</span></div><div class="bar"><i style="width:'+x.r+'%;background:'+color+'"></i></div></div>';
+    return '<div style="margin:10px 0;cursor:pointer" onclick="openTagDrawer(\''+x.t+'\')"><div class="between small"><span>'+esc(x.t)+'</span><span class="muted">'+x.r+'% · 错 '+x.b+' 次 · <b style="color:var(--brand)">看题目 ›</b></span></div><div class="bar"><i style="width:'+x.r+'%;background:'+color+'"></i></div></div>';
   }).join(''):'<div class="small muted">暂无数据</div>';
 
   // 未来 7 天负担
@@ -761,6 +893,7 @@ function setting(){
       +'<div style="flex:1;min-width:0;font-weight:600">'+esc(txt).replace(/______/g,'____')+'</div>'
       +'<span class="chip" data-id="'+escAttr(id)+'" onclick="restoreArch(this)">恢复</span></div>';
   }).join(''):'<div class="small muted">没有归档的题目</div>';
+  renderTagIndex();
 }
 function seg(id,vals,cur,cb,lab){
   document.getElementById(id).innerHTML=vals.map(function(v){
@@ -775,7 +908,7 @@ function segSet(id,v){
 function applyDark(){ document.body.classList.toggle('dark',!!S.set.dark); }
 function toggleBank(k){ S.off[k]=!S.off[k]; save(); setting(); home(); }
 function exportData(){
-  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,arch:S.arch,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
+  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,arch:S.arch,hist:S.hist,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
   dl(blob,'刷题进度_'+todayKey()+'.json'); toast('已导出');
 }
 function dl(blob,name){
@@ -791,7 +924,7 @@ function importData(f){
   r.onload=function(){
     try{
       var d=JSON.parse(r.result);
-      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.arch) S.arch=d.arch; if(d.set) S.set=Object.assign(S.set,d.set);
+      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.arch) S.arch=d.arch; if(d.hist) S.hist=d.hist; if(d.set) S.set=Object.assign(S.set,d.set);
       save(); home(); stat(); setting(); toast('进度已导入');
     }catch(e){ toast('文件格式不正确'); }
   };
@@ -845,6 +978,8 @@ window.start=start; window.next=next; window.pick=pick; window.grade=grade; wind
 window.submitFill=submitFill; window.tagToggle=tagToggle; window.startByTag=startByTag;
 window.quit=quit; window.toggleStar=toggleStar; window.quickWrong=quickWrong; window.peek=peek; window.segSet=segSet;
 window.archiveQ=archiveQ; window.archFromEl=archFromEl; window.restoreArch=restoreArch;
+window.openTagDrawer=openTagDrawer; window.closeTagDrawer=closeTagDrawer; window.toggleDrawerFilter=toggleDrawerFilter;
+window.renderDrawer=renderDrawer; window.renderTagIndex=renderTagIndex; window.peekFromDrawer=peekFromDrawer;
 window.toggleBank=toggleBank; window.exportData=exportData; window.resetAll=resetAll;
 applyDark(); home();
 })();
