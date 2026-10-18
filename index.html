@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261018-1420">
+<meta name="build" content="20261018-1424">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -157,11 +157,10 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
 .qitem .m{font-size:11.5px;color:var(--sub);margin-top:3px}
 .qitem .acts{display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex:0 0 auto}
 /* ---- 错题知识卡（刷题页空态） ---- */
-.kcard{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px;cursor:pointer}
+.kcard{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px}
 .kcard .kt{font-weight:700;font-size:15px;line-height:1.55}
 .kcard .km{font-size:11.5px;color:var(--sub);margin-top:5px}
-.kcard .kb{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
-.kcard.open .kb{display:block}
+.kcard .kb{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
 .kcard .optline{padding:5px 0;font-size:13.5px;color:var(--sub);line-height:1.5}
 .kcard .optline.ok{color:var(--ok);font-weight:700}
 .kcard .ans{font-size:13.5px;margin-top:6px}
@@ -287,7 +286,7 @@ th{color:var(--sub);font-size:12px}
         <h3 style="font-size:16px">错题知识卡 <span class="small muted" id="idle-n"></span></h3>
         <span class="chip" onclick="start(0,'wrong')">刷这一批 ›</span>
       </div>
-      <div class="small muted">没有进行中的练习时，这里按「最近答错」顺序展示错题；点卡片展开答案与解析。</div>
+      <div class="small muted">没有进行中的练习时，这里按「最近答错」顺序展示错题，答案与解析直接显示。</div>
     </div>
     <div class="list" id="idle-list"></div>
   </div>
@@ -886,9 +885,9 @@ function kcard(q){
   }
   body+='<div class="ans">正确答案：<b>'+esc(q.type==='fill'?(q.ans||[]).join(' / '):q.options[q.ans])+'</b></div>';
   body+='<div class="exp">'+esc(q.why)+'</div>';
-  return '<div class="kcard" onclick="this.classList.toggle(\'open\')">'
+  return '<div class="kcard">'
     +'<div class="kt">'+esc(q.q).replace(/______/g,'____')+'</div>'
-    +'<div class="km">错 '+c.bad+' 次 · 对 '+c.ok+' 次'+((q.tags||[]).length?' · '+esc(q.tags.join(' / ')):'')+' · 点击展开答案</div>'
+    +'<div class="km">错 '+c.bad+' 次 · 对 '+c.ok+' 次'+((q.tags||[]).length?' · '+esc(q.tags.join(' / ')):'')+'</div>'
     +'<div class="kb">'+body+'</div></div>';
 }
 
