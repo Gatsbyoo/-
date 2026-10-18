@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>八股刷题 · 重复记忆</title>
+<style>
+:root{
+  --bg:#f4f6fb; --card:#ffffff; --ink:#1a1d29; --sub:#6b7280; --line:#e6e9f0;
+  --brand:#4f6ef7; --brand2:#7c5cff; --ok:#16a34a; --ok-bg:#e8f7ee; --bad:#e0453b; --bad-bg:#fdeceb;
+  --warn:#f59e0b; --warn-bg:#fff5e6; --shadow:0 6px 20px rgba(32,45,90,.07);
+  --radius:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+  font-size:15px;line-height:1.6;padding-bottom:calc(72px + env(safe-area-inset-bottom));
+}
+body.dark{
+  --bg:#12141c; --card:#1b1e28; --ink:#e8eaf2; --sub:#9aa1b4; --line:#2a2e3c;
+  --shadow:0 6px 20px rgba(0,0,0,.35); --ok-bg:#16301f; --bad-bg:#33191a; --warn-bg:#33270f;
+}
+.wrap{max-width:720px;margin:0 auto;padding:0 14px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin:14px 0}
+h1,h2,h3{margin:0}
+.muted{color:var(--sub)}
+.small{font-size:12.5px}
+.big{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.btn{
+  border:none;background:var(--brand);color:#fff;padding:12px 16px;border-radius:12px;
+  font-size:15px;font-weight:600;cursor:pointer;transition:transform .06s,opacity .2s;width:100%;
+  font-family:inherit;
+}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+.btn.gray{background:var(--line);color:var(--ink)}
+.btn.ok{background:var(--ok)}
+.btn.bad{background:var(--bad)}
+.btn.sm{padding:8px 12px;font-size:13.5px;border-radius:10px;width:auto}
+.btn[disabled]{opacity:.45}
+.chip{
+  display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:999px;
+  background:var(--line);color:var(--sub);font-size:12.5px;font-weight:600;cursor:pointer;border:none;font-family:inherit;
+}
+.chip.on{background:var(--brand);color:#fff}
+.chip.on.warn{background:var(--warn);color:#fff}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;background:rgba(79,110,247,.12);color:var(--brand);font-size:11.5px;font-weight:700;margin-right:6px}
+.tag.g{background:rgba(22,163,74,.14);color:var(--ok)}
+.tag.r{background:rgba(224,69,59,.14);color:var(--bad)}
+.tag.y{background:rgba(245,158,11,.16);color:var(--warn)}
+.progress{height:8px;border-radius:8px;background:var(--line);overflow:hidden}
+.progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:8px;transition:width .3s}
+.opt{
+  display:flex;gap:10px;align-items:flex-start;padding:13px 14px;border:1.5px solid var(--line);
+  border-radius:12px;margin:9px 0;cursor:pointer;background:var(--card);text-align:left;width:100%;font-family:inherit;font-size:14.5px;color:var(--ink);
+}
+.opt .k{
+  flex:0 0 24px;height:24px;border-radius:7px;background:var(--line);color:var(--sub);
+  font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;
+}
+.opt.correct{border-color:var(--ok);background:var(--ok-bg)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.opt.dim{opacity:.6}
+.opt .k.on{background:var(--ok);color:#fff}
+.opt .k.no{background:var(--bad);color:#fff}
+input[type=text]{
+  width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--bg);color:var(--ink);font-size:15px;font-family:inherit;outline:none;
+}
+input[type=text]:focus{border-color:var(--brand)}
+.why{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--bg);border-left:4px solid var(--brand);font-size:14px}
+.why.ok{border-left-color:var(--ok)}
+.why.bad{border-left-color:var(--bad)}
+.nav{
+  position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(4,1fr);padding:6px 0 calc(6px + env(safe-area-inset-bottom));
+  z-index:50;
+}
+.nav button{background:none;border:none;color:var(--sub);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px}
+.nav button.on{color:var(--brand)}
+.nav .ic{font-size:19px;line-height:1}
+.page{display:none}
+.page.on{display:block}
+.stat{background:var(--card);border-radius:14px;padding:12px;text-align:center;box-shadow:var(--shadow)}
+.stat .n{font-size:22px;font-weight:800}
+.stat .l{font-size:11.5px;color:var(--sub)}
+.bar{height:10px;border-radius:6px;background:var(--line);overflow:hidden;margin:6px 0}
+.bar>i{display:block;height:100%;border-radius:6px}
+.list{display:flex;flex-direction:column;gap:9px}
+.item{padding:12px 14px;border-radius:12px;background:var(--card);box-shadow:var(--shadow);cursor:pointer}
+.q{font-size:16px;font-weight:700;line-height:1.55;margin:6px 0 12px}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px;border-radius:10px;font-size:13px;overflow:auto;margin:8px 0}
+.hr{height:1px;background:var(--line);margin:12px 0}
+.center{text-align:center}
+.pill{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--sub)}
+.heat{display:flex;gap:4px;align-items:flex-end;height:64px}
+.heat i{flex:1;background:var(--brand);border-radius:4px;min-height:3px;opacity:.85}
+.heat i.z{background:var(--line)}
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:rgba(20,22,30,.92);color:#fff;
+  padding:10px 18px;border-radius:12px;font-size:14px;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none;max-width:80%;text-align:center
+}
+.toast.on{opacity:1}
+.blank{display:inline-block;min-width:88px;border-bottom:2px solid var(--brand);text-align:center;color:var(--brand);font-weight:800}
+.kbd{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--line);padding:1px 6px;border-radius:5px;font-size:12.5px}
+.switch{display:flex;align-items:center;gap:8px}
+.seg{display:flex;background:var(--line);border-radius:12px;padding:3px}
+.seg button{flex:1;border:none;background:none;padding:8px;border-radius:10px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--sub);cursor:pointer}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.fabrow{display:flex;gap:8px;flex-wrap:wrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--sub);font-size:12px}
+</style>
+</head>
+<body>
+
+<script id="BANK" type="application/json">[{"name": "小林coding·C++面试题", "questions": [{"id": "cpp-001", "type": "choice", "tags": ["基础语法", "指针与引用"], "q": "在 64 位计算机中，指针变量占用的字节数是？", "options": ["4 字节", "8 字节", "取决于指向的类型", "由编译器决定，可能为 2 字节"], "ans": 1, "why": "指针的大小由地址总线宽度决定。文章原文：在 64 位计算机中，指针占 8 个字节空间；32 位机器上是 4 字节，与指向的类型无关。"}, {"id": "cpp-002", "type": "choice", "tags": ["基础语法", "指针与引用"], "q": "下列关于「悬空指针」和「野指针」的说法，正确的是？", "options": ["悬空指针是未初始化的指针，野指针是指向已释放内存的指针", "悬空指针指向的内存已被释放，野指针是未初始化、指向不确定的指针", "两者完全等价，只是叫法不同", "悬空指针一定为 NULL，野指针一定不为 NULL"], "ans": 1, "why": "原文：若指针指向一块内存空间，当这块内存空间被释放后该指针依然指向它，称为悬空指针（如 free(p) 后的 p）；野指针是指不确定其指向的指针，未初始化的指针即为野指针。"}, {"id": "cpp-003", "type": "choice", "tags": ["基础语法", "指针与引用"], "q": "关于指针和引用的区别，下列说法错误的是？", "options": ["指针在内存中占有空间，引用是变量的别名不额外占空间", "指针可以为空，引用必须绑定对象", "指针可以有多级，引用只能有一级", "引用所绑定的对象在程序运行过程中可以改变"], "ans": 3, "why": "原文：指针所指向的内存空间在程序运行过程中可以改变，而引用所绑定的对象一旦绑定就不能改变。其余三项均为原文列出的区别。"}, {"id": "cpp-004", "type": "choice", "tags": ["基础语法", "指针与引用"], "q": "声明 const int * p; 表示什么含义？", "options": ["p 是一个常量指针，p 的指向不能改变", "p 指向的对象是常量，不能通过 p 修改指向的内容，但 p 可以指向别处", "p 和 p 指向的内容都不能改变", "该声明非法，const 必须放在 * 右侧"], "ans": 1, "why": "原文：常量指针本质上是个指针，指向的对象是常量，不可以通过解引用修改指向的内容，但可以修改指针的指向。判断诀窍：const 在 * 左侧即为常量指针。"}, {"id": "cpp-005", "type": "choice", "tags": ["基础语法", "指针与引用"], "q": "声明 int * const c_p = &var; 下列说法正确的是？", "options": ["不能修改 c_p 的指向，但可以通过 *c_p 修改 var 的值", "不能通过 c_p 修改指向的内容，但 c_p 可以指向其他变量", "c_p 和指向的内容都不能修改", "c_p 必须在类内声明、类外定义"], "ans": 0, "why": "原文：指针常量本质上是个常量，const 位于 * 右侧，表明指针本身是常量，不可以修改指针的指向，但可以通过解引用修改指向的内容。"}, {"id": "cpp-006", "type": "choice", "tags": ["基础语法", "指针与引用"], "q": "「函数指针」和「指针函数」的根本区别在于？", "options": ["函数指针本质是指针，指向一个函数；指针函数本质是函数，返回值是指针", "函数指针只能指向全局函数，指针函数只能返回堆内存", "函数指针没有参数，指针函数必须有参数", "两者是同一个概念的不同写法"], "ans": 0, "why": "原文：关键看名字最后俩字——函数指针核心是指针，用来指向函数；指针函数核心是函数，特点是返回指针。"}, {"id": "cpp-007", "type": "choice", "tags": ["基础语法"], "q": "关于参数传递的三种方式，下列说法正确的是？", "options": ["值传递时形参是实参的拷贝，修改形参不会影响实参", "指针传递不是值传递", "引用传递会产生一个独立的形参对象", "三种方式在函数内操作的都不是变量本身"], "ans": 0, "why": "原文：值传递形参是实参的拷贝，函数对形参的操作不会影响实参；指针传递本质是值传递，拷贝的是指针的值；引用传递形参是实参对象的别名，不产生独立对象。示例输出显示值传递地址不同，引用和指针传递地址相同。"}, {"id": "cpp-008", "type": "choice", "tags": ["基础语法"], "q": "函数参数使用引用传递的主要作用是？", "options": ["避免对大型对象进行拷贝，减少拷贝构造开销", "让实参在函数内变为只读", "使函数可以接受 NULL", "让参数在函数结束后自动释放"], "ans": 0, "why": "原文：传引用可以避免拷贝，避免对大型对象进行复制；若按值传递会触发拷贝构造函数，造成额外开销。"}, {"id": "cpp-009", "type": "choice", "tags": ["基础语法"], "q": "若需要在函数内部修改实参指针自身的指向，应采用的形参类型是？", "options": ["T*", "T&", "T*& 或 T**", "const T*"], "ans": 2, "why": "原文：如果需要在函数内修改实参指针自身，可以传递指针的引用（如 T*&）或指向指针的指针（如 T**）。"}, {"id": "cpp-010", "type": "choice", "tags": ["基础语法"], "q": "关于 C++ 中全局变量、静态全局变量、局部变量、静态局部变量，下列说法正确的是？", "options": ["静态全局变量具有全局作用域，可被其他源文件用 extern 引用", "全局变量具有全局作用域，其他源文件用 extern 声明后可使用", "静态局部变量存放在栈区，函数结束后被销毁", "局部变量存放在静态存储区"], "ans": 1, "why": "原文：全局变量具有全局作用域，其他不包含定义的源文件需用 extern 关键字再次声明；静态全局变量具有文件作用域，只在定义它的文件内有效；局部变量在栈，静态局部变量、全局变量、静态全局变量在静态存储区。"}, {"id": "cpp-011", "type": "choice", "tags": ["基础语法"], "q": "为什么不能在头文件中定义全局变量？", "options": ["头文件不能被多个源文件包含", "该头文件被多个源文件 include 时变量会被重复定义", "全局变量在头文件中会变成静态变量", "语法上允许，但会导致运行速度变慢"], "ans": 1, "why": "原文：如果在头文件中定义全局变量，当该头文件被多个文件 include 时，该全局变量就会被定义多次，导致重复定义。"}, {"id": "cpp-012", "type": "choice", "tags": ["基础语法", "编译链接"], "q": "extern \"C\" 的作用是？", "options": ["声明变量为 C 语言风格的全局变量", "指出函数使用 C 语言的链接规范，使 C++ 能调用 C 编写的函数", "把 C++ 代码编译成 C 代码", "禁止函数被重载"], "ans": 1, "why": "原文：当 C++ 程序需要调用 C 语言编写的函数时，C++ 使用链接指示 extern \"C\" 指出任意非 C++ 函数所用的语言。"}, {"id": "cpp-013", "type": "choice", "tags": ["基础语法"], "q": "表达式 sizeof(1==1) 在 C 和 C++ 中的结果分别是？", "options": ["C 中 4，C++ 中 1", "C 中 1，C++ 中 4", "两者都是 4", "两者都是 1"], "ans": 0, "why": "原文运行结果：C 语言中输出 4（比较结果是 int），C++ 中输出 1（比较结果是 bool，占 1 字节）。"}, {"id": "cpp-014", "type": "choice", "tags": ["基础语法"], "q": "关于 C 与 C++ 中 struct 的区别，下列说法错误的是？", "options": ["C 中 struct 不能定义成员函数，C++ 中可以", "C 中 struct 没有访问权限设置，C++ 中有", "C++ 中定义变量仍需写 struct A var;", "C++ 中 struct 是抽象数据类型，支持成员函数"], "ans": 2, "why": "原文：C 语言中定义该类型的变量需要加 struct 关键字，如 struct A var；而 C++ 中不用加该关键字，如 A var。"}, {"id": "cpp-015", "type": "choice", "tags": ["基础语法", "面向对象"], "q": "C++ 中 struct 和 class 的默认访问权限与默认继承方式分别是？", "options": ["struct 默认 public 访问 + public 继承；class 默认 private 访问 + private 继承", "struct 默认 private 访问 + public 继承；class 默认 public 访问 + private 继承", "两者默认权限完全相同", "struct 不支持继承，class 支持继承"], "ans": 0, "why": "原文：struct 默认访问权限为 public，默认继承方式为 public；class 默认访问权限为 private，默认继承方式为 private。"}, {"id": "cpp-016", "type": "choice", "tags": ["基础语法", "面向对象"], "q": "class B : A{}; 中 A 为 struct，B 为 class，则默认继承级别是？", "options": ["public 继承", "private 继承", "protected 继承", "编译错误，必须显式指定"], "ans": 1, "why": "原文：当 class 继承 struct 或 struct 继承 class 时，默认继承级别取决于派生类本身——class 为 private 继承，struct 为 public 继承。此处派生类是 class，故为 private 继承。"}, {"id": "cpp-017", "type": "choice", "tags": ["基础语法"], "q": "关于 union 和 struct 的区别，下列说法正确的是？", "options": ["union 所有成员都有效，struct 只有一个成员有效", "union 的大小按最大成员并按其类型的倍数分配，struct 遵循内存对齐原则", "union 可以对不同成员赋值而互不影响", "两者的内存大小计算规则完全相同"], "ans": 1, "why": "原文：联合体只有一个有效成员，对不同成员赋值会覆盖其他成员；联合体大小为内部最大变量并按最大类型的倍数分配；结构体分配内存遵循内存对齐原则。"}, {"id": "cpp-018", "type": "choice", "tags": ["基础语法"], "q": "typedef union { char c[10]; int i; } u22; 在常见 64 位环境下 sizeof(u22) 的结果是？", "options": ["10", "12", "16", "4"], "ans": 1, "why": "原文示例输出：u11(含 char[10]+char) 为 10，u22(含 char[10]+int) 为 12，u33(含 char[10]+double) 为 16。联合体大小按最大类型倍数向上取整，10 按 int(4) 对齐为 12。"}, {"id": "cpp-019", "type": "choice", "tags": ["基础语法"], "q": "typedef struct { char c; double d; char cc; } s33; 的 sizeof 结果是？", "options": ["10", "16", "24", "32"], "ans": 2, "why": "原文示例：c 占 1 + 对齐 7 + d 占 8 = 16，再加 cc 占 1，尾部按最大对齐数 8 补齐到 24。原文输出 sizeof(s33) 为 24。"}, {"id": "cpp-020", "type": "fill", "tags": ["基础语法"], "q": "C++ 中 class 可以用于定义模板参数，而 ______ 不能用于定义模板参数。", "ans": ["struct"], "why": "原文：class 可以用于定义模板参数，struct 不能用于定义模板参数。"}, {"id": "cpp-021", "type": "choice", "tags": ["基础语法"], "q": "关于 C 和 C++ 中 static 的区别，下列说法正确的是？", "options": ["C 中 static 只能修饰局部变量", "C++ 由于有类的概念，除局部静态变量、外部静态变量、静态函数外，还可以定义静态成员变量和静态成员函数", "两者的 static 用法完全一致", "C++ 中 static 不能修饰函数"], "ans": 1, "why": "原文：C 中 static 可定义局部静态变量、外部静态变量、静态函数；C++ 中除此之外还可定义静态成员变量和静态成员函数。"}, {"id": "cpp-022", "type": "choice", "tags": ["基础语法"], "q": "static 修饰局部变量时改变的是变量的什么？", "options": ["作用域", "生存周期，使其从定义后一直存在到程序运行结束", "数据类型", "访问权限"], "ans": 1, "why": "原文：保持变量内容持久——static 作用于局部变量，改变了局部变量的生存周期，使该变量存在于定义后直到程序运行结束的这段时间。"}, {"id": "cpp-023", "type": "choice", "tags": ["基础语法"], "q": "static 作用于全局变量和函数时，起到什么效果？", "options": ["隐藏：使其只能在定义它的文件中使用", "延长生命周期到程序结束", "使其可以被多线程共享", "使其成为常量"], "ans": 0, "why": "原文：隐藏——static 作用于全局变量和函数，改变了它们的作用域，使其只能在定义它的文件中使用，在其他源文件中不具有全局可见性。"}, {"id": "cpp-024", "type": "choice", "tags": ["基础语法", "面向对象"], "q": "关于类的静态成员函数，下列说法正确的是？", "options": ["可以调用非静态成员函数", "可以访问非静态成员变量", "只能访问静态成员变量或静态成员函数，因为没有 this 指针", "可以声明为虚函数"], "ans": 2, "why": "原文：静态成员函数没有 this 指针，不能调用非静态成员变量或非静态成员函数；静态成员函数不能声明成虚函数、const 函数和 volatile 函数。"}, {"id": "cpp-025", "type": "choice", "tags": ["基础语法", "面向对象"], "q": "关于类的静态成员变量，下列说法错误的是？", "options": ["在类内声明，在类外定义和初始化", "被类的所有对象共享，包括派生类对象", "可以作为成员函数的默认参数", "普通成员变量也可以作为成员函数的默认参数"], "ans": 3, "why": "原文：静态成员变量可以作为成员函数的参数（含默认参数），而非静态成员变量不可以（invalid use of non-static data member）。"}, {"id": "cpp-026", "type": "choice", "tags": ["基础语法", "面向对象"], "q": "下列关于静态数据成员类型的说法正确的是？", "options": ["静态数据成员的类型可以是所属类的类型，普通数据成员只能是该类类型的指针或引用", "两者都可以是所属类的类型", "两者都只能是所属类的指针或引用", "静态数据成员不能是类类型"], "ans": 0, "why": "原文示例：class A { static A s_var; // 正确; A var; // error: field has incomplete type }，普通数据成员只能是 A* 或 A&。"}, {"id": "cpp-027", "type": "choice", "tags": ["基础语法"], "q": "未初始化的全局静态变量（如 static int a;）存放在哪个内存段，初值是什么？", "options": ["数据段，初值随机", "BSS 段，系统自动清零，初值为 0", "栈段，初值随机", "堆段，需要手动初始化"], "ans": 1, "why": "原文：未初始化的全局静态变量存放在 BSS 段（未初始化数据段），程序启动时系统会自动将该段清零，初值为 0。"}, {"id": "cpp-028", "type": "choice", "tags": ["基础语法"], "q": "关于 static 全局变量和普通全局变量的异同，下列说法错误的是？", "options": ["两者都是静态存储方式", "普通全局变量作用域是整个源程序，各源文件都有效", "静态全局变量只在定义它的源文件内有效", "两者在内存中的存储方式完全不同"], "ans": 3, "why": "原文：相同点是两者都是静态存储方式；不同点在作用域——普通全局变量对整个源程序有效，静态全局变量只在定义它的源文件内有效。"}, {"id": "cpp-029", "type": "choice", "tags": ["基础语法"], "q": "下列哪个不是文章中提到的静态变量典型使用场景？", "options": ["函数内记录调用次数", "单例模式中返回静态局部对象", "统计类的实例数量", "作为线程间通信的消息队列"], "ans": 3, "why": "原文列举：局部静态变量记录函数调用次数、单例确保唯一实例；类静态成员统计实例数量、存储类级别常量。未提及线程间通信队列。"}, {"id": "cpp-030", "type": "choice", "tags": ["基础语法"], "q": "const 修饰成员函数的作用是？", "options": ["使函数不能被重载", "使函数不能修改任何成员变量（mutable 修饰的除外），也不能调用非 const 成员函数", "使函数返回值不可修改", "使函数只能被 const 对象调用一次"], "ans": 1, "why": "原文：const 修饰成员函数，使得成员函数不能修改任何类型的成员变量（mutable 修饰的除外），也不能调用非 const 成员函数。"}, {"id": "cpp-031", "type": "choice", "tags": ["基础语法", "面向对象"], "q": "关于类中的 const 成员变量，下列说法正确的是？", "options": ["可以在类的声明中直接初始化", "只能在类内声明、定义，并在构造函数的初始化列表中初始化", "可以在任意成员函数中赋值", "必须声明为 static"], "ans": 1, "why": "原文：const 成员变量只能在类内声明、定义，在构造函数初始化列表中初始化；不能在类声明中初始化，因为对象尚未创建。"}, {"id": "cpp-032", "type": "choice", "tags": ["基础语法"], "q": "关于 #define 和 const 的区别，下列说法错误的是？", "options": ["define 在预处理阶段替换，const 在编译阶段确定其值", "define 定义的宏常量有数据类型，会做类型检查", "const 定义的常量可以进行调试，宏常量不能调试", "宏在程序中使用多少次就替换多少次，内存中多个备份"], "ans": 1, "why": "原文：define 定义的宏常量没有数据类型，只做简单替换，不会进行类型安全检查；const 常量有类型，会做检查。"}, {"id": "cpp-033", "type": "choice", "tags": ["基础语法"], "q": "关于 typedef，下列说法正确的是？", "options": ["typedef 在预处理阶段做文本替换，不做正确性检查", "typedef 是编译阶段处理的关键字，为已有类型起别名，有类型检查功能", "typedef 可以用来定义常量和编译开关", "typedef 没有作用域限制，预定义后全程序可用"], "ans": 1, "why": "原文：typedef 是关键字，在编译时处理，有类型检查功能，用来给已经存在的类型起别名。无作用域限制、能定义常量是 #define 的特点。"}, {"id": "cpp-034", "type": "choice", "tags": ["基础语法"], "q": "#define INTPTR1 int* 与 typedef int* INTPTR2; 之后，const INTPTR1 p5 与 const INTPTR2 p6 分别是？", "options": ["p5 是指针常量，p6 是常量指针", "p5 是常量指针（const int*），p6 是指针常量（int* const）", "两者都是常量指针", "两者都是指针常量"], "ans": 1, "why": "原文：const INTPTR1 p5 相当于 const int * p5（常量指针）；const INTPTR2 p6 相当于 int * const p6（指针常量）。宏只做文本替换，typedef 是类型别名。"}, {"id": "cpp-035", "type": "choice", "tags": ["基础语法"], "q": "volatile 关键字的作用是？", "options": ["保证操作的原子性", "告知编译器该对象的值可能在程序控制之外被改变，不要对其进行优化", "使变量只能被一个线程访问", "替代加锁实现线程同步"], "ans": 1, "why": "原文：volatile 告知编译器不应对这样的对象进行优化，不会把变量缓存到寄存器；volatile 不具有原子性。"}, {"id": "cpp-036", "type": "choice", "tags": ["基础语法"], "q": "volatile 与 const 能否同时使用？", "options": ["不能，两者语义冲突", "可以，某种类型可以既是 volatile 又是 const", "只能在类成员上同时使用", "只能在全局指针上同时使用"], "ans": 1, "why": "原文：volatile 关键字和 const 关键字可以同时使用，某种类型可以既是 volatile 又是 const，同时具有二者的属性。"}, {"id": "cpp-037", "type": "choice", "tags": ["基础语法"], "q": "下列场景中，通常不需要使用 volatile 的是？", "options": ["中断服务程序中访问的变量", "并行设备的硬件寄存器", "多线程共享且可能被改变的变量", "函数内部的局部计数器，只被本函数修改"], "ans": 3, "why": "原文：多线程都会用到且值可能改变的变量、中断服务程序访问的变量、并行设备的硬件寄存器需要 volatile；函数内局部计数器只被本函数修改，无需 volatile。"}, {"id": "cpp-038", "type": "choice", "tags": ["基础语法"], "q": "volatile 对编译器的影响是？", "options": ["强制编译器把变量放入寄存器加速访问", "阻止编译器把变量缓存到寄存器，每次都从内存读取", "让编译器对变量做常量折叠", "让编译器自动插入内存屏障保证原子性"], "ans": 1, "why": "原文：使用该关键字后编译器不会对相应对象进行优化，即不会将变量从内存缓存到寄存器中，防止多线程下有的用内存值有的用寄存器值导致错误。"}, {"id": "cpp-039", "type": "choice", "tags": ["基础语法"], "q": "关于内联函数 inline 与宏定义的区别，下列说法错误的是？", "options": ["内联函数在编译时展开，宏在预处理时展开", "内联函数是真正的函数，会做类型检查；宏只做文本替换", "宏不需要考虑运算符优先级问题", "内联函数可以避免函数调用的参数压栈开销"], "ans": 2, "why": "原文：宏定义编写较为复杂，常需要增加一些括号来避免歧义；宏只进行文本替换，不会对参数类型、语句能否编译进行检查。"}, {"id": "cpp-040", "type": "choice", "tags": ["基础语法"], "q": "下列哪项不是内联函数的缺点？", "options": ["可能导致代码膨胀", "会增加编译时间", "实现通常要写在头文件中，改动后所有包含它的源文件都要重编译", "会增加函数调用的栈帧开销"], "ans": 3, "why": "原文缺点：代码膨胀、编译时间增加、头文件膨胀与维护成本增加。内联恰恰是减少函数调用开销，不会增加栈帧开销。"}, {"id": "cpp-041", "type": "choice", "tags": ["基础语法", "编译链接"], "q": "#include <文件名> 与 #include \"文件名\" 的查找顺序分别是？", "options": ["<> 先在当前源文件目录找，\"\" 先在标准库目录找", "<> 先在标准库头文件目录找，找不到再到当前源文件目录；\"\" 先在当前源文件目录找，再到系统目录", "两者查找顺序完全相同", "<> 只用于第三方库，\"\" 只用于标准库"], "ans": 1, "why": "原文：<> 在标准库头文件所在目录查找，没有则到当前源文件目录；\"\" 在当前源文件目录查找，没有则到系统目录。"}, {"id": "cpp-042", "type": "choice", "tags": ["基础语法"], "q": "关于 void* 指针，下列说法正确的是？", "options": ["void* 可以直接解引用", "void* 可以直接进行指针运算", "void* 是无类型指针，使用前需转换为具体类型的指针", "void* 不能指向堆内存"], "ans": 2, "why": "原文：void* 是无类型指针，不能直接解引用，也不能进行指针运算，使用时需要转换为具体的指针类型。"}, {"id": "cpp-043", "type": "choice", "tags": ["基础语法"], "q": "sizeof 与 strlen 的区别，下列说法错误的是？", "options": ["strlen 是库函数，在运行时计算；sizeof 是运算符，在编译时计算", "strlen 以 \\0 作为结束标志，sizeof 测量的是分配的字节数", "sizeof 的参数只能是变量，不能是类型", "数组作为函数形参时，sizeof(arr) 得到的是指针大小"], "ans": 2, "why": "原文：sizeof 的参数可以是类型也可以是变量，strlen 的参数必须是 char* 类型的变量。其余三项均为原文表述。"}, {"id": "cpp-044", "type": "choice", "tags": ["基础语法"], "q": "char arr[10] = \"hello\"; 则 strlen(arr) 与 sizeof(arr) 分别是？", "options": ["5 和 10", "10 和 5", "6 和 10", "5 和 6"], "ans": 0, "why": "原文示例输出：strlen(arr) 为 5，sizeof(arr) 为 10。strlen 不含 \\0，sizeof 统计分配的 10 字节。"}, {"id": "cpp-045", "type": "choice", "tags": ["基础语法", "面向对象"], "q": "explicit 关键字的作用是？", "options": ["声明构造函数为显式调用，阻止隐式类型转换", "强制构造函数必须带参数", "使析构函数为虚函数", "禁止类被继承"], "ans": 0, "why": "原文：explicit 用来声明类构造函数是显式调用的，而非隐式调用，可以阻止调用构造函数时进行隐式转换，如 A ex = 10; 会报错。"}, {"id": "cpp-046", "type": "choice", "tags": ["基础语法"], "q": "explicit 通常修饰哪类构造函数才有意义？", "options": ["无参构造函数", "单参构造函数", "多参构造函数", "拷贝构造函数"], "ans": 1, "why": "原文：explicit 只可用于修饰单参构造函数，因为无参和多参构造函数本身就是显式调用的，再加 explicit 没有意义。"}, {"id": "cpp-047", "type": "choice", "tags": ["基础语法"], "q": "memcpy 的底层原理，下列说法正确的是？", "options": ["按字节（或更大的对齐块）直接搬运二进制数据，不关心数据类型", "会自动处理字符串结束符", "保证在内存重叠时结果正确，无需考虑方向", "只适用于字符数组"], "ans": 0, "why": "原文：memcpy 直接操作内存块的二进制数据，从源地址逐字节或按更高效的块复制；不关心数据类型，也不处理字符串结束符。重叠情况需特殊处理（文中实现做了自后向前拷贝）。"}, {"id": "cpp-048", "type": "choice", "tags": ["基础语法"], "q": "strcpy 函数的主要缺陷是？", "options": ["复制速度比 memcpy 慢", "不检查目标缓冲区大小，可能造成越界覆盖其他变量", "不能复制空字符串", "会自动截断超长字符串并保证安全"], "ans": 1, "why": "原文：strcpy 不检查目的缓冲区的大小边界，会把源字符串全部写入目标地址起始的连续空间并加终止符，导致其他变量被覆盖。示例中将 \"hello world!\" 拷入 char[10] 覆盖了相邻的 var。"}, {"id": "cpp-049", "type": "choice", "tags": ["基础语法", "编译链接"], "q": "C++ 的编译过程包含哪四个阶段？", "options": ["预处理、编译、汇编、链接", "词法分析、语法分析、语义分析、代码生成", "编辑、编译、运行、调试", "预处理、优化、汇编、加载"], "ans": 0, "why": "原文：C++ 的编译过程经过预处理、编译、汇编和链接四个主要阶段。"}, {"id": "cpp-050", "type": "choice", "tags": ["编译链接"], "q": "预处理阶段不包括下列哪项工作？", "options": ["展开宏定义", "处理 #include、#ifdef 等条件编译指令", "删除注释", "将汇编代码转换为机器指令"], "ans": 3, "why": "原文：预处理包括展开宏定义、处理条件编译指令、删除注释；将汇编代码转换为机器指令是汇编阶段的工作。"}, {"id": "cpp-051", "type": "choice", "tags": ["编译链接"], "q": "关于静态链接库和动态链接库，下列说法错误的是？", "options": ["静态库在链接时被完整复制进可执行文件", "动态库的代码在运行时才被加载，可在多个进程间共享", "静态库生成的可执行文件体积更大", "静态库的可扩展性更好，替换库无需重新编译"], "ans": 3, "why": "原文：动态链接库的可扩展性更好，可以在不修改可执行文件的情况下替换或添加新的库文件；静态链接库需要重新编译链接。"}, {"id": "cpp-052", "type": "fill", "tags": ["基础语法"], "q": "C++ 编译的四个阶段依次是：预处理、编译、______、链接。", "ans": ["汇编"], "why": "原文：预处理 → 编译 → 汇编 → 链接。"}, {"id": "cpp-053", "type": "choice", "tags": ["基础语法", "面向对象"], "q": "关于 this 指针，下列说法正确的是？", "options": ["this 指针指向类的当前对象，是一个指针常量", "this 指针可以在静态成员函数中使用", "this 指针的类型是 void*", "this 指针可以指向其他对象"], "ans": 0, "why": "原文：this 指针是指向类的当前对象的指针常量；静态成员函数没有 this 指针。"}, {"id": "cpp-054", "type": "choice", "tags": ["基础语法"], "q": "sizeof(1==1) 在 C++ 中为 1，说明 C++ 中关系表达式的结果类型是？", "options": ["int", "bool", "char", "size_t"], "ans": 1, "why": "原文：C++ 中 sizeof(1==1) 输出 1，因为结果是 bool 类型，占 1 字节；而 C 中结果为 int，占 4 字节。"}, {"id": "cpp-055", "type": "choice", "tags": ["基础语法"], "q": "关于 C++ 保留 struct 的原因，文中给出的说法是？", "options": ["struct 性能更好", "为了与 C 语言兼容", "struct 可以做模板参数", "class 不能继承"], "ans": 1, "why": "原文：C++ 是在 C 语言的基础上发展起来的，为了与 C 语言兼容，C++ 中保留了 struct。"}, {"id": "cpp-056", "type": "choice", "tags": ["内存管理"], "q": "new 和 malloc 在分配内存位置上的区别是？", "options": ["两者都是从堆上分配", "malloc 从堆上动态分配内存，new 从自由存储区为对象动态分配内存", "new 只能从栈上分配", "malloc 从自由存储区分配"], "ans": 1, "why": "原文：malloc 是从堆上动态分配内存，new 是从自由存储区为对象动态分配内存。自由存储区的位置取决于 operator new 的实现，不仅可以是堆，还可以是静态存储区。"}, {"id": "cpp-057", "type": "choice", "tags": ["内存管理"], "q": "关于 new 与 malloc 返回类型的安全性，下列说法正确的是？", "options": ["malloc 返回与对象类型匹配的指针，类型安全", "new 返回 void*，需要强制类型转换", "malloc 成功返回 void* 需强制转换；new 返回与对象类型匹配的指针，是类型安全的操作符", "两者返回值完全一样"], "ans": 2, "why": "原文：malloc 内存分配成功后返回 void*，然后再强制类型转换为需要的类型；new 分配成功后返回与对象类型相匹配的指针类型，因此 new 是符合类型安全的操作符。"}, {"id": "cpp-058", "type": "choice", "tags": ["内存管理"], "q": "malloc 与 new 在内存分配失败时分别如何处理？", "options": ["malloc 返回 NULL，new 抛出 bad_alloc 异常", "两者都返回 NULL", "两者都抛异常", "malloc 抛异常，new 返回 NULL"], "ans": 0, "why": "原文：malloc 内存分配失败后返回 NULL；new 分配内存失败则会抛异常（bad_alloc）。"}, {"id": "cpp-059", "type": "choice", "tags": ["内存管理"], "q": "关于 operator new/delete 与 malloc/free 能否被重载，下列说法正确的是？", "options": ["operator new / operator delete 可以被重载，malloc / free 则不能重载", "malloc / free 可以被重载，operator new / delete 不能", "两者都可以被重载", "两者都不能被重载"], "ans": 0, "why": "原文：operator new / operator delete 可以被重载，而 malloc / free 则不能重载。"}, {"id": "cpp-060", "type": "choice", "tags": ["内存管理"], "q": "delete 的实现原理是？", "options": ["直接调用 free 释放内存，不调用析构函数", "首先执行对象所属类的析构函数，再调用 operator delete 释放所占内存", "先释放内存再调用析构函数", "只调用析构函数，不释放内存"], "ans": 1, "why": "原文：delete 的实现原理——首先执行该对象所属类的析构函数；进而通过调用 operator delete 的标准库函数来释放所占的内存空间。"}, {"id": "cpp-061", "type": "choice", "tags": ["内存管理"], "q": "delete 与 delete[] 的区别是？", "options": ["两者完全等价", "delete 释放单个对象只调用一次析构函数；delete[] 释放数组空间，对每个成员都调用一次析构函数", "delete[] 只调用一次析构函数", "delete[] 不能释放基本类型数组"], "ans": 1, "why": "原文：delete 用来释放单个对象所占的空间，只会调用一次析构函数；delete[] 用来释放数组空间，会对数组中的每个成员都调用一次析构函数。"}, {"id": "cpp-062", "type": "choice", "tags": ["内存管理"], "q": "用 new[] 创建的数组用 delete 释放（而非 delete[]），会导致什么问题？", "options": ["没有任何问题，两者等价", "行为未定义：可能只调用一次析构函数就释放整块内存，造成资源泄漏", "编译器会报错", "会自动转换为 delete[]"], "ans": 1, "why": "由 delete/delete[] 语义推得：delete 只调用一次析构函数，数组中其余对象的析构函数不会被调用，其持有的资源泄漏，且行为未定义。"}, {"id": "cpp-063", "type": "choice", "tags": ["内存管理"], "q": "delete 和 free 的关键区别不包括下列哪项？", "options": ["new/delete 是 C++ 的操作符，malloc/free 是 C 的库函数", "new 分配内存并调用构造函数，delete 调用析构函数并释放内存", "malloc/free 需要头文件支持，new/delete 是保留字", "free 会调用对象的析构函数"], "ans": 3, "why": "原文列举区别：new/delete 是 C++ 操作符，malloc/free 是 C 函数；new 做两件事——分配内存 + 调用构造函数，delete 调用析构函数 + 释放内存；malloc/free 需要头文件库函数支持，new/delete 是保留字。free 不会调用析构函数。"}, {"id": "cpp-064", "type": "choice", "tags": ["内存管理"], "q": "malloc 申请内存时，其底层分配策略是？", "options": ["小于 128K 时调用 brk() 移动 _enddata；大于 128K 时调用 mmap() 在虚拟地址空间开辟空间", "一律调用 mmap()", "一律调用 brk()", "直接调用系统调用 sbrk() 分配物理内存"], "ans": 0, "why": "原文：malloc 的原理——当开辟的空间小于 128K 时，调用 brk() 函数，通过移动 _enddata 来实现；当开辟空间大于 128K 时，调用 mmap() 函数，通过在虚拟地址空间中开辟一块内存空间来实现。"}, {"id": "cpp-065", "type": "fill", "tags": ["内存管理"], "q": "malloc 分配内存时，当申请空间大于 ______ KB 时会调用 mmap()。", "ans": ["128", "128K"], "why": "原文阈值：大于 128K 时调用 mmap()，小于 128K 时调用 brk()。"}, {"id": "cpp-066", "type": "choice", "tags": ["内存管理"], "q": "free 一个数组时，如何知道要释放多大的内存？", "options": ["由编译器静态记录数组长度", "一般在数组前面几个字节中存在某个结构体来保存当前申请的数组大小", "由 free 的参数指定大小", "通过遍历内存直到遇到结束标记"], "ans": 1, "why": "常见实现：malloc 在返回给用户的指针前面（低地址方向）存放一个记录本次分配大小的结构/头信息，free 时据此释放相应大小的内存。"}, {"id": "cpp-067", "type": "choice", "tags": ["内存管理"], "q": "关于虚拟内存的作用，下列说法错误的是？", "options": ["可以让进程运行的内存超过物理内存大小", "每个进程有自己的页表，虚拟地址空间相互独立", "页表项中含有控制读写权限、标记页是否存在等属性位", "虚拟内存让程序直接访问物理地址，提高访问速度"], "ans": 3, "why": "原文：虚拟内存三大作用——允许超过物理内存（未常用内存换出到 swap）、每进程页表独立、页表项含权限等标记位。程序访问的是虚拟地址，不是直接访问物理地址。"}, {"id": "cpp-068", "type": "choice", "tags": ["内存管理"], "q": "虚拟内存能让进程使用超过物理内存大小的空间，主要依赖什么原理？", "options": ["程序的局部性原理，把不常用的内存换出到磁盘 swap 区域", "压缩算法", "把数据全部常驻内存", "多进程共享同一份内存"], "ans": 0, "why": "原文：程序运行符合局部性原理，CPU 访问内存有明显重复访问的倾向性，对不常使用的内存可以换出到硬盘上的 swap 区域。"}, {"id": "cpp-069", "type": "choice", "tags": ["内存管理"], "q": "用户态地址空间中，未初始化的静态变量和全局变量存放在哪个段？", "options": ["代码段", "数据段", "BSS 段", "堆段"], "ans": 2, "why": "原文：代码段包括二进制可执行代码；数据段包括已初始化的静态常量和全局变量；BSS 段包括未初始化的静态变量和全局变量。"}, {"id": "cpp-070", "type": "choice", "tags": ["内存管理"], "q": "关于堆和栈的增长方向，下列说法正确的是？", "options": ["堆从低地址向高地址增长，栈通常从高地址向低地址增长", "堆和栈都从低地址向高地址增长", "堆从高地址向低地址增长，栈从低地址向高地址增长", "两者共用同一块空间，无方向之分"], "ans": 0, "why": "原文：堆段包括动态分配的内存，从低地址开始向上增长；栈段包含局部变量和函数调用的上下文。经典布局中栈自高地址向下增长。"}, {"id": "cpp-071", "type": "choice", "tags": ["内存管理"], "q": "Linux 下默认栈的大小一般是？", "options": ["1 MB", "8 MB", "64 MB", "与物理内存相同"], "ans": 1, "why": "原文：栈的大小是固定的，一般是 8 MB。"}, {"id": "cpp-072", "type": "choice", "tags": ["内存管理"], "q": "关于堆和栈的区别，下列说法错误的是？", "options": ["栈由系统自动分配释放，存放函数参数值和局部变量", "堆需要程序员自己申请并指明大小，用完需手动释放", "栈空间比堆大得多，几乎不受限制", "堆分配时需要遍历空闲内存链表寻找合适的空闲块"], "ans": 2, "why": "原文：栈大小固定一般 8MB，堆空间大得多。C 项说反了。其余三项均为原文表述。"}, {"id": "cpp-073", "type": "choice", "tags": ["内存管理"], "q": "当栈的剩余空间小于所申请空间时会发生什么？", "options": ["自动向堆申请扩展", "报异常，提示栈溢出", "程序静默丢失数据", "由操作系统把栈换出到磁盘"], "ans": 1, "why": "原文：栈——只要栈的剩余空间大于所申请空间，系统就为程序提供内存，否则报异常提示栈溢出。"}, {"id": "cpp-074", "type": "choice", "tags": ["内存管理"], "q": "内存对齐的主要目的是？", "options": ["节省内存空间", "以空间换时间，让 CPU 更快访问数据，提高访问性能", "防止内存泄漏", "便于内存回收"], "ans": 1, "why": "原文：内存对齐就是将数据存放在内存的某个位置，使得 CPU 可以更快地访问到这个数据，以空间换时间的方式提高 CPU 访问数据的性能。"}, {"id": "cpp-075", "type": "choice", "tags": ["内存管理"], "q": "关于自然边界对齐，下列说法正确的是？", "options": ["int 类型数据（4 字节）会被放在 4 的倍数地址上", "所有数据都按 1 字节对齐", "对齐由程序员手动完成，编译器不参与", "double 类型按 4 字节边界对齐"], "ans": 0, "why": "原文：一般情况下编译器会自动将数据存放在它的自然边界上，例如 int 类型大小为 4 字节，编译器会将其存放在 4 的倍数的地址上。"}, {"id": "cpp-076", "type": "choice", "tags": ["内存管理"], "q": "能否用 memcmp 判断两个结构体对象是否相等？", "options": ["可以，直接比较二进制即可", "不可以，因为结构体存在字节对齐，补齐的字节内容随机，会产生垃圾值", "可以，但仅限 POD 类型且成员全为 char", "不可以，因为 memcmp 不能比较内存"], "ans": 1, "why": "原文：不能用 memcmp 判断结构体相等，因为 memcmp 逐字节比较，而结构体保存时存在字节对齐，对齐补充的字节内容随机，会产生垃圾值。正确做法是重载 operator==。"}, {"id": "cpp-077", "type": "choice", "tags": ["内存管理"], "q": "freed 之后的指针如果不置空，会变成？", "options": ["野指针", "悬空指针", "空指针", "函数指针"], "ans": 1, "why": "原文：指针指向的内存空间被释放后该指针依然指向这块空间，此时称为悬空指针。良好的习惯是 free/delete 后立即置为 nullptr。"}, {"id": "cpp-078", "type": "choice", "tags": ["内存管理"], "q": "下列哪种情况不会导致内存泄漏？", "options": ["new 之后忘记 delete", "shared_ptr 之间形成循环引用", "异常导致 delete 语句未执行", "使用栈上的局部对象，函数返回后自动销毁"], "ans": 3, "why": "栈上局部对象由编译器自动销毁，不产生泄漏；忘记 delete、异常跳过 delete、shared_ptr 循环引用都会导致泄漏。"}, {"id": "cpp-079", "type": "choice", "tags": ["内存管理"], "q": "智能指针可能造成内存泄漏吗？", "options": ["绝对不会，智能指针就是为了避免泄漏", "会，例如 shared_ptr 循环引用导致引用计数永远不为 0", "只有 unique_ptr 会", "只有在使用 make_shared 时会"], "ans": 1, "why": "原文：智能指针可能造成内存泄漏，比如循环引用场景，多个 shared_ptr 形成循环引用时资源将无法释放，需要用 weak_ptr 打破循环。"}, {"id": "cpp-080", "type": "choice", "tags": ["内存管理"], "q": "mmap 内存映射的过程顺序是？", "options": ["直接把文件内容读入内存，无需建立映射", "创建虚拟映射区域 → 调用 mmap 建立文件物理地址与进程虚拟地址的一一映射 → 访问时触发缺页异常，把文件内容拷贝到物理内存", "先拷贝内容到物理内存，再建立映射", "由用户态库函数直接完成，无需内核参与"], "ans": 1, "why": "原文：mmap 内存映射原理——进程在虚拟地址空间创建虚拟映射区域；调用内核的 mmap 系统调用实现文件物理地址与进程虚拟地址的一一映射；进程访问该空间引发缺页异常，实现文件内容到物理内存的拷贝。"}, {"id": "cpp-081", "type": "choice", "tags": ["内存管理"], "q": "关于内存池，下列说法正确的是？", "options": ["内存池完全避免了内存碎片，且不需要考虑线程安全", "内存池预先申请大块内存并自行管理分配与回收，减少向内核频繁申请，降低碎片并提升性能", "内存池只能用于栈内存", "使用内存池后就不需要释放内存"], "ans": 1, "why": "内存池的核心思想是预先申请一大块内存，之后由应用层自行管理分配与回收，减少 malloc/系统调用次数，缓解内存碎片，提升分配效率。"}, {"id": "cpp-082", "type": "choice", "tags": ["内存管理"], "q": "程序地址空间中，字符串常量和已初始化的全局变量分别位于？", "options": ["代码段和堆段", "已初始化全局变量在数据段，字符串常量通常在只读数据段/常量区", "都在栈段", "都在堆段"], "ans": 1, "why": "原文：数据段包括已初始化的静态常量和全局变量；字符串常量属于只读常量区（常与代码段/rodata 同区域）。"}, {"id": "cpp-083", "type": "choice", "tags": ["内存管理"], "q": "new 出来的对象存储在？", "options": ["栈", "自由存储区（通常基于堆实现）", "寄存器", "静态存储区"], "ans": 1, "why": "原文：new 所申请的内存区域在 C++ 中称为自由存储区。很多编译器的 new/delete 以 malloc/free 为基础实现，所以通常在堆上。"}, {"id": "cpp-084", "type": "choice", "tags": ["内存管理"], "q": "函数调用时，参数与返回地址的入栈顺序通常是？", "options": ["参数先入栈，再压入返回地址", "返回地址和参数同时入栈", "只压入参数，返回地址存寄存器", "由被调用函数负责压栈"], "ans": 0, "why": "函数调用约定：调用者先将实参按约定顺序（如从右到左）压栈，再执行 call 指令把返回地址压栈，随后进入被调函数建立新的栈帧。"}, {"id": "cpp-085", "type": "choice", "tags": ["内存管理"], "q": "__stdcall 与 __cdecl 的主要区别是？", "options": ["参数压栈顺序不同", "清理堆栈的责任方不同：__stdcall 由函数自身清理，__cdecl 由调用者清理", "返回值存放位置不同", "__stdcall 支持可变参数，__cdecl 不支持"], "ans": 1, "why": "__stdcall 从右往左压栈，堆栈参数由函数本身清除（ret x）；__cdecl 由调用者清理栈，因此支持可变参数函数。"}, {"id": "cpp-086", "type": "fill", "tags": ["内存管理"], "q": "malloc 分配小于 128K 的内存时调用的系统调用是 ______()，大于 128K 时调用 mmap()。", "ans": ["brk"], "why": "原文：小于 128K 调用 brk()，通过移动 _enddata 实现。"}, {"id": "cpp-087", "type": "choice", "tags": ["内存管理"], "q": "关于内存碎片，下列说法正确的是？", "options": ["内部碎片是分配了但未使用的内存，外部碎片是空闲内存总量够但不连续", "外部碎片只发生在栈上", "内存碎片只存在于虚拟内存中，物理内存没有碎片", "使用 brk 分配不会产生任何碎片"], "ans": 0, "why": "内部碎片指已分配块内未被利用的部分（如对齐填充）；外部碎片指空闲内存分散、总量足够但没有足够大的连续块可供分配。"}, {"id": "cpp-088", "type": "choice", "tags": ["内存管理"], "q": "为什么大块内存分配常用 mmap 而不是 brk？", "options": ["mmap 更快", "mmap 分配的内存释放后立即归还给操作系统，不会长期占用堆顶部，减少堆碎片；brk 收缩受顶部已分配块限制", "brk 不能分配大内存", "brk 需要管理员权限"], "ans": 1, "why": "brk 通过移动堆顶指针分配，只有当堆顶部的内存被释放时才能收缩，容易产生碎片；mmap 分配独立映射区，munmap 后立即归还，适合大块内存。"}, {"id": "cpp-089", "type": "choice", "tags": ["内存管理"], "q": "C++ 中局部变量、static 局部变量、全局变量分别存放在？", "options": ["栈、静态存储区、静态存储区", "栈、栈、静态存储区", "堆、静态存储区、静态存储区", "栈、静态存储区、堆"], "ans": 0, "why": "原文：局部变量在栈；静态存储区存放全局变量、静态局部变量、静态全局变量。"}, {"id": "cpp-090", "type": "choice", "tags": ["内存管理"], "q": "下面关于「内存泄漏排查」的说法，合理的是？", "options": ["只能靠阅读代码，没有工具可用", "可使用 valgrind、AddressSanitizer 等工具检测泄漏与越界", "只要使用智能指针就一定不需要排查", "内存泄漏在程序退出后仍然存在"], "ans": 1, "why": "实践中常用 valgrind --leak-check、AddressSanitizer/LeakSanitizer 等工具定位泄漏；程序退出后操作系统会回收其全部内存。"}, {"id": "cpp-091", "type": "choice", "tags": ["内存管理"], "q": "关于栈上对象与堆上对象的生命周期，下列说法正确的是？", "options": ["栈对象在离开作用域时自动析构，堆对象需手动 delete 才析构", "两者都在程序结束时才析构", "堆对象离开作用域会自动析构", "栈对象需要手动释放"], "ans": 0, "why": "栈对象由编译器在作用域结束时自动调用析构函数；堆对象必须显式 delete（或由智能指针托管）才会析构。"}, {"id": "cpp-092", "type": "choice", "tags": ["内存管理"], "q": "为什么要避免返回局部变量的引用或指针？", "options": ["会降低性能", "函数返回后局部变量被销毁，引用/指针将悬空，访问是未定义行为", "编译器会报错", "会导致内存泄漏"], "ans": 1, "why": "局部对象存放在栈帧中，函数返回后栈帧失效，返回其引用或指针会得到悬空引用/悬空指针，访问属于未定义行为。"}, {"id": "cpp-093", "type": "choice", "tags": ["内存管理"], "q": "关于内存对齐的规则，下列说法错误的是？", "options": ["结构体每个成员相对于起始地址的偏移量必须是其自身大小（对齐数）的整数倍", "结构体总大小必须是最大成员对齐数的整数倍", "对齐数可以用 #pragma pack 修改", "对齐只在 64 位系统下生效，32 位系统不做对齐"], "ans": 3, "why": "内存对齐在 32 位与 64 位系统下都存在；#pragma pack(n) 可指定对齐系数，影响偏移与总大小。"}, {"id": "cpp-094", "type": "choice", "tags": ["内存管理"], "q": "struct { char c; double d; } 在默认对齐下 sizeof 为？", "options": ["9", "16", "12", "8"], "ans": 1, "why": "原文示例 s11：char 占 1 字节 + 7 字节对齐填充 + double 8 字节 = 16 字节。"}, {"id": "cpp-095", "type": "choice", "tags": ["内存管理"], "q": "下列关于 BSS 段的说法正确的是？", "options": ["BSS 段存放已初始化的全局变量", "BSS 段在程序加载时由系统清零，未初始化全局变量初值为 0", "BSS 段占用可执行文件的大量磁盘空间", "BSS 段可读不可写"], "ans": 1, "why": "BSS 段存放未初始化的全局/静态变量，加载时由系统清零，因此在可执行文件中只记录大小，不占实际磁盘空间。"}, {"id": "cpp-096", "type": "choice", "tags": ["内存管理"], "q": "内存泄漏的本质是？", "options": ["内存被重复释放", "程序中已不再使用的内存没有被释放，也无法被再次分配使用", "内存被越界写入", "内存分配失败"], "ans": 1, "why": "内存泄漏指程序动态申请的内存在使用完毕后未被释放，导致这部分内存既不能被程序使用也不能被系统回收，长时间运行会耗尽可用内存。"}, {"id": "cpp-097", "type": "choice", "tags": ["内存管理"], "q": "RAII 思想的核心是？", "options": ["在构造函数中获取资源，在析构函数中释放资源，利用对象生命周期自动管理资源", "在函数入口加锁，出口解锁", "所有资源都在 main 函数中分配", "使用全局变量管理资源"], "ans": 0, "why": "RAII（Resource Acquisition Is Initialization）：资源取得时机便是初始化时机，资源在构造时获得、析构时释放，是智能指针与锁管理的基础。"}, {"id": "cpp-098", "type": "choice", "tags": ["内存管理"], "q": "下列代码中，哪种写法最安全？（单选）", "options": ["int* p = new int(1); 使用完 delete p;", "int* p = new int(1); 使用完 delete p; p = nullptr;", "int* p = new int(1); 使用完不释放", "int* p = new int(1); delete p; 再次 delete p;"], "ans": 1, "why": "delete 后将指针置空可避免二次释放与悬空指针解引用；重复 delete 同一指针是未定义行为。更推荐使用 unique_ptr 等智能指针托管。"}, {"id": "cpp-099", "type": "choice", "tags": ["内存管理"], "q": "多次 new 少量小对象导致性能下降，常见优化手段是？", "options": ["改用全局变量", "使用内存池或对象池批量申请，减少系统调用与碎片", "使用更大的类型", "把对象放在栈上并增大栈空间"], "ans": 1, "why": "频繁小对象分配会带来系统调用开销与内存碎片，内存池/对象池通过批量申请和复用显著降低开销。"}, {"id": "cpp-100", "type": "choice", "tags": ["内存管理"], "q": "下面的代码存在的问题是？\nchar* p = (char*)malloc(10);\nstrcpy(p, \"hello world\");", "options": ["没有初始化 p", "目标缓冲区仅 10 字节而源字符串需要 13 字节（含 \\0），发生越界写入", "malloc 返回值不应强转", "strcpy 不能用于 char*"], "ans": 1, "why": "原文示例：char arr[10] 拷入 \"hello world!\" 会覆盖相邻变量。strcpy 不检查目标缓冲区大小，越界写入破坏相邻内存，应使用 strncpy/snprintf 或保证容量充足。"}, {"id": "cpp-101", "type": "choice", "tags": ["内存管理"], "q": "malloc 分配得到的内存初值是？", "options": ["全部为 0", "未初始化，内容不确定", "全部为 0xFF", "由编译器填充随机值以保证安全"], "ans": 1, "why": "malloc 只分配内存不做初始化，内容是未定义的；calloc 才会把分配的内存清零。"}, {"id": "cpp-102", "type": "choice", "tags": ["内存管理"], "q": "calloc 与 malloc 的区别是？", "options": ["calloc 分配后会把内存清零，并可指定元素个数与单个元素大小", "calloc 从栈分配", "calloc 速度一定更快", "两者完全等价"], "ans": 0, "why": "calloc(nmemb, size) 分配 nmemb*size 字节并把内容初始化为 0；malloc(size) 只分配不清零。"}, {"id": "cpp-103", "type": "choice", "tags": ["内存管理"], "q": "realloc 的作用与风险是？", "options": ["调整已分配内存块大小，可能搬移整块内存，原指针可能失效", "只能在堆顶扩展，不会搬移", "一定成功且原指针始终有效", "只能缩小不能扩大"], "ans": 0, "why": "realloc 可能就地扩展，也可能新分配一块并拷贝旧数据后释放旧块，此时传入的原指针失效，必须用返回值更新指针。"}, {"id": "cpp-104", "type": "choice", "tags": ["内存管理"], "q": "关于「内存越界访问」，下列说法正确的是？", "options": ["编译器一定能检测出来", "属于未定义行为，可能破坏相邻内存或导致崩溃，需借助 ASan 等工具检测", "只影响读操作，不影响写操作", "在 Release 模式下是安全的"], "ans": 1, "why": "越界访问是未定义行为，编译器未必报警，可能静静破坏其他数据；AddressSanitizer 等工具可在运行时检测。"}, {"id": "cpp-105", "type": "choice", "tags": ["内存管理"], "q": "下面哪一项属于「内存泄漏」而非「内存溢出」？", "options": ["申请的内存大于可用内存", "不断 new 而不 delete，可用内存逐渐减少", "数组下标越界", "栈上递归过深"], "ans": 1, "why": "泄漏是已分配内存无法再被回收使用；溢出（OOM）是申请量超过可用内存。越界与栈溢出属于访问越界/栈溢出问题。"}, {"id": "cpp-106", "type": "choice", "tags": ["内存管理"], "q": "关于「野指针」的危害，下列说法最恰当的是？", "options": ["野指针一定为 NULL，解引用会立刻崩溃", "野指针指向不确定，误写会破坏任意内存，危害难以预测", "野指针只能读不能写", "野指针在编译期会被拦截"], "ans": 1, "why": "野指针（未初始化指针）指向地址不确定，解引用写入可能破坏任意合法内存，行为不可预测，编译期通常无法拦截。"}, {"id": "cpp-107", "type": "choice", "tags": ["内存管理"], "q": "使用 malloc 申请内存后，若要把它当作 int 数组使用，正确做法是？", "options": ["直接使用，无需转换", "将返回的 void* 强制转换为 int* 后使用", "先调用 free 再转换", "用 static_cast 转换为 int"], "ans": 1, "why": "原文示例：int* intPtr = (int*)voidPtr; malloc 返回 void*，需转换为具体类型指针才能解引用与做指针运算。"}, {"id": "cpp-108", "type": "choice", "tags": ["内存管理"], "q": "下列哪个操作能够真正把内存归还给操作系统？", "options": ["free() 一定立即归还给操作系统", "munmap() 会立即解除映射并归还", "delete 一定立即归还", "把指针置为 nullptr"], "ans": 1, "why": "free/delete 通常只是把内存归还给分配器（glibc 的空闲链表/bin），不一定调用系统调用归还给内核；munmap 会解除映射并立即归还。"}, {"id": "cpp-109", "type": "choice", "tags": ["内存管理"], "q": "关于「写时复制（Copy-On-Write）」，下列说法正确的是？", "options": ["fork 后父子进程共享物理页，任一方写入时才复制该页", "每次写操作都会复制整块内存", "只适用于堆内存", "由编译器自动为所有对象实现"], "ans": 0, "why": "fork 后父子进程页表指向同一物理页并标记为只读，任一方写入触发缺页异常，内核才为该进程复制该页，避免不必要的拷贝。"}, {"id": "cpp-110", "type": "fill", "tags": ["内存管理"], "q": "内存管理中的 RAII 全称是 Resource ______ Is Initialization。", "ans": ["Acquisition", "获取"], "why": "RAII = Resource Acquisition Is Initialization（资源获取即初始化），在构造时获取资源、析构时释放。"}, {"id": "cpp-111", "type": "choice", "tags": ["面向对象"], "q": "面向对象的三大特性是？", "options": ["封装、继承、多态", "抽象、封装、模块化", "继承、重载、覆盖", "封装、多态、并发"], "ans": 0, "why": "原文：面向对象的三大特性是封装（把实现过程和数据封装成函数，只能通过接口访问，降低耦合性）、继承（子类继承父类的特征和行为）、多态（不同继承类的对象对同一消息做出不同响应）。"}, {"id": "cpp-112", "type": "choice", "tags": ["面向对象"], "q": "关于封装的作用，文中说法是？", "options": ["提高运行速度", "把数据和实现封装，只能通过接口访问，降低耦合性", "减少内存占用", "自动生成文档"], "ans": 1, "why": "原文：封装将具体的实现过程和数据封装成一个函数，只能通过接口进行访问，降低耦合性。"}, {"id": "cpp-113", "type": "choice", "tags": ["面向对象"], "q": "重载、重写（覆盖）、隐藏的范围区别是？", "options": ["重载发生在同一个类内部，重写和隐藏发生在父类与子类之间", "重写发生在同一个类内部，重载发生在不同类之间", "三者都只发生在同一个类内部", "三者都只发生在父子类之间"], "ans": 0, "why": "原文：重载发生在同一个类的内部；重写（覆盖）发生在不同类之间（子类和父类）；隐藏也发生在不同类中，只要同名函数不管参数列表是否相同，基类函数都会被屏蔽。"}, {"id": "cpp-114", "type": "choice", "tags": ["面向对象"], "q": "关于函数重载，下列说法正确的是？", "options": ["重载关心函数的返回类型，返回值不同即可重载", "重载要求同名且参数列表（类型、个数、顺序）不同，不关心返回类型", "重载必须在不同作用域", "重载要求基类函数有 virtual"], "ans": 1, "why": "原文：重载是指同一可访问区内被声明的几个具有不同参数列（参数类型、个数、顺序）的同名函数，重载不关心函数返回类型。仅返回类型不同无法重载，会编译报错。"}, {"id": "cpp-115", "type": "choice", "tags": ["面向对象"], "q": "构成重写（覆盖）的必要条件不包括？", "options": ["函数名相同", "参数列表相同", "返回值类型相同", "基类函数必须是 static 的"], "ans": 3, "why": "原文：重写的函数名、参数列表、返回值类型都必须与基类中被重写的函数一致，且基类中被重写的函数必须有 virtual 修饰，与 static 无关。"}, {"id": "cpp-116", "type": "choice", "tags": ["面向对象"], "q": "派生类中定义了与基类同名但参数不同的函数，会发生什么？", "options": ["构成重载，基类的同名函数依然可见", "构成隐藏，基类的同名函数被屏蔽，需通过 Base::fun 显式调用", "编译错误", "构成重写"], "ans": 1, "why": "原文：隐藏是指派生类的函数屏蔽了与其同名的基类函数，只要同名，不管参数列表是否相同，基类函数都会被隐藏。示例中 ex.fun(1, 0.01) 报错，需要写成 ex.Base::fun(1, 0.01)。"}, {"id": "cpp-117", "type": "choice", "tags": ["面向对象"], "q": "C++ 的多态分为哪两类？", "options": ["静态多态（重载、模板，编译期确定）和动态多态（虚函数，运行期确定）", "函数多态和运算符多态", "值多态和引用多态", "编译多态和运行多态（两者实现方式相同）"], "ans": 0, "why": "原文：编译时多态（静态多态）通过函数重载和运算符重载实现，编译时确定；运行时多态（动态多态）通过虚函数和继承实现，运行时根据对象实际类型决定调用。"}, {"id": "cpp-118", "type": "choice", "tags": ["面向对象"], "q": "虚函数实现多态的核心机制是？", "options": ["函数指针数组（虚函数表）+ 对象中的虚表指针（vptr）", "编译器内联展开", "模板实例化", "宏替换"], "ans": 0, "why": "原文：每个包含虚函数的类都有一个虚函数表，记录该类对象可调用的虚函数地址；每个对象有虚表指针指向其类的虚函数表，运行时通过它找到实际应调用的函数。"}, {"id": "cpp-119", "type": "choice", "tags": ["面向对象"], "q": "虚函数表建立的时间与虚表指针存放的位置分别是？", "options": ["编译阶段建立；虚表指针存放在对象内存空间的最前面", "运行时建立；虚表指针存放在代码段", "链接阶段建立；虚表指针存放在静态区", "运行阶段建立；虚表指针存放在虚函数表中"], "ans": 0, "why": "原文：虚函数表在编译阶段建立；虚表指针存放在对象内存空间中最前面的位置，以保证能正确取到虚函数的偏移量。"}, {"id": "cpp-120", "type": "choice", "tags": ["面向对象"], "q": "关于虚函数表和虚表指针的绑定关系，下列说法正确的是？", "options": ["虚函数表与对象绑定，虚表指针与类绑定", "虚函数表与类绑定，同一个类的不同对象共享虚表，但每个对象有自己的虚表指针", "两者都与对象绑定", "两者都与类绑定"], "ans": 1, "why": "原文：虚函数表和类绑定，虚表指针和对象绑定。类的不同对象的虚函数表是一样的，但每个对象都有自己的虚表指针指向类的虚函数表。"}, {"id": "cpp-121", "type": "choice", "tags": ["面向对象"], "q": "派生类没有重新定义基类的虚函数时，派生类虚表中该函数的地址是？", "options": ["为空（NULL）", "保存的是基类虚函数的地址，与基类相同", "保存派生类自己的地址", "随机值"], "ans": 1, "why": "原文：如果派生类没有重新定义基类的虚函数 A，则派生类的虚函数表中保存的是基类虚函数 A 的地址，即基类和派生类中该函数地址相同。"}, {"id": "cpp-122", "type": "choice", "tags": ["面向对象"], "q": "派生类重写了基类的虚函数 B 时，结果是？", "options": ["虚表只有一份，地址被覆盖", "虚函数 B 有两个版本，分别存放在基类和派生类的虚表中", "基类虚表中的地址被改为派生类版本", "派生类不再有虚表"], "ans": 1, "why": "原文：如果派生类重写了基类的某个虚函数 B，则虚函数 B 有两个版本，分别存放在基类和派生类的虚函数表中。"}, {"id": "cpp-123", "type": "choice", "tags": ["面向对象"], "q": "多继承且无虚函数覆盖时，派生类虚表的个数与顺序是？", "options": ["只有 1 张虚表", "有几个带虚函数的基类就有几张虚表，顺序与继承声明顺序一致", "基类数量 + 1 张", "由编译器随机决定"], "ans": 1, "why": "原文：多继承无虚函数覆盖时，派生类的虚函数表有多个，基类的顺序和声明的顺序一致。"}, {"id": "cpp-124", "type": "choice", "tags": ["面向对象"], "q": "为什么析构函数通常要声明为虚函数？", "options": ["为了节省内存", "防止用基类指针删除派生类对象时只调用基类析构函数，导致派生部分析构不完全、内存泄漏", "为了让析构顺序变成先基类后派生类", "为了允许重写析构逻辑而必须显式调用"], "ans": 1, "why": "原文：若析构函数不是虚函数，编译器实施静态绑定，删除基类指针时只会调用基类析构函数，派生类对象析构不完全，造成内存泄漏。声明为虚函数后可确保先调用派生类析构函数，再调用基类析构函数。"}, {"id": "cpp-125", "type": "choice", "tags": ["面向对象"], "q": "为什么构造函数不能是虚函数？", "options": ["语法规定禁止，没有原因", "调用虚函数需要 vptr 找到 vtable，而构造对象时对象尚未实例化、内存空间还没有，无法找到 vtable；且构造函数是自动调用的，不会通过父类指针或引用调用", "因为构造函数不能重载", "因为构造函数没有返回值"], "ans": 1, "why": "原文：从存储空间角度，虚函数对应 vtable 且存储在对象内存空间中，构造时对象还没实例化，无法找到 vtable；从使用角度，虚函数是为了通过父类指针或引用调用时变成调用子类函数，而构造函数是创建对象时自动调用的。"}, {"id": "cpp-126", "type": "choice", "tags": ["面向对象"], "q": "关于纯虚函数，下列说法正确的是？", "options": ["纯虚函数在基类中必须有实现", "声明形式为 virtual void f() = 0;，含纯虚函数的类是抽象类，不能实例化", "纯虚函数不能被重写", "纯虚析构函数不需要提供函数体"], "ans": 1, "why": "原文：纯虚函数声明形式 virtual void function() = 0；含有纯虚函数的类称为抽象类，不能实例化，派生类必须全部实现后才能创建对象。纯虚析构函数仍必须提供函数体实现。"}, {"id": "cpp-127", "type": "choice", "tags": ["面向对象"], "q": "抽象类的下列用法中，合法的是？", "options": ["创建抽象类对象", "把抽象类作为函数返回值类型", "声明抽象类的指针或引用", "把抽象类对象作为函数参数（按值传递）"], "ans": 2, "why": "原文：抽象类对象不能作为函数的参数，不能创建对象，不能作为函数返回类型；但可以声明抽象类指针，可以声明抽象类的引用。"}, {"id": "cpp-128", "type": "choice", "tags": ["面向对象"], "q": "虚函数与纯虚函数的区别不包括？", "options": ["定义形式不同，纯虚函数需加 =0", "虚函数在基类有默认实现，纯虚函数一般没有", "派生类对虚函数可以不重写，纯虚函数必须全部实现", "虚函数不能出现在抽象类中"], "ans": 3, "why": "原文：虚函数和纯虚函数也可以出现在同一个类中，此时该类同样是抽象类。前三项都是原文列出的区别。"}, {"id": "cpp-129", "type": "choice", "tags": ["面向对象"], "q": "类中未显式定义时，编译器会自动生成的缺省函数不包括？", "options": ["构造函数", "析构函数", "拷贝构造函数", "移动赋值运算符（C++11 中在用户声明了拷贝/析构时通常被抑制）"], "ans": 3, "why": "原文：若没有显式定义构造函数、析构函数、拷贝构造函数、赋值运算符重载函数，编译器会自动生成这些缺省函数。移动操作的自动生成受多条件限制，不属于经典缺省函数集合。"}, {"id": "cpp-130", "type": "choice", "tags": ["面向对象"], "q": "C++ 空类的大小是？", "options": ["0 字节", "1 字节", "4 字节", "8 字节"], "ans": 1, "why": "原文：C++ 空类的大小是 1 字节。因为标准不允许对象大小为 0，不同对象不能具有相同地址，编译器隐式分配 1 字节保证每个实例有独一无二的地址（MSVC 与 g++ 均为 1）。"}, {"id": "cpp-131", "type": "choice", "tags": ["面向对象"], "q": "只含一个虚函数的类对象的大小是？", "options": ["1 字节", "等于指针大小（32 位 4 字节，64 位 8 字节）", "0 字节", "取决于虚函数个数"], "ans": 1, "why": "原文：只含虚函数的类大小不为 1，因为每个对象会被隐式插入一个虚函数表指针，大小等于平台指针大小：32 位 4 字节，64 位 8 字节。"}, {"id": "cpp-132", "type": "choice", "tags": ["面向对象"], "q": "class A { static int a; }; 中 sizeof(A) 是？", "options": ["4", "1", "8", "0"], "ans": 1, "why": "原文：只含有一个静态成员变量的类的大小是 1，静态成员存放在静态存储区，不占用类对象大小；普通成员函数也不占类对象大小。"}, {"id": "cpp-133", "type": "choice", "tags": ["面向对象"], "q": "class A { static int a; int b; }; 中 sizeof(A) 是？", "options": ["8", "4", "1", "取决于 static 变量是否初始化"], "ans": 1, "why": "原文：静态成员 a 不占用类的大小，所以类的大小就是 b 的大小，即 4 字节。"}, {"id": "cpp-134", "type": "choice", "tags": ["面向对象"], "q": "空类作为基类时，子类大小会发生什么？", "options": ["子类大小至少为 2 字节", "触发空基类最优化，空基类部分大小优化为 0，子类大小就是子类本身的大小", "空基类仍占 1 字节且必须对齐", "编译错误，空类不能被继承"], "ans": 1, "why": "原文：当该空类作为基类时，该类的大小就优化为 0 了，子类的大小就是子类本身的大小，这就是所谓的空白基类最优化（EBO）。"}, {"id": "cpp-135", "type": "choice", "tags": ["面向对象"], "q": "关于多态的实现条件，下列说法错误的是？", "options": ["必须有继承关系", "基类函数必须是虚函数", "必须通过基类指针或引用调用", "必须用 new 创建对象"], "ans": 3, "why": "多态的三个条件：有继承、基类声明虚函数并派生类重写、通过基类指针或引用调用。栈上对象取地址传给基类指针同样触发多态，不要求 new。"}, {"id": "cpp-136", "type": "choice", "tags": ["面向对象"], "q": "构造函数和析构函数中调用虚函数，会发生什么？", "options": ["正常触发多态，调用派生类版本", "不会触发多态，调用的是当前类（基类）的版本", "编译报错", "运行时崩溃"], "ans": 1, "why": "构造基类子对象时派生部分尚未构造，析构派生部分后对象已不完整，因此构造/析构期间虚调用不会下降到派生类，只调用当前类的版本。"}, {"id": "cpp-137", "type": "choice", "tags": ["面向对象"], "q": "菱形继承带来的问题是？", "options": ["无法调用基类函数", "最顶层基类在数据上出现多份副本，产生数据冗余与二义性", "虚表丢失", "不能多继承"], "ans": 1, "why": "菱形继承（Der1、Der2 都继承 Base，Der3 继承两者）会导致 Base 的成员在 Der3 中存在两份，访问时产生二义性，通常用虚继承解决。"}, {"id": "cpp-138", "type": "choice", "tags": ["面向对象"], "q": "解决菱形继承中数据冗余问题的手段是？", "options": ["使用虚继承（virtual public Base）", "使用私有继承", "把基类成员改为 static", "使用组合代替继承"], "ans": 0, "why": "虚继承让 Der1、Der2 共享同一份 Base 子对象，派生类中通过虚基类指针（vbptr）定位共享的基类实例，消除冗余与二义性。"}, {"id": "cpp-139", "type": "choice", "tags": ["面向对象"], "q": "关于 override 与 final（C++11），下列说法正确的是？", "options": ["override 用于显式声明重写基类虚函数，让编译器检查签名是否匹配；final 可阻止类被继承或虚函数被继续重写", "override 用于阻止重写", "final 只能修饰函数", "两者作用相同"], "ans": 0, "why": "override 显式表明该函数重写基类虚函数，签名不匹配时编译报错；final 修饰虚函数表示不能再被重写，修饰类表示不能被继承。"}, {"id": "cpp-140", "type": "choice", "tags": ["面向对象"], "q": "下面哪个运算符不能作为成员函数重载？", "options": ["operator+", "operator[]", "operator<<（流插入，左操作数为流对象）", "operator="], "ans": 2, "why": "当左操作数不是本类对象（如 std::ostream）时无法作为成员函数重载，只能作为非成员（友元）函数重载，例如 operator<<、operator>>。"}, {"id": "cpp-141", "type": "choice", "tags": ["面向对象"], "q": "不能被重载的运算符是？", "options": ["operator+", "operator::（作用域解析符）", "operator[]", "operator()"], "ans": 1, "why": "不能重载的运算符包括 ::、.*、. 、?:、sizeof、typeid 等；其中作用域解析符 :: 不能重载。"}, {"id": "cpp-142", "type": "choice", "tags": ["面向对象"], "q": "关于友元（friend），下列说法正确的是？", "options": ["友元关系是相互的，A 是 B 的友元则 B 也是 A 的友元", "友元可以访问类的私有成员，但不具备传递性与继承性", "友元函数属于类的成员，有 this 指针", "友元可以被派生类继承"], "ans": 1, "why": "友元可以访问类的 private/protected 成员；友元关系不可传递、不可继承；友元函数不是类成员，没有 this 指针。"}, {"id": "cpp-143", "type": "choice", "tags": ["面向对象"], "q": "公有继承、保护继承、私有继承中，派生类对象能在类外访问基类 public 成员的是？", "options": ["只有公有继承", "公有继承和保护继承", "三种都可以", "只有私有继承"], "ans": 0, "why": "公有继承保持基类成员原有访问级别；保护继承使基类 public 成员变为 protected；私有继承使其变为 private，类外均不可访问。"}, {"id": "cpp-144", "type": "choice", "tags": ["面向对象"], "q": "关于拷贝构造函数与赋值运算符，下列说法错误的是？", "options": ["拷贝构造函数用于用一个已有对象初始化新对象", "赋值运算符用于两个已存在对象之间的赋值", "编译器自动生成的版本对含指针成员的类也能正确完成深拷贝", "含指针成员时应自己实现深拷贝（或使用智能指针/容器）"], "ans": 2, "why": "编译器默认生成的是逐成员的浅拷贝，含裸指针时会导致两个对象指向同一块内存、重复释放，需要自己实现深拷贝或遵循 Rule of Three/Five/Zero。"}, {"id": "cpp-145", "type": "choice", "tags": ["面向对象"], "q": "Rule of Three（三法则）指的是？", "options": ["如果定义了析构函数、拷贝构造函数、拷贝赋值运算符中的任意一个，通常三个都要定义", "一个类最多继承三层", "一个函数最多三个参数", "虚函数表最多三层"], "ans": 0, "why": "三法则：若类需要自定义析构函数、拷贝构造函数、拷贝赋值运算符中的任何一个，通常三个都需要（用于正确管理资源）。C++11 后扩展为 Rule of Five（加上移动构造与移动赋值）。"}, {"id": "cpp-146", "type": "choice", "tags": ["面向对象"], "q": "关于「函数对象（仿函数）」与普通函数的区别，下列说法错误的是？", "options": ["函数对象是重载了 operator() 的类/结构体实例", "函数对象可以拥有成员变量，从而携带状态；普通函数无状态", "函数对象不需要创建实例即可调用", "函数对象可作为模板参数内联展开，性能往往更好"], "ans": 2, "why": "原文：普通函数被直接调用，函数对象需要先创建实例再用实例调用（如 Add add; add(2,3)）。C 项说法错误。"}, {"id": "cpp-147", "type": "choice", "tags": ["面向对象"], "q": "C++ 的四种强制类型转换中，用于「去掉 const/volatile 属性」的是？", "options": ["static_cast", "dynamic_cast", "const_cast", "reinterpret_cast"], "ans": 2, "why": "const_cast 用于移除对象的 const/volatile 限定；static_cast 用于相关类型间转换；dynamic_cast 用于多态类型的安全向下转型（需 RTTI）；reinterpret_cast 是低层位模式重解释。"}, {"id": "cpp-148", "type": "choice", "tags": ["面向对象"], "q": "dynamic_cast 的使用条件与失败行为是？", "options": ["只能用于含虚函数的多态类型；对指针失败返回 nullptr，对引用失败抛出 std::bad_cast", "可以用于任何类型，失败返回 NULL", "不需要 RTTI 支持", "失败时程序直接崩溃"], "ans": 0, "why": "dynamic_cast 依赖 RTTI，要求转换的源类型含虚函数；转换指针失败返回 nullptr，转换引用失败抛出 std::bad_cast 异常。"}, {"id": "cpp-149", "type": "choice", "tags": ["面向对象"], "q": "关于异常处理，下列说法正确的是？", "options": ["析构函数应该吞下异常而不是向外抛出，否则栈展开时可能导致程序终止", "异常可以随意从析构函数抛出", "catch(...) 无法捕获任意异常", "异常处理不需要考虑资源释放"], "ans": 0, "why": "析构函数在栈展开期间被调用，若再抛出异常会导致 std::terminate，因此应在析构函数内部捕获并处理异常（Effective C++：绝不让异常逃离析构函数）。"}, {"id": "cpp-150", "type": "choice", "tags": ["面向对象"], "q": "深拷贝与浅拷贝的区别是？", "options": ["深拷贝只复制指针值，浅拷贝复制指针指向的内容", "深拷贝会为新对象分配独立资源并复制内容；浅拷贝只复制指针值，两个对象共享同一资源", "两者没有区别", "深拷贝只用于内置类型"], "ans": 1, "why": "浅拷贝仅复制指针值，导致多个对象共享同一块堆内存，析构时可能重复释放；深拷贝分配新资源并复制内容，对象彼此独立。"}, {"id": "cpp-151", "type": "choice", "tags": ["面向对象"], "q": "关于「多态下基类指针释放派生类对象」的正确做法是？", "options": ["基类析构函数声明为 virtual", "派生类析构函数声明为 virtual 即可，基类不必", "使用 delete[] 释放", "手动调用派生类析构函数"], "ans": 0, "why": "原文：如果析构函数不被声明成虚函数，编译器实施静态绑定，删除基类指针时只调用基类析构函数，导致派生部分析构不完全。正确做法是把基类析构函数声明为虚函数。"}, {"id": "cpp-152", "type": "choice", "tags": ["面向对象"], "q": "下面关于「对象切片（slicing）」的说法正确的是？", "options": ["把派生类对象按值赋给基类对象时，派生类特有部分被切掉", "把基类对象赋给派生类对象时会发生切片", "切片会保留多态行为", "切片只在指针赋值时发生"], "ans": 0, "why": "派生类对象按值传递给基类对象（或按值参数传递）时，只复制基类子对象部分，派生部分丢失，多态失效；应通过指针或引用传递（pass-by-reference-to-const）。"}, {"id": "cpp-153", "type": "choice", "tags": ["面向对象"], "q": "关于 virtual 与默认参数的结合，下列说法正确的是？", "options": ["默认参数是动态绑定的，会使用派生类的默认值", "默认参数是静态绑定的，通过基类指针调用时使用基类的默认值，与动态绑定的函数体不一致，易产生陷阱", "默认参数在虚函数中不允许使用", "两者绑定方式相同"], "ans": 1, "why": "虚函数动态绑定，但默认实参是编译期静态绑定的：通过基类指针调用时使用基类声明的默认值，即使实际执行的是派生类函数体，推荐避免在虚函数中使用默认参数。"}, {"id": "cpp-154", "type": "fill", "tags": ["面向对象"], "q": "运行时多态依赖的两样东西是：虚函数表（vtable）和每个对象中的 ______（vptr）。", "ans": ["虚表指针", "虚函数表指针", "虚指针"], "why": "原文：每个包含虚函数的类的对象都包含一个虚函数指针（虚表指针），指向该类的虚函数表。"}, {"id": "cpp-155", "type": "choice", "tags": ["面向对象"], "q": "下面代码中调用的是哪个版本？\nclass A { public: virtual void f(){ cout<<\"A\"; } };\nclass B : public A { public: void f(){ cout<<\"B\"; } };\nA* p = new B(); p->f();", "options": ["A::f，输出 A", "B::f，输出 B", "编译错误", "运行错误"], "ans": 1, "why": "原文示例：基类指针指向派生类对象，调用虚函数时根据实际对象类型调用派生类的实现，输出 B::v_fun()。"}, {"id": "cpp-156", "type": "choice", "tags": ["面向对象"], "q": "关于「隐藏」与「重写」的触发条件，下列说法正确的是？", "options": ["基类函数是 virtual 且签名相同 → 重写；否则同名即隐藏", "只要同名就是重写", "只要签名相同就是隐藏", "隐藏只在多继承中发生"], "ans": 0, "why": "原文：当参数不同时，无论基类中的函数是否被 virtual 修饰，基类函数都是被隐藏而不是重写；只有基类 virtual 且函数名、参数、返回值一致才构成重写。"}, {"id": "cpp-157", "type": "choice", "tags": ["面向对象"], "q": "关于 protected 成员，下列说法正确的是？", "options": ["类外可以直接访问", "派生类可以访问，类外不可直接访问", "友元不能访问", "与 private 完全等价"], "ans": 1, "why": "protected 成员对派生类可见（可在派生类成员函数内访问），但对类外部不可直接访问；友元同样可以访问 protected 成员。"}, {"id": "cpp-158", "type": "choice", "tags": ["面向对象"], "q": "为什么重载 operator= 通常要返回 reference to *this？", "options": ["为了支持连锁赋值 a = b = c", "为了节省内存", "语法强制要求", "为了支持多态"], "ans": 0, "why": "Effective C++：令 operator= 返回 *this 的引用，以支持 a = b = c 的连锁赋值形式（内置类型的行为兼容）。"}, {"id": "cpp-159", "type": "choice", "tags": ["面向对象"], "q": "拷贝赋值运算符中处理「自我赋值」的原因是？", "options": ["提高性能", "防止先释放自身资源再拷贝时访问已释放的内存", "语法要求", "防止编译警告"], "ans": 1, "why": "自我赋值（a = a）时若先 delete 自身资源再按成员拷贝，会访问已释放内存，需在开头判断 if (this == &other) 或使用 copy-and-swap 惯用法。"}, {"id": "cpp-160", "type": "choice", "tags": ["面向对象"], "q": "关于单一职责的使用建议「用 const 引用传递替代值传递」，例外情况是？", "options": ["内置类型、STL 迭代器、函数对象，值传递往往更合适", "所有类类型都应值传递", "引用传递永远更好", "只适用于指针"], "ans": 0, "why": "Effective C++：以 pass-by-reference-to-const 替换 pass-by-value 更高效且避免对象切割，但不适用于内置类型、STL 迭代器和函数对象类型。"}, {"id": "cpp-161", "type": "choice", "tags": ["面向对象"], "q": "下列代码中 sizeof(B) 最可能是（64 位，A 含一个虚函数，B 继承 A 并含一个 int）？", "options": ["4", "8", "16", "24"], "ans": 2, "why": "64 位下：vptr 8 字节 + int 4 字节，按 8 字节对齐后总大小为 16 字节。"}, {"id": "cpp-162", "type": "choice", "tags": ["面向对象"], "q": "关于「虚析构函数」的代价，下列说法正确的是？", "options": ["没有任何代价，应当无条件使用", "会引入 vptr，使对象增大一个指针大小，且不该为不含虚函数的非基类随意添加", "会让析构变慢很多，不建议使用", "只能在抽象类中使用"], "ans": 1, "why": "声明虚析构会为类引入虚函数与 vptr，增加对象大小与一次间接调用。因此只为「设计用作基类」的类声明虚析构；不作为基类的类不应随意添加。"}, {"id": "cpp-163", "type": "choice", "tags": ["面向对象"], "q": "接口类（纯抽象类）的典型特征是？", "options": ["只含纯虚函数，通常还声明虚析构函数", "含大量数据成员", "构造函数是虚函数", "不能有多态"], "ans": 0, "why": "接口类只包含纯虚函数（描述对外接口），并应声明虚析构以便通过基类指针正确释放；不含数据成员，由派生类实现具体行为。"}, {"id": "cpp-164", "type": "choice", "tags": ["面向对象"], "q": "关于「组合优于继承」，最恰当的理解是？", "options": ["继承完全不该使用", "组合（has-a）降低耦合、不影响基类实现细节；继承（is-a）表达「是一种」关系并支持多态", "组合可以实现多态", "组合会让代码更长，应避免"], "ans": 1, "why": "继承表达 is-a 并支持多态，但会破坏封装、耦合度高；组合表达 has-a，耦合更低、更易维护。仅在确实需要表达「是一种」并使用多态时才用 public 继承。"}, {"id": "cpp-165", "type": "choice", "tags": ["面向对象"], "q": "关于对象内存布局，下列说法正确的是？", "options": ["成员变量按声明顺序存放（受访问控制与对齐影响），虚函数表中虚函数顺序与声明顺序一致", "成员变量顺序由编译器随机决定", "虚函数顺序与声明顺序无关", "vptr 一定放在对象末尾"], "ans": 0, "why": "常见实现：vptr 放在对象最前面，虚函数在虚表中的顺序与声明顺序一致，成员变量按声明顺序并遵循对齐规则存放。"}, {"id": "cpp-166", "type": "choice", "tags": ["STL容器"], "q": "STL 容器按文中分类可分为哪三大类？", "options": ["顺序容器、关联容器、容器适配器", "数组、链表、树", "线性表、栈、队列", "可变容器、不可变容器、智能容器"], "ans": 0, "why": "原文：STL 容器可分为序列式容器、关联式容器和容器适配器三大类。"}, {"id": "cpp-167", "type": "choice", "tags": ["STL容器"], "q": "下列关于 vector 的说法正确的是？", "options": ["内存不连续，不支持随机访问", "动态数组，内存连续，支持随机访问，尾插尾删 O(1)，中间插入删除 O(n)", "任意位置插入都是 O(1)", "扩容时不会重新分配内存"], "ans": 1, "why": "原文：vector 是动态数组，内存连续，支持 [] 或 at() 随机访问；优点尾插/尾删效率高 O(1)，缺点中间插入/删除效率 O(n)，扩容时可能重新分配内存。"}, {"id": "cpp-168", "type": "choice", "tags": ["STL容器"], "q": "deque 的特点是？", "options": ["内存完全连续，只能尾部操作", "双端队列，分段连续，首尾插入删除均为 O(1)，支持随机访问", "双向链表，不支持随机访问", "固定大小数组"], "ans": 1, "why": "原文：deque 是双端队列，内存分段连续，头插/头删、尾插/尾删效率均为 O(1)，可随机访问，没有容量概念，扩容时不会像 vector 那样整体搬迁。"}, {"id": "cpp-169", "type": "choice", "tags": ["STL容器"], "q": "list 的底层与特点分别是？", "options": ["单向链表，任意位置插入删除 O(1)，支持随机访问", "双向链表，内存不连续，任意位置插入删除 O(1)，不支持随机访问", "动态数组，内存连续", "红黑树"], "ans": 1, "why": "原文：list 是双向链表，元素通过指针连接、内存不连续，任意位置插入/删除 O(1)（只需修改指针），不支持随机访问（需遍历 O(n)），内存开销较大。"}, {"id": "cpp-170", "type": "choice", "tags": ["STL容器"], "q": "下列哪个容器是 C++11 新增的固定大小数组？", "options": ["vector", "array", "deque", "forward_list"], "ans": 1, "why": "原文：array 是固定大小数组（C++11 新增），编译时确定大小，内存连续，比原生数组更安全（支持边界检查），但大小不可变。"}, {"id": "cpp-171", "type": "choice", "tags": ["STL容器"], "q": "map、set 的底层实现是？", "options": ["哈希表", "红黑树（有序，查找 O(log n)）", "跳表", "B+ 树"], "ans": 1, "why": "原文：有序关联容器（set、multiset、map、multimap）基于红黑树实现，元素按键排序存储，查找通常为 O(log n)。"}, {"id": "cpp-172", "type": "choice", "tags": ["STL容器"], "q": "unordered_map 的底层结构与冲突解决方式是？", "options": ["红黑树，开放寻址", "哈希表 + 链地址法（每个桶存放冲突的元素）", "跳表", "数组线性查找"], "ans": 1, "why": "原文：unordered_map 底层基于哈希表，维护一个哈希桶数组，每个桶可存一个或多个键值对；通常使用链地址法解决哈希冲突。"}, {"id": "cpp-173", "type": "choice", "tags": ["STL容器"], "q": "map 与 unordered_map 的主要区别是？", "options": ["map 无序查找 O(1)，unordered_map 有序查找 O(log n)", "map 基于红黑树有序、查找 O(log n)；unordered_map 基于哈希表无序、平均 O(1)，但可能退化且需要哈希函数", "两者底层相同", "unordered_map 支持顺序遍历"], "ans": 1, "why": "原文：有序关联容器基于红黑树，支持按键排序、查找 O(log n)；无序关联容器基于哈希表，平均 O(1)，但元素无序、对哈希函数敏感，最坏情况会退化。"}, {"id": "cpp-174", "type": "choice", "tags": ["STL容器"], "q": "multiset 与 set 的区别是？", "options": ["multiset 允许键值重复，set 键值唯一", "multiset 无序，set 有序", "multiset 基于哈希表", "两者完全相同"], "ans": 0, "why": "原文：set 存储唯一键值，元素自动按键升序排序；multiset 与 set 类似，但允许键值重复，其他特性相同。"}, {"id": "cpp-175", "type": "choice", "tags": ["STL容器"], "q": "priority_queue 能保证优先级最高的元素在队头，根本原因是？", "options": ["底层用堆（heap）组织数据，默认基于 vector 存储", "底层是红黑树", "底层是哈希表", "每次插入后对整个容器排序"], "ans": 0, "why": "原文：priority_queue 底层采用 vector 或 deque 存储数据，并用堆这种数据结构重新组织数据，从而实现优先级最高元素位于队头，插入/删除 O(log n)。"}, {"id": "cpp-176", "type": "choice", "tags": ["STL容器"], "q": "stack 和 queue 默认基于哪个容器实现？", "options": ["vector", "deque", "list", "set"], "ans": 1, "why": "原文：stack 默认基于 deque 实现（也可指定 vector 或 list）；queue 默认基于 deque 实现（也可指定 list）。"}, {"id": "cpp-177", "type": "choice", "tags": ["STL容器"], "q": "push_back 与 emplace_back 的区别是？", "options": ["两者完全等价", "push_back 先创建元素再拷贝或移动进容器；emplace_back 直接在容器尾部构造元素，省去拷贝或移动", "emplace_back 只能用于基本类型", "push_back 性能总是更好"], "ans": 1, "why": "原文：push_back 首先创建这个元素，然后再将其拷贝或移动到容器中；emplace_back 则直接在容器尾部创建这个元素，省去了拷贝或移动的过程。"}, {"id": "cpp-178", "type": "choice", "tags": ["STL容器"], "q": "std::map 是线程安全的吗？", "options": ["是，标准库内部加了锁", "不是，并发读写会导致未定义行为，需外部加锁或使用并发容器", "只在读操作时安全", "只在单线程插入时安全"], "ans": 1, "why": "原文：std::map 不是线程安全的，多个线程同时写会破坏红黑树结构，读写并发也可能使迭代器失效；需使用 std::mutex/lock_guard 或第三方并发容器。"}, {"id": "cpp-179", "type": "choice", "tags": ["STL容器"], "q": "vector 插入元素导致扩容时，迭代器会怎样？", "options": ["只有 end() 失效", "所有指向 vector 的迭代器、指针和引用都会失效", "只有被插入位置之后的失效", "都不失效"], "ans": 1, "why": "原文：当插入操作导致容器内存重新分配时，所有指向 vector 的迭代器、指针和引用都会失效，因为元素被移动到新的内存位置。"}, {"id": "cpp-180", "type": "choice", "tags": ["STL容器"], "q": "vector 删除元素时，迭代器的失效情况是？", "options": ["所有迭代器都失效", "指向被删除元素及其之后元素的迭代器、指针和引用都会失效", "只有被删除元素的迭代器失效，其余有效", "都不失效"], "ans": 1, "why": "原文：在 vector 中删除元素时，指向被删除元素的迭代器、指针和引用会失效，并且指向删除位置之后的元素的迭代器、指针和引用也会失效。"}, {"id": "cpp-181", "type": "choice", "tags": ["STL容器"], "q": "对 set/map 调用 insert 后，已有迭代器会？", "options": ["全部失效", "不会失效（红黑树只新增节点，不改变其他节点内存位置）", "只有 begin() 失效", "只有被插入位置之后失效"], "ans": 1, "why": "原文：set/map 插入元素不会使任何迭代器、指针和引用失效，因为插入只是在树中添加新节点；仅指向被删除元素的迭代器会失效。"}, {"id": "cpp-182", "type": "choice", "tags": ["STL容器"], "q": "在 list 中插入元素会？", "options": ["使所有迭代器失效", "不会使任何迭代器失效，因为只修改节点指针", "使 end() 失效", "使被插入位置之后的迭代器失效"], "ans": 1, "why": "原文：在 list 插入元素不会使任何迭代器、指针和引用失效，因为链表插入只修改节点指针，不影响其他节点内存位置；删除时仅被删元素的迭代器失效。"}, {"id": "cpp-183", "type": "choice", "tags": ["STL容器"], "q": "在顺序容器（如 vector）中边遍历边删除元素，正确写法是？", "options": ["c.erase(it++);", "it = c.erase(it);（用 erase 返回的有效迭代器继续遍历）", "c.erase(it); 然后不做处理", "先收集后统一 clear()"], "ans": 1, "why": "原文：顺序容器的 erase 会使被删元素之后的所有迭代器失效，不能简单 ++；应使用 it = c.erase(it)，erase 返回被删元素之后的有效迭代器。"}, {"id": "cpp-184", "type": "choice", "tags": ["STL容器"], "q": "deque 在中间插入元素会导致？", "options": ["所有迭代器、指针和引用都失效", "只有 begin() 失效", "都不失效", "只有尾部迭代器失效"], "ans": 0, "why": "原文：在 deque 的中间插入元素时，所有迭代器、指针和引用都会失效；在首尾插入不会使迭代器失效。"}, {"id": "cpp-185", "type": "choice", "tags": ["STL容器"], "q": "关于 deque 的底层实现，下列说法正确的是？", "options": ["完全连续的一整块内存", "分段连续空间 + 中控器（map）保存指向各缓冲区的指针，扩容时新增一段空间链接起来", "双向链表", "与 vector 完全相同"], "ans": 1, "why": "原文：deque 由一段段定量连续空间构成，用一块称为 map（中控器）的连续空间保存指向各缓冲区的指针；需要时在头部或尾部配置新空间并串接。"}, {"id": "cpp-186", "type": "choice", "tags": ["STL容器"], "q": "std::sort 的底层实现（libstdc++）是？", "options": ["纯快速排序", "内省式排序 introsort：主体快排，递归过深转堆排序，小区间用插入排序", "纯堆排序", "归并排序"], "ans": 1, "why": "原文：std::sort 是插入排序、快速排序、堆排序的结合体（introsort）；主体快排，递归深度超过 2*log2(N) 时切换堆排序保证最坏 O(N log N)，子区间长度 ≤ 16 时留给最后的插入排序收尾。"}, {"id": "cpp-187", "type": "choice", "tags": ["STL容器"], "q": "std::sort 中递归深度超过阈值时切换为堆排序的目的是？", "options": ["减少内存占用", "避免快排退化为 O(N²)，保证整体最坏时间复杂度稳定在 O(N log N)", "提高缓存命中率", "支持稳定排序"], "ans": 1, "why": "原文：当递归深度超过 2*log2(N) 时说明快排有退化为 O(N²) 的风险，于是把该子区间交给堆排序处理，保证整体最坏时间复杂度稳定在 O(N log N)。"}, {"id": "cpp-188", "type": "choice", "tags": ["STL容器"], "q": "std::sort 与 std::stable_sort 的区别是？", "options": ["stable_sort 保证相等元素的相对顺序不变，通常用归并排序实现，可能是稳定排序", "两者完全相同", "std::sort 是稳定排序", "stable_sort 更快且不稳定"], "ans": 0, "why": "std::sort 不保证相等元素相对顺序（introsort）；std::stable_sort 保持相等元素的原有相对次序，通常用归并排序实现，可能需要额外内存。"}, {"id": "cpp-189", "type": "choice", "tags": ["STL容器"], "q": "vector 的 size() 与 capacity() 分别表示？", "options": ["已分配容量 与 元素个数", "元素个数 与 不重新分配内存情况下可容纳的元素数", "两者含义相同", "字节大小 与 元素个数"], "ans": 1, "why": "size() 返回当前元素个数；capacity() 返回当前已分配存储空间能容纳的元素数量（不触发重新分配的上限）。通常 capacity() >= size()。"}, {"id": "cpp-190", "type": "choice", "tags": ["STL容器"], "q": "reserve() 与 resize() 的区别是？", "options": ["reserve 只改变容量不改变元素个数；resize 改变元素个数（可能构造或销毁元素）", "两者完全相同", "reserve 会初始化元素", "resize 只改变容量"], "ans": 0, "why": "reserve(n) 仅预分配至少能容纳 n 个元素的空间，不改变 size，不构造元素；resize(n) 改变容器元素个数，增多时会构造/值初始化新元素，减少时会销毁多余元素。"}, {"id": "cpp-191", "type": "choice", "tags": ["STL容器"], "q": "vector 扩容时通常按什么方式增长，目的是什么？", "options": ["每次只多分配一个元素的空间，节省内存", "按倍数增长（常见 1.5 或 2 倍），使多次 push_back 的均摊时间复杂度为 O(1)", "按固定 10 个元素增长", "随机增长"], "ans": 1, "why": "常见实现按 1.5 倍（MSVC）或 2 倍（GCC）增长，使扩容次数为 O(log n)，从而让 push_back 的均摊代价为 O(1)。扩容会导致所有迭代器、指针、引用失效。"}, {"id": "cpp-192", "type": "choice", "tags": ["STL容器"], "q": "关于 STL 迭代器种类，下列哪种不是标准迭代器类别？", "options": ["输入迭代器、输出迭代器", "前向迭代器、双向迭代器、随机访问迭代器", "反向迭代器（适配器）", "循环迭代器"], "ans": 3, "why": "标准迭代器类别为输入、输出、前向、双向、随机访问（C++20 新增 contiguous）；反向迭代器是适配器而非独立类别，「循环迭代器」不是标准类别。"}, {"id": "cpp-193", "type": "choice", "tags": ["STL容器"], "q": "下列容器的迭代器类型匹配错误的是？", "options": ["vector — 随机访问迭代器", "list — 双向迭代器", "forward_list — 前向迭代器", "map — 随机访问迭代器"], "ans": 3, "why": "map/set 的迭代器是双向迭代器（只能 ++/--），不支持随机访问；vector/deque 是随机访问迭代器，list 是双向，forward_list 是前向。"}, {"id": "cpp-194", "type": "choice", "tags": ["STL容器"], "q": "为什么 vector<bool> 常被诟病？", "options": ["它不支持随机访问", "它是按位存储的代理（proxy）特化版本，operator[] 返回代理对象而非 bool&，行为与其他容器不一致", "它性能最好但语法不兼容", "它已被标准废弃"], "ans": 1, "why": "vector<bool> 是空间优化特化版，内部按位存储，operator[] 返回 std::vector<bool>::reference 代理而非真正的 bool&，导致取地址、并发等场景出现意外行为，常建议用 vector<char> 或 bitset 代替。"}, {"id": "cpp-195", "type": "choice", "tags": ["STL容器"], "q": "关于 unordered_map 的 rehash，下列说法正确的是？", "options": ["桶数量不变，只调整链表", "负载因子超过阈值时会重建桶数组并重排元素，导致所有迭代器失效", "rehash 不会使迭代器失效", "rehash 只影响被插入的元素"], "ans": 1, "why": "当元素数量超过 max_load_factor * bucket_count 时会触发 rehash，重新分配桶数组并重新分布元素，此时所有迭代器失效（引用/指针仍有效）。可用 reserve() 预留桶数减少 rehash。"}, {"id": "cpp-196", "type": "choice", "tags": ["智能指针"], "q": "std::unique_ptr 的语义是？", "options": ["共享所有权，引用计数管理", "独占所有权，同一时刻只能有一个 unique_ptr 指向该对象，禁止拷贝、支持移动", "弱引用，不控制生命周期", "可复制的裸指针封装"], "ans": 1, "why": "原文：unique_ptr 是一种独占所有权的智能指针，只能有一个 unique_ptr 指向同一个对象或数组；超出作用域或被显式释放时自动删除所管理的对象。它不可拷贝、只能移动。"}, {"id": "cpp-197", "type": "choice", "tags": ["智能指针"], "q": "std::shared_ptr 通过什么机制管理资源生命周期？", "options": ["垃圾回收", "引用计数，当最后一个 shared_ptr 不再指向对象时释放资源", "作用域结束自动释放，与引用计数无关", "手动调用 delete"], "ans": 1, "why": "原文：shared_ptr 通过引用计数管理资源生命周期，可以有多个 shared_ptr 指向同一对象，只有当最后一个 shared_ptr 超出作用域或被显式释放时资源才被删除。"}, {"id": "cpp-198", "type": "choice", "tags": ["智能指针"], "q": "std::weak_ptr 的作用是？", "options": ["独立管理对象生命周期", "弱引用：指向 shared_ptr 管理的对象但不增加引用计数，用于打破循环引用；通过 lock() 获取有效的 shared_ptr", "替代 unique_ptr", "自动释放 shared_ptr"], "ans": 1, "why": "原文：weak_ptr 可以指向由 shared_ptr 管理的对象，但不会增加引用计数，主要用于解决 shared_ptr 的循环引用问题，通过 weak_ptr.lock() 获取有效的 shared_ptr 访问对象。"}, {"id": "cpp-199", "type": "choice", "tags": ["智能指针"], "q": "解决 shared_ptr 循环引用的正确做法是？", "options": ["把其中一个引用改为 weak_ptr，打破计数闭环", "把两个都改成 shared_ptr 并手动 delete", "使用 unique_ptr 互相引用", "在析构函数中调用 reset() 并不能解决"], "ans": 0, "why": "原文：循环依赖导致引用计数永远不为 0，资源无法释放；把环上的一条边改成 weak_ptr（不增加引用计数）即可打破循环。"}, {"id": "cpp-200", "type": "choice", "tags": ["智能指针"], "q": "推荐使用 make_shared 而不是直接 new 的原因是？", "options": ["语法更短，且一次分配同时创建对象与控制块，减少内存分配次数并提升异常安全性", "make_shared 一定更快但异常不安全", "没有区别", "make_shared 只能用于 unique_ptr"], "ans": 0, "why": "make_shared 一次分配对象与控制块（引用计数），减少一次内存分配、提高缓存局部性，并避免 f(shared_ptr<T>(new T), g()) 这类因求值顺序导致的异常泄漏问题。"}, {"id": "cpp-201", "type": "choice", "tags": ["智能指针"], "q": "shared_ptr 的引用计数本身是线程安全的吗？", "options": ["引用计数的增减是原子的（线程安全），但被指向对象的读写仍需用户自己同步", "完全线程安全，包括对象访问", "完全不安全，连计数都不安全", "只有 unique_ptr 是线程安全的"], "ans": 0, "why": "标准保证多个 shared_ptr 实例（即使是同一对象的不同副本）的引用计数操作是原子且线程安全的；但通过 shared_ptr 访问被管理对象本身并不自动加锁，需要用户同步。"}, {"id": "cpp-202", "type": "choice", "tags": ["智能指针"], "q": "unique_ptr 转为 shared_ptr 的方式是？", "options": ["无法转换", "可以直接移动构造/赋值给 shared_ptr（std::shared_ptr<T> sp = std::move(up);）", "只能通过 get() 取裸指针", "只能通过拷贝构造"], "ans": 1, "why": "shared_ptr 可由 unique_ptr&& 构造（移动），此后 unique_ptr 为空、所有权转移给 shared_ptr；反向（shared_ptr 转 unique_ptr）不被允许。"}, {"id": "cpp-203", "type": "choice", "tags": ["智能指针"], "q": "关于 shared_ptr 与裸指针混用的风险，下列说法正确的是？", "options": ["没有任何风险", "用同一裸指针构造多个 shared_ptr 会创建多个独立控制块，导致重复释放", "shared_ptr 会自动接管裸指针的所有权计数", "混用能提升性能"], "ans": 1, "why": "int* p = new int; shared_ptr<int> a(p); shared_ptr<int> b(p); 会产生两个控制块、两个引用计数，析构时重复 delete，属于经典错误。应始终用 make_shared 或从已有的 shared_ptr 拷贝。"}, {"id": "cpp-204", "type": "choice", "tags": ["智能指针"], "q": "enable_shared_from_this 解决的问题是？", "options": ["在类的成员函数中安全地获取指向自身的 shared_ptr（而不会创建新控制块）", "让类不能被 shared_ptr 管理", "替代 weak_ptr", "自动打破循环引用"], "ans": 0, "why": "在成员函数内写 shared_ptr<T>(this) 会创建新的控制块导致重复释放；继承 enable_shared_from_this 后调用 shared_from_this() 可返回与已有 shared_ptr 共享同一控制块的指针。"}, {"id": "cpp-205", "type": "choice", "tags": ["智能指针"], "q": "unique_ptr 支持自定义删除器，其类型是？", "options": ["删除器类型是 unique_ptr 类型的一部分（模板参数），不同删除器是不同类型", "删除器类型与 unique_ptr 类型无关，运行时指定", "unique_ptr 不支持自定义删除器", "只能通过 lambda 指定"], "ans": 0, "why": "unique_ptr<T, Deleter> 把删除器作为模板参数，因此删除器类型不同则 unique_ptr 类型不同，且无状态删除器不增加对象大小（空基类优化）；shared_ptr 的删除器是控制块的一部分，不影响指针类型。"}, {"id": "cpp-206", "type": "choice", "tags": ["智能指针"], "q": "shared_ptr::reset() 的作用是？", "options": ["重置引用计数为 0 但不释放对象", "释放当前对象所有权（引用计数减 1，若为 0 则销毁对象），可选地指向新对象", "把对象内容清零", "重新分配控制块"], "ans": 1, "why": "reset() 使当前 shared_ptr 放弃所有权，引用计数递减，若变为 0 则销毁对象；reset(p) 则改为管理新指针 p。"}, {"id": "cpp-207", "type": "choice", "tags": ["智能指针"], "q": "weak_ptr::lock() 与 expired() 的作用是？", "options": ["expired() 判断所指对象是否已被释放；lock() 返回一个 shared_ptr，对象已释放则返回空", "两者作用相同", "lock() 用于加锁，expired() 用于解锁", "expired() 会自动释放对象"], "ans": 0, "why": "lock() 原子地返回一个有效的 shared_ptr（对象已销毁时为空）；expired() 等价于 use_count()==0，用于判断资源是否已释放。"}, {"id": "cpp-208", "type": "choice", "tags": ["智能指针"], "q": "C++11 中被弃用、C++17 中被移除的智能指针是？", "options": ["auto_ptr", "scoped_ptr", "shared_ptr", "intrusive_ptr"], "ans": 0, "why": "auto_ptr 因拷贝会转移所有权、无法用于容器等缺陷，在 C++11 被弃用（deprecated）、C++17 中被移除，由 unique_ptr 取代。"}, {"id": "cpp-209", "type": "fill", "tags": ["智能指针"], "q": "shared_ptr 循环引用导致引用计数永远不为 0，需要用 ______ 打破循环。", "ans": ["weak_ptr"], "why": "原文：weak_ptr 不会增加引用计数，主要用于解决 shared_ptr 的循环引用问题。"}, {"id": "cpp-210", "type": "choice", "tags": ["新特性"], "q": "左值与右值的核心区别是？", "options": ["左值是持久对象，表达式结束后依然存在；右值是临时对象，表达式结束即销毁", "左值在左边，右值在右边", "左值不能取地址，右值可以", "两者没有区别"], "ans": 0, "why": "原文：左值指表达式结束后依然存在的持久对象；右值指表达式结束就不再存在的临时对象。区别在于左值持久、右值短暂。"}, {"id": "cpp-211", "type": "choice", "tags": ["新特性"], "q": "右值引用如何声明，主要作用是什么？", "options": ["T&，用于绑定左值", "T&&，用于实现移动语义与完美转发", "const T&，用于只读访问", "T*，用于指针传递"], "ans": 1, "why": "原文：右值引用通过 && 获得，只能绑定到将要销毁的对象；作用一是实现移动语义（转移资源所有权），二是用于完美转发（保持参数的值类别）。"}, {"id": "cpp-212", "type": "choice", "tags": ["新特性"], "q": "左值引用（非 const）不能绑定到什么？", "options": ["具名变量", "字面常量、需要转换的表达式、返回右值的表达式", "静态变量", "类成员"], "ans": 1, "why": "原文：左值引用不能绑定到要转换的表达式、字面常量或返回右值的表达式；右值引用恰好相反，可以绑定这类表达式但不能绑定左值。"}, {"id": "cpp-213", "type": "choice", "tags": ["新特性"], "q": "std::move 的本质是？", "options": ["真的移动了对象的数据", "仅做一次强制类型转换：把实参（经引用折叠后）static_cast 为 T&&，使其可以匹配移动构造/移动赋值", "复制对象后销毁原对象", "把对象移到堆上"], "ans": 1, "why": "原文：std::move 利用引用折叠接收任意实参，remove_reference 去掉引用得到类型 T，最后 static_cast<T&&> 返回右值引用。它本身不移动任何数据，真正的移动由移动构造函数完成。"}, {"id": "cpp-214", "type": "choice", "tags": ["新特性"], "q": "引用折叠规则中，左值传给 T&& 形参的结果是？", "options": ["T&& && 折叠为 T&&", "T&& & 折叠为 T&（左值引用）", "保持 T&& 不变", "折叠为 const T&"], "ans": 1, "why": "原文：右值传递给 T&& 形参仍是右值（T&& && → T&&）；左值传递给 T&& 形参是左值引用（T&& & → T&）。"}, {"id": "cpp-215", "type": "choice", "tags": ["新特性"], "q": "std::move(var) 之后，var 的状态是？", "options": ["被销毁，不能再使用", "仍是一个合法但未指定状态的对象（资源已被转移），可以重新赋值或析构", "变为 nullptr", "被置为默认值 0"], "ans": 1, "why": "std::move 只是把 var 转为右值，随后的移动构造/赋值会转移其资源。移动后 var 处于有效但未指定（valid but unspecified）状态：可以析构或赋新值，但不应依赖其原有内容。"}, {"id": "cpp-216", "type": "choice", "tags": ["新特性"], "q": "移动语义带来的主要好处是？", "options": ["避免大型对象不必要的深拷贝，把资源所有权直接转移，提高性能", "让代码更安全，杜绝空指针", "减少内存占用", "让对象可以跨线程共享"], "ans": 0, "why": "原文：移动语义通过右值引用和移动构造函数优化对象传递，把资源所有权从一个对象转移到另一个对象，避免深拷贝开销，在动态内存管理和容器元素移动时收益明显。"}, {"id": "cpp-217", "type": "choice", "tags": ["新特性"], "q": "std::forward 与 std::move 的区别是？", "options": ["两者完全等价", "forward 用于完美转发，按模板参数 T 的推导结果有条件地转换（保留原值类别）；move 无条件转为右值", "forward 只能用于左值", "move 用于转发，forward 用于移动"], "ans": 1, "why": "std::forward<T>(t) 在 T 推导为左值引用时返回左值、否则返回右值，从而保持实参原始的值类别，实现完美转发；std::move 无条件把实参转为右值。"}, {"id": "cpp-218", "type": "choice", "tags": ["新特性"], "q": "nullptr 相比 NULL 的优势是？", "options": ["只是语法糖，没有区别", "nullptr 是有类型的空指针常量（std::nullptr_t），不会在重载时与整型混淆，避免 f(NULL) 误匹配 f(int)", "NULL 是关键字，nullptr 是宏", "nullptr 可以直接当整数用"], "ans": 1, "why": "NULL 通常是 0（整型），在函数重载 f(int) 与 f(char*) 时会匹配到整型版本；nullptr 是 std::nullptr_t 类型，只能转换为指针类型，重载解析明确。"}, {"id": "cpp-219", "type": "choice", "tags": ["新特性"], "q": "auto 类型推导时，下面哪种写法会保留引用与 const？", "options": ["auto x = expr;", "auto& x = expr; 或 const auto& x = expr;", "auto&& 一定产生右值引用", "auto 永远保留顶层 const"], "ans": 1, "why": "auto x = expr 会去掉引用和顶层 const（拷贝语义）；auto& / const auto& 显式保留引用与常量性；auto&& 是万能引用，依初始化表达式推导为左值或右值引用。"}, {"id": "cpp-220", "type": "choice", "tags": ["新特性"], "q": "范围 for 循环（for (auto& x : v)）的适用条件是？", "options": ["任何类型都可以", "对象提供 begin()/end() 或能用 std::begin/std::end（如数组与标准容器）", "必须是 vector", "必须含虚函数"], "ans": 1, "why": "范围 for 要求范围表达式能求出 begin/end 迭代器（成员 begin/end 或 ADL 找到的自由函数），因此标准容器、原生数组、初始化列表都可用。"}, {"id": "cpp-221", "type": "choice", "tags": ["新特性"], "q": "lambda 表达式 [=] 与 [&] 的含义是？", "options": ["[=] 以引用捕获外部变量，[&] 以值捕获", "[=] 以值（拷贝）捕获外部变量，[&] 以引用捕获", "两者都是值捕获", "两者都是引用捕获"], "ans": 1, "why": "[=] 默认按值拷贝捕获使用的外部变量（默认在 const 的 operator() 中，修改需 mutable）；[&] 按引用捕获，需注意悬空引用风险。也可用 [this]、[x, &y] 显式指定。"}, {"id": "cpp-222", "type": "choice", "tags": ["新特性"], "q": "constexpr 的作用是？", "options": ["声明变量或函数为编译期可求值的常量表达式，可用于数组长度、模板参数等场合", "等价于 const，无任何区别", "只能在运行时求值", "用于声明线程局部变量"], "ans": 0, "why": "constexpr 表明值或函数可在编译期求值，可用于需要编译期常量的上下文（数组大小、case 标签、模板非类型参数）；const 只表示运行时不可修改。"}, {"id": "cpp-223", "type": "choice", "tags": ["新特性"], "q": "关于 std::thread 的join 与 detach，下列说法正确的是？", "options": ["线程对象析构前必须调用 join() 或 detach()，否则 std::terminate", "两种都不调用也安全", "detach 后主线程必须等待子线程结束", "join 之后线程仍在后台运行"], "ans": 0, "why": "std::thread 对象在析构时若仍 joinable（既未 join 也未 detach），会调用 std::terminate 终止程序；detach 后线程在后台运行且不可再 join。"}, {"id": "cpp-224", "type": "choice", "tags": ["新特性"], "q": "std::atomic 与互斥锁的区别是？", "options": ["atomic 提供无锁的原子操作（适用于简单类型），开销通常更小；mutex 用于保护临界区，适用范围更广", "两者完全等价", "atomic 只能保护代码块", "mutex 只能用于整数"], "ans": 0, "why": "std::atomic 对整型、指针等提供原子读改写（如 fetch_add、compare_exchange），通常无锁、开销低；mutex 用于保护任意复杂临界区，但存在阻塞与上下文切换开销。"}, {"id": "cpp-225", "type": "choice", "tags": ["新特性"], "q": "下列哪个不是 C++11 引入的特性？", "options": ["auto 类型推导", "lambda 表达式", "右值引用与移动语义", "概念（concepts）"], "ans": 3, "why": "Concepts 是 C++20 引入的；auto、lambda、右值引用/移动语义、智能指针、nullptr、范围 for、thread 库等均为 C++11 特性。"}, {"id": "cpp-226", "type": "choice", "tags": ["模板泛型"], "q": "函数模板与类模板在实例化方式上的区别是？", "options": ["函数模板由编译器在处理函数调用时自动推导实例化；类模板必须显式指定模板实参", "两者都必须显式指定", "两者都能自动推导", "类模板不能被实例化"], "ans": 0, "why": "原文：函数模板实例化由编译程序在处理函数调用时自动完成（实参推断）；类模板实例化需要在模板名后的尖括号中显式指定类型。"}, {"id": "cpp-227", "type": "choice", "tags": ["模板泛型"], "q": "关于模板特化，下列说法正确的是？", "options": ["函数模板只能全特化；类模板可以全特化也可以偏特化", "两者都只能全特化", "两者都可以偏特化", "函数模板不能特化"], "ans": 0, "why": "原文：函数模板只能全特化；类模板可以全特化，也可以偏特化。函数模板的「偏特化」通常通过重载实现。"}, {"id": "cpp-228", "type": "choice", "tags": ["模板泛型"], "q": "模板参数列表中 class 与 typename 的关系是？", "options": ["完全等价，可互换使用（在模板参数列表中）", "class 只能用于类模板", "typename 只能用于函数模板", "typename 还能用于声明嵌套依赖类型名，class 不能"], "ans": 0, "why": "原文：模板类型参数前必须使用 class 或 typename，在模板参数列表中这两个关键字含义相同、可互换。但声明嵌套依赖类型名时只能使用 typename（如 typename T::value_type）。"}, {"id": "cpp-229", "type": "choice", "tags": ["模板泛型"], "q": "类模板的默认参数情况是？", "options": ["类模板在模板参数列表中可以有默认参数，函数模板（C++11 前）不支持", "函数模板可以有默认参数，类模板不能", "两者都不能有", "两者都可以"], "ans": 0, "why": "原文：类模板在模板参数列表中可以有默认参数（如 template<class T, class Alloc = allocator<T>>）；函数模板的模板参数默认实参在 C++11 起才被支持，且实践中较少使用。"}, {"id": "cpp-230", "type": "choice", "tags": ["模板泛型"], "q": "可变参数模板中，用于获取参数包元素个数的运算符是？", "options": ["sizeof", "sizeof...", "countof", "pack_size"], "ans": 1, "why": "原文：当需要知道包中有多少元素时，可以使用 sizeof... 运算符（如 sizeof...(Args)）。"}, {"id": "cpp-231", "type": "choice", "tags": ["模板泛型"], "q": "可变参数模板通常采用什么方式展开参数包？", "options": ["递归展开：定义一个处理最后一个元素的终止版本和一个变长版本，变长版本不断调用自身", "用 for 循环遍历参数包", "用 switch 逐个处理", "无法展开，只能特化"], "ans": 0, "why": "原文：可变参数函数通常是递归的，第一个版本 print_fun 负责终止递归并打印最后一个实参，第二个版本打印绑定到 t 的实参并调用自身处理剩余值。"}, {"id": "cpp-232", "type": "choice", "tags": ["模板泛型"], "q": "模板的定义通常放在哪里，原因是？", "options": ["放在 .cpp 中，加快编译", "放在头文件中，因为实例化时编译器需要看到完整的模板定义", "放在源文件中即可", "放在静态库中"], "ans": 1, "why": "模板在使用点实例化，编译器需要看到完整定义才能生成代码，因此模板定义通常放在头文件（或使用显式实例化 extern template 等特殊手段）。"}, {"id": "cpp-233", "type": "choice", "tags": ["模板泛型"], "q": "模板的缺点不包括？", "options": ["可能导致代码膨胀（每个类型生成一份实例）", "编译时间变长", "错误信息难读", "运行时性能必然下降"], "ans": 3, "why": "模板在编译期完成实例化，通常不引入运行时开销（甚至因内联而更快）；缺点主要是代码膨胀、编译时间增加和错误信息冗长。"}, {"id": "cpp-234", "type": "choice", "tags": ["模板泛型"], "q": "typename 关键字在下面哪种场景中是必须的？", "options": ["声明模板类型参数（可与 class 互换）以及声明嵌套依赖类型名（typename T::iterator）", "声明普通变量类型", "声明类成员", "声明命名空间"], "ans": 0, "why": "两种典型场景：① template<typename T>（此处与 class 等价）；② 在模板中引用依赖于模板参数的嵌套类型时必须写 typename，否则编译器默认把它当作值处理。"}, {"id": "cpp-235", "type": "choice", "tags": ["模板泛型"], "q": "下列代码中 func(ptr) 与 func(val) 分别调用哪个重载？（func(T&) 与 func(T&&)）", "options": ["两者都调用 func(T&)", "变量（左值）匹配 T&，字面量或 std::move 后的右值匹配 T&&", "两者都调用 func(T&&)", "编译错误（重载歧义）"], "ans": 1, "why": "左值优先绑定到左值引用重载，右值优先绑定到右值引用重载；这是实现移动语义与完美转发的重载解析基础。"}, {"id": "cpp-236", "type": "choice", "tags": ["新特性"], "q": "完美转发（perfect forwarding）的目的是？", "options": ["在函数模板中把参数连同其值类别（左值/右值）原封不动地传给另一个函数", "复制参数以避免修改", "把参数转换为右值以触发移动", "把参数转换为左值以延长生命周期"], "ans": 0, "why": "原文：在函数模板中使用右值引用形参（T&&）配合 std::forward<T> 可保持原参数的值类别，将其传递给另一个函数，这就是完美转发。"}, {"id": "cpp-237", "type": "choice", "tags": ["新特性"], "q": "移动构造函数通常应如何声明？", "options": ["T(T&& other) noexcept，把 other 的资源指针接管过来并把 other 置空", "T(const T& other)，深拷贝", "T(T& other)，浅拷贝", "T(T&& other) = delete;"], "ans": 0, "why": "移动构造函数接收 T&&，接管资源（指针赋值）并把源对象指针置空避免二次释放；应标记 noexcept，否则 vector 扩容等场景仍会退化为拷贝以保证强异常安全。"}, {"id": "cpp-238", "type": "choice", "tags": ["新特性"], "q": "std::vector 在扩容时若元素类型的移动构造函数不是 noexcept，会怎样？", "options": ["仍然使用移动", "为保持强异常安全保证，改用拷贝构造", "编译失败", "直接崩溃"], "ans": 1, "why": "vector 扩容要求「要么成功要么保持原状」的强异常安全保证；若移动构造可能抛异常，标准库会退化为使用拷贝构造（若拷贝不可用则编译错误）。因此移动构造应加 noexcept。"}, {"id": "cpp-239", "type": "choice", "tags": ["STL容器"], "q": "关于 vector 的 shrink_to_fit，下列说法正确的是？", "options": ["一定会把 capacity 收缩到 size", "是非强制请求，实现可以忽略；且可能触发重新分配使迭代器失效", "只能用于空 vector", "会自动释放所有内存"], "ans": 1, "why": "shrink_to_fit 是非绑定请求，标准允许实现忽略；若发生重新分配，所有迭代器、指针和引用都会失效。"}, {"id": "cpp-240", "type": "choice", "tags": ["STL容器"], "q": "下列哪个操作不会使 vector 的迭代器失效？", "options": ["push_back 触发扩容", "在中间 insert 元素", "只读取元素（operator[] 访问，不修改容器结构）", "erase 中间元素"], "ans": 2, "why": "纯读取（operator[]、at、解引用迭代器）不改变容器结构，迭代器保持有效；插入/删除/扩容都可能使迭代器失效。"}, {"id": "cpp-241", "type": "choice", "tags": ["STL容器"], "q": "map 的 operator[] 与 at() 的区别是？", "options": ["operator[] 在键不存在时会插入一个默认构造的值；at() 键不存在时抛出 std::out_of_range", "两者行为完全相同", "at() 会插入默认值", "operator[] 只能用于 const map"], "ans": 0, "why": "map::operator[] 是「不存在则插入（默认构造 value）」，会改变容器，因此 const map 上不可用；at() 不插入、找不到时抛 std::out_of_range，且有 const 重载。"}, {"id": "cpp-242", "type": "choice", "tags": ["STL容器"], "q": "关于迭代器的 const_iterator，下列说法正确的是？", "options": ["可以修改指向的元素", "只能读取不能修改元素；C++11 起可用 cbegin()/cend() 获取", "不能用于遍历", "只能用于 set"], "ans": 1, "why": "const_iterator 解引用得到 const 引用，只能读取；C++11 引入 cbegin()/cend() 便于在泛型代码中显式取得常量迭代器。"}, {"id": "cpp-243", "type": "choice", "tags": ["STL容器"], "q": "下列容器适配器中，默认底层容器为 vector 的是？", "options": ["stack", "queue", "priority_queue", "deque"], "ans": 2, "why": "原文：priority_queue 默认基于 vector 实现（并用堆组织）；stack 与 queue 默认基于 deque。"}, {"id": "cpp-244", "type": "choice", "tags": ["STL容器"], "q": "关于 set 的插入返回值，下列说法正确的是？", "options": ["返回 bool", "返回 pair<iterator, bool>，second 表示是否真的插入了新元素", "返回 void", "返回元素个数"], "ans": 1, "why": "set/map 的 insert 返回 pair<iterator, bool>：first 指向元素（已存在时指向已有元素），second 为 true 表示插入成功、false 表示键已存在未插入。"}, {"id": "cpp-245", "type": "choice", "tags": ["STL容器"], "q": "为什么 aluminium 容器中存放的元素需要满足可拷贝/可移动等要求（如 vector<T> 要求 T 可析构）？", "options": ["标准强制所有类型都可拷贝", "容器在扩容、插入、销毁时会拷贝或移动元素，因此元素类型需满足相应语义要求（C++11 后可用移动-only 类型）", "只是编译器的历史包袱", "没有这回事"], "ans": 1, "why": "容器的实现依赖元素的构造/拷贝/移动/析构语义，vector 扩容要移动或拷贝元素。C++11 后 vector 支持 move-only 类型（如 unique_ptr），前提是移动操作可用且 noexcept 更优。"}, {"id": "cpp-246", "type": "fill", "tags": ["基础语法"], "q": "指针所指向的内存空间在程序运行过程中可以改变，而 ______ 一旦绑定对象就不能再改变。", "ans": ["引用"], "why": "原文：指针指向可以改变，引用所绑定的对象一旦绑定就不能改变。"}, {"id": "cpp-247", "type": "fill", "tags": ["基础语法"], "q": "未初始化的指针称为 ______ 指针；指向的内存已被释放的指针称为 ______ 指针。", "ans": ["野 悬空", "野指针 悬空指针"], "why": "原文：野指针是不确定其指向的指针，未初始化的指针为野指针；内存释放后仍指向该空间的指针为悬空指针。"}, {"id": "cpp-248", "type": "fill", "tags": ["基础语法"], "q": "const 位于 * 左侧的是常量指针，位于 * 右侧的是 ______。", "ans": ["指针常量"], "why": "原文：const 在 * 左侧表示指向的对象是常量（常量指针）；const 在 * 右侧表示指针本身是常量（指针常量）。"}, {"id": "cpp-249", "type": "fill", "tags": ["基础语法"], "q": "局部变量存放在 ______ 区，全局变量和静态变量存放在 ______ 区。", "ans": ["栈 静态存储", "栈区 静态存储区"], "why": "原文：静态存储区存放全局变量、静态局部变量、静态全局变量；栈存放局部变量。"}, {"id": "cpp-250", "type": "fill", "tags": ["基础语法"], "q": "static 修饰全局变量和函数的作用是 ______，使其只能在定义它的文件中使用。", "ans": ["隐藏"], "why": "原文：隐藏——static 作用于全局变量和函数，改变了作用域，使其只能在定义它的文件中使用。"}, {"id": "cpp-251", "type": "fill", "tags": ["基础语法"], "q": "未初始化的全局静态变量存放在 ______ 段，系统会自动将其清零。", "ans": ["BSS", "bss"], "why": "原文：未初始化的全局静态变量存放在 BSS 段（未初始化数据段），程序启动时会把该段清零。"}, {"id": "cpp-252", "type": "fill", "tags": ["基础语法"], "q": "volatile 关键字 ______（具备/不具备）原子性。", "ans": ["不具备"], "why": "原文：volatile 不具有原子性，它只阻止编译器把变量缓存到寄存器。"}, {"id": "cpp-253", "type": "fill", "tags": ["基础语法"], "q": "char arr[10]=\"hello\" 中，strlen(arr) 的结果是 ______，sizeof(arr) 的结果是 ______。", "ans": ["5 10"], "why": "原文示例输出：5 和 10。strlen 不含 \\0，sizeof 统计分配的 10 字节。"}, {"id": "cpp-254", "type": "fill", "tags": ["基础语法"], "q": "strlen 是 ______（填「库函数」或「运算符」），在运行时计算；sizeof 是 ______，在编译时计算。", "ans": ["库函数 运算符"], "why": "原文：strlen 是头文件中的函数，sizeof 是 C++ 中的运算符；strlen 运行时计算，sizeof 编译时计算。"}, {"id": "cpp-255", "type": "fill", "tags": ["基础语法", "编译链接"], "q": "#include <文件名> 先在 ______ 目录中查找，#include \"文件名\" 先在 ______ 目录中查找。", "ans": ["标准库头文件 当前源文件", "标准库 当前源文件所在"], "why": "原文：<> 在标准库头文件所在目录查找；\"\" 在当前源文件所在目录查找。"}, {"id": "cpp-256", "type": "fill", "tags": ["基础语法"], "q": "空指针常量 nullptr 的类型是 std::______。", "ans": ["nullptr_t"], "why": "nullptr 的类型是 std::nullptr_t，可转换为任意指针类型，但不能转换为整型，从而避免与 NULL 的重载歧义。"}, {"id": "cpp-257", "type": "fill", "tags": ["内存管理"], "q": "虚拟内存三大作用中，把不常用内存换出到硬盘的 ______ 区域，依赖程序的局部性原理。", "ans": ["swap"], "why": "原文：对没有被经常使用到的内存，可以把它换出到物理内存之外，比如硬盘上的 swap 区域。"}, {"id": "cpp-258", "type": "fill", "tags": ["内存管理"], "q": "程序地址空间中，已初始化的全局变量存放在 ______ 段，未初始化的存放在 BSS 段。", "ans": ["数据段", "data"], "why": "原文：数据段包括已初始化的静态常量和全局变量；BSS 段包括未初始化的静态变量和全局变量。"}, {"id": "cpp-259", "type": "fill", "tags": ["内存管理"], "q": "Linux 下栈的大小一般是 ______ MB。", "ans": ["8"], "why": "原文：栈的大小是固定的，一般是 8 MB。"}, {"id": "cpp-260", "type": "fill", "tags": ["内存管理"], "q": "内存对齐是以 ______ 换 ______ 的方式提高 CPU 访问性能。", "ans": ["空间 时间"], "why": "原文：内存对齐以空间换时间的方式提高 CPU 访问数据的性能。"}, {"id": "cpp-261", "type": "fill", "tags": ["内存管理"], "q": "判断两个结构体是否相等不能用 memcmp，正确做法是重载 ______ 运算符。", "ans": ["==", "operator=="], "why": "原文：需要重载操作符 == 判断两个结构体是否相等，不能用 memcmp（对齐字节内容随机）。"}, {"id": "cpp-262", "type": "fill", "tags": ["内存管理"], "q": "new 分配失败会抛出 ______ 异常，malloc 分配失败返回 ______。", "ans": ["bad_alloc NULL", "std::bad_alloc NULL"], "why": "原文：new 分配内存失败会抛异常（bad_alloc）；malloc 分配失败后返回 NULL。"}, {"id": "cpp-263", "type": "fill", "tags": ["内存管理"], "q": "delete 先调用对象的 ______ 函数，再调用 operator delete 释放内存。", "ans": ["析构"], "why": "原文：delete 首先执行该对象所属类的析构函数，进而调用 operator delete 释放所占的内存空间。"}, {"id": "cpp-264", "type": "fill", "tags": ["内存管理"], "q": "释放数组应使用 delete______，它会对每个成员调用一次析构函数。", "ans": ["[]", "[] "], "why": "原文：delete[] 用来释放数组空间，会对数组中的每个成员都调用一次析构函数。"}, {"id": "cpp-265", "type": "fill", "tags": ["内存管理"], "q": "new 申请的内存区域在 C++ 中称为 ______ 区。", "ans": ["自由存储"], "why": "原文：new 所申请的内存区域在 C++ 中称为自由存储区。"}, {"id": "cpp-266", "type": "fill", "tags": ["内存管理"], "q": "malloc 分配大于 128K 的内存时调用的系统调用是 ______()。", "ans": ["mmap"], "why": "原文：大于 128K 时调用 mmap()，在虚拟地址空间中开辟一块内存空间。"}, {"id": "cpp-267", "type": "fill", "tags": ["内存管理"], "q": "重载 ______ 和 ______ 是允许的，而 malloc/free 不能被重载。", "ans": ["operator new operator delete"], "why": "原文：operator new / operator delete 可以被重载，malloc / free 则不能重载。"}, {"id": "cpp-268", "type": "fill", "tags": ["内存管理"], "q": "fork 后父子进程共享物理页，任一方写入时才复制该页，这种机制叫 ______（缩写 COW）。", "ans": ["写时复制", "Copy-On-Write", "COW"], "why": "写时复制（Copy-On-Write）：fork 后页表共享并标为只读，写入触发缺页异常后内核复制该页。"}, {"id": "cpp-269", "type": "fill", "tags": ["内存管理"], "q": "calloc 与 malloc 的区别在于 calloc 会把分配的内存 ______。", "ans": ["清零", "初始化为0", "置零"], "why": "calloc 分配内存后会将其全部清零；malloc 只分配不初始化，内容未定义。"}, {"id": "cpp-270", "type": "fill", "tags": ["内存管理"], "q": "资源获取即初始化的缩写是 ______。", "ans": ["RAII"], "why": "RAII：Resource Acquisition Is Initialization，在构造时获取资源、析构时释放，是智能指针的基础。"}, {"id": "cpp-271", "type": "fill", "tags": ["面向对象"], "q": "面向对象的三大特性是封装、______、______。", "ans": ["继承 多态"], "why": "原文：封装、继承、多态。"}, {"id": "cpp-272", "type": "fill", "tags": ["面向对象"], "q": "class 的默认访问权限是 ______，struct 的默认访问权限是 ______。", "ans": ["private public"], "why": "原文：struct 默认 public，class 默认 private；默认继承方式同理。"}, {"id": "cpp-273", "type": "fill", "tags": ["面向对象"], "q": "运行时多态通过 ______ 函数实现，依赖虚函数表和虚表指针。", "ans": ["虚"], "why": "原文：运行时多态通过虚函数和继承实现，通过虚函数指针找到虚函数表，从而调用实际类型的函数。"}, {"id": "cpp-274", "type": "fill", "tags": ["面向对象"], "q": "虚表指针存放在对象内存空间的 ______（最前面/最后面）。", "ans": ["最前面"], "why": "原文：虚表指针存放在对象的内存空间中最前面的位置，以保证正确取到虚函数的偏移量。"}, {"id": "cpp-275", "type": "fill", "tags": ["面向对象"], "q": "虚函数表与 ______ 绑定，虚表指针与 ______ 绑定。", "ans": ["类 对象"], "why": "原文：虚函数表和类绑定，虚表指针和对象绑定；同类的不同对象共享虚表，各有自己的虚表指针。"}, {"id": "cpp-276", "type": "fill", "tags": ["面向对象"], "q": "纯虚函数的声明形式是在虚函数后加 ______。", "ans": ["=0", "= 0"], "why": "原文：virtual void function() = 0; 其中 =0 表示这是纯虚函数。"}, {"id": "cpp-277", "type": "fill", "tags": ["面向对象"], "q": "含有纯虚函数的类称为 ______ 类，不能实例化。", "ans": ["抽象"], "why": "原文：含有纯虚函数的类被称为抽象类，抽象类不能被实例化，只能作为接口使用。"}, {"id": "cpp-278", "type": "fill", "tags": ["面向对象"], "q": "C++ 空类的大小是 ______ 字节。", "ans": ["1"], "why": "原文：C++ 空类的大小是 1 字节，保证每个对象有独一无二的地址。"}, {"id": "cpp-279", "type": "fill", "tags": ["面向对象"], "q": "只含一个虚函数的类在 64 位下大小为 ______ 字节（一个虚表指针的大小）。", "ans": ["8"], "why": "原文：只含虚函数的类大小为平台指针大小，32 位 4 字节，64 位 8 字节。"}, {"id": "cpp-280", "type": "fill", "tags": ["面向对象"], "q": "派生类中同名函数会 ______（屏蔽）基类的同名函数，与参数列表是否相同无关。", "ans": ["隐藏"], "why": "原文：隐藏是指派生类的函数屏蔽了与其同名的基类函数，只要同名，不管参数列表是否相同。"}, {"id": "cpp-281", "type": "fill", "tags": ["面向对象"], "q": "四种类型转换中，用于多态类型安全向下转型（需要 RTTI）的是 ______。", "ans": ["dynamic_cast"], "why": "dynamic_cast 依赖 RTTI，要求源类型含虚函数；指针失败返回 nullptr，引用失败抛 std::bad_cast。"}, {"id": "cpp-282", "type": "fill", "tags": ["面向对象"], "q": "移除 const/volatile 限定使用的类型转换是 ______。", "ans": ["const_cast"], "why": "const_cast 用于去除对象的 const/volatile 属性。"}, {"id": "cpp-283", "type": "fill", "tags": ["面向对象"], "q": "operator= 通常应返回 ______ 以支持连锁赋值。", "ans": ["*this 的引用", "reference to *this", "T&"], "why": "Effective C++：令 operator= 返回 reference to *this，支持 a = b = c。"}, {"id": "cpp-284", "type": "fill", "tags": ["面向对象"], "q": "菱形继承中顶层基类出现多份副本，用 ______ 继承可以解决。", "ans": ["虚"], "why": "虚继承（virtual public Base）让多个中间派生类共享同一份基类子对象，消除冗余与二义性。"}, {"id": "cpp-285", "type": "fill", "tags": ["面向对象"], "q": "static 成员函数没有 ______ 指针，因此不能访问非静态成员。", "ans": ["this"], "why": "原文：静态成员函数没有 this 指针，只能访问静态成员变量或静态成员函数。"}, {"id": "cpp-286", "type": "fill", "tags": ["STL容器"], "q": "STL 容器三大类是序列式容器、关联式容器和 ______。", "ans": ["容器适配器"], "why": "原文：序列式容器、关联式容器和容器适配器三大类。"}, {"id": "cpp-287", "type": "fill", "tags": ["STL容器"], "q": "map、set 等有序关联容器的底层是 ______ 树，查找复杂度 O(log n)。", "ans": ["红黑"], "why": "原文：有序关联容器基于红黑树实现。"}, {"id": "cpp-288", "type": "fill", "tags": ["STL容器"], "q": "unordered_map 的底层是 ______ 表，冲突通常用链地址法解决。", "ans": ["哈希", "hash"], "why": "原文：unordered_map 底层基于哈希表，维护哈希桶数组，通常用链地址法解决冲突。"}, {"id": "cpp-289", "type": "fill", "tags": ["STL容器"], "q": "priority_queue 用 ______ 这种数据结构组织数据，默认底层容器是 vector。", "ans": ["堆", "heap"], "why": "原文：priority_queue 底层采用 vector 存储，并用堆重新组织数据，保证优先级最高的元素在队头。"}, {"id": "cpp-290", "type": "fill", "tags": ["STL容器"], "q": "stack 和 queue 默认基于 ______ 实现。", "ans": ["deque"], "why": "原文：stack 默认基于 deque 实现，queue 默认基于 deque 实现。"}, {"id": "cpp-291", "type": "fill", "tags": ["STL容器"], "q": "在 vector 中删除元素并继续遍历，应使用 it = c.______(it) 获取下一个有效迭代器。", "ans": ["erase"], "why": "原文：erase 返回被删除元素之后的迭代器，顺序容器要用 it = c.erase(it) 继续遍历。"}, {"id": "cpp-292", "type": "fill", "tags": ["STL容器"], "q": "vector 的 ______() 只改变容量不改变元素个数，______() 会改变元素个数。", "ans": ["reserve resize"], "why": "reserve 只预分配空间，不改变 size；resize 改变元素个数，可能构造或销毁元素。"}, {"id": "cpp-293", "type": "fill", "tags": ["STL容器"], "q": "std::sort 的底层实现称为 ______（内省式排序），是快排、堆排和插入排序的结合。", "ans": ["introsort", "内省排序"], "why": "原文：libstdc++ 的实现为 introsort，主体快排，递归过深转堆排序，小区间用插入排序收尾。"}, {"id": "cpp-294", "type": "fill", "tags": ["STL容器"], "q": "std::sort 中当子区间长度不大于 ______（libstdc++ 的阈值）时，留给最后的插入排序处理。", "ans": ["16"], "why": "原文：当子区间长度 ≤ _S_threshold（libstdc++ 中取 16）时，留到最后做插入排序收尾。"}, {"id": "cpp-295", "type": "fill", "tags": ["STL容器"], "q": "set/map 调用 insert 时，已有迭代器 ______（会/不会）失效。", "ans": ["不会"], "why": "原文：关联式容器插入不会使任何迭代器失效，只有被删除元素的迭代器失效。"}, {"id": "cpp-296", "type": "fill", "tags": ["STL容器"], "q": "map 的 operator[] 在键不存在时会 ______ 一个默认构造的值；at() 则抛出 out_of_range。", "ans": ["插入"], "why": "map::operator[] 找不到键时会插入默认值，因此会改变容器，const map 上不可用。"}, {"id": "cpp-297", "type": "fill", "tags": ["STL容器"], "q": "vector 扩容时所有迭代器、指针和 ______ 都会失效。", "ans": ["引用"], "why": "原文：重新分配内存后元素被移动到新位置，所有指向 vector 的迭代器、指针和引用都会失效。"}, {"id": "cpp-298", "type": "fill", "tags": ["STL容器"], "q": "list 的底层是 ______ 链表，插入不会使迭代器失效。", "ans": ["双向"], "why": "原文：list 是双向链表，插入只修改指针，不会使任何迭代器失效。"}, {"id": "cpp-299", "type": "fill", "tags": ["STL容器"], "q": "deque 的内存是 ______ 连续的（填两个字），由中控器 map 管理各段缓冲区。", "ans": ["分段"], "why": "原文：deque 是双向开口的分段连续空间，中控器保存指向各段空间的指针。"}, {"id": "cpp-300", "type": "fill", "tags": ["智能指针"], "q": "独占所有权的智能指针是 ______，共享所有权的是 ______。", "ans": ["unique_ptr shared_ptr"], "why": "原文：unique_ptr 独占所有权，只能有一个指针指向对象；shared_ptr 通过引用计数共享所有权。"}, {"id": "cpp-301", "type": "fill", "tags": ["智能指针"], "q": "weak_ptr 通过 ______() 方法获取一个有效的 shared_ptr 来访问对象。", "ans": ["lock"], "why": "原文：通过 std::weak_ptr.lock() 方法可以获取一个有效的 std::shared_ptr 来访问被管理的对象。"}, {"id": "cpp-302", "type": "fill", "tags": ["智能指针"], "q": "判断 weak_ptr 所指对象是否已释放，可以调用 ______() 方法。", "ans": ["expired"], "why": "expired() 等价于 use_count()==0，用于判断被管理对象是否已被销毁。"}, {"id": "cpp-303", "type": "fill", "tags": ["智能指针"], "q": "C++11 中被弃用的智能指针是 ______，已被 unique_ptr 取代。", "ans": ["auto_ptr"], "why": "auto_ptr 因拷贝转移所有权等缺陷在 C++11 被弃用、C++17 被移除。"}, {"id": "cpp-304", "type": "fill", "tags": ["智能指针"], "q": "在类成员函数中安全获取指向自身的 shared_ptr，需要继承 enable______。", "ans": ["shared_from_this"], "why": "继承 enable_shared_from_this<T> 后调用 shared_from_this() 可返回共享同一控制块的 shared_ptr，避免重复控制块。"}, {"id": "cpp-305", "type": "fill", "tags": ["新特性"], "q": "右值引用用 ______ 个 & 声明。", "ans": ["2", "两"], "why": "原文：右值引用通过 && 获得，用于实现移动语义和完美转发。"}, {"id": "cpp-306", "type": "fill", "tags": ["新特性"], "q": "把左值强制转换为右值的函数是 std::______。", "ans": ["move"], "why": "原文：std::move 可以将一个左值强制转化为右值，以用于移动语义。"}, {"id": "cpp-307", "type": "fill", "tags": ["新特性"], "q": "保持参数值类别原样传递给下一层函数，称为 ______ 转发，使用 std::forward 实现。", "ans": ["完美"], "why": "原文：右值引用可用于完美转发，保持原参数的值类别（左值还是右值）传递给另一个函数。"}, {"id": "cpp-308", "type": "fill", "tags": ["新特性"], "q": "std::move 的实现中用 ______ 移除引用得到具体类型 T，再用 static_cast 转为 T&&。", "ans": ["remove_reference"], "why": "原文：std::move 利用 remove_reference 移除引用得到类型 T，再 static_cast 强制转换为 T&&。"}, {"id": "cpp-309", "type": "fill", "tags": ["新特性"], "q": "函数模板中 T&& 配合引用折叠形成的引用称为 ______ 引用（万能引用）。", "ans": ["万能", "通用", "转发"], "why": "T&& 在模板中结合引用折叠（T&& & → T&，T&& && → T&&）可绑定左值或右值，称为万能引用/转发引用。"}, {"id": "cpp-310", "type": "fill", "tags": ["新特性"], "q": "移动构造函数应声明为 ______ 以保证 vector 扩容等场景使用移动而非拷贝。", "ans": ["noexcept"], "why": "若移动构造可能抛异常，容器为保持强异常安全会退化为拷贝，因此移动操作应标记 noexcept。"}, {"id": "cpp-311", "type": "fill", "tags": ["新特性"], "q": "lambda 中 [=] 表示按 ______ 捕获，[&] 表示按 ______ 捕获。", "ans": ["值 引用"], "why": "[=] 默认按值拷贝捕获使用的外部变量，[&] 按引用捕获（注意悬空引用风险）。"}, {"id": "cpp-312", "type": "fill", "tags": ["新特性"], "q": "std::thread 对象析构前必须调用 join() 或 ______()，否则会调用 std::terminate。", "ans": ["detach"], "why": "std::thread 析构时若仍 joinable（既未 join 也未 detach），会 terminate。"}, {"id": "cpp-313", "type": "fill", "tags": ["模板泛型"], "q": "获取可变参数模板中参数包元素个数使用 sizeof______ 运算符。", "ans": ["..."], "why": "原文：需要知道包中有多少元素时，可以使用 sizeof... 运算符。"}, {"id": "cpp-314", "type": "fill", "tags": ["模板泛型"], "q": "函数模板只能 ______ 特化；类模板可以全特化也可以偏特化。", "ans": ["全"], "why": "原文：函数模板只能全特化；类模板可以全特化，也可以偏特化。"}, {"id": "cpp-315", "type": "fill", "tags": ["模板泛型"], "q": "类模板实例化时需要在模板名后的 ______ 中显式指定类型。", "ans": ["尖括号", "<>", "尖括号<>"], "why": "原文：编译器不能为类模板推断模板参数类型，需要在模板名后面的尖括号中指明。"}, {"id": "cpp-316", "type": "fill", "tags": ["编译链接"], "q": "静态链接库在 ______ 阶段被完整复制进可执行文件；动态链接库在 ______ 时才被加载。", "ans": ["链接 运行", "编译链接 运行"], "why": "原文：静态库在编译链接时被完整复制到可执行文件中；动态库在运行时由操作系统动态加载。"}, {"id": "cpp-317", "type": "fill", "tags": ["编译链接"], "q": "将汇编代码转换为机器指令并生成目标文件的阶段叫做 ______。", "ans": ["汇编"], "why": "原文：汇编阶段将汇编代码转换为机器可以执行的目标文件（.o/.obj）。"}, {"id": "cpp-318", "type": "fill", "tags": ["编译链接"], "q": "C++ 中为了让 C++ 程序调用 C 编写的函数，使用的链接指示是 extern ______。", "ans": ["\"C\"", "C"], "why": "原文：extern \"C\" 指出任意非 C++ 函数所用的语言。"}]}]</script>
+<div class="wrap">
+
+<!-- ================= 首页 ================= -->
+<section class="page on" id="p-home">
+  <div class="card" style="background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff">
+    <div class="between">
+      <div>
+        <div style="opacity:.85;font-size:13px">今日任务</div>
+        <div class="big" id="h-due">0</div>
+        <div class="small" style="opacity:.85">道待复习 · 新题 <span id="h-new">0</span> 道</div>
+      </div>
+      <div style="text-align:right">
+        <div style="opacity:.85;font-size:13px">连续打卡</div>
+        <div class="big" id="h-streak">0<span style="font-size:14px;font-weight:600"> 天</span></div>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="between small" style="opacity:.9;margin-bottom:5px"><span>总掌握度</span><span id="h-master-txt">0%</span></div>
+      <div style="height:8px;border-radius:8px;background:rgba(255,255,255,.28);overflow:hidden">
+        <div id="h-master" style="height:100%;width:0;background:#fff;border-radius:8px;transition:width .4s"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid4" style="margin:14px 0">
+    <div class="stat"><div class="n" id="h-total">0</div><div class="l">题库</div></div>
+    <div class="stat"><div class="n" id="h-done">0</div><div class="l">已练</div></div>
+    <div class="stat"><div class="n" id="h-acc">0%</div><div class="l">正确率</div></div>
+    <div class="stat"><div class="n" id="h-wrong">0</div><div class="l">错题</div></div>
+  </div>
+
+  <div class="card">
+    <div class="between" style="margin-bottom:10px">
+      <h3 style="font-size:16px">开始刷题</h3>
+      <span class="small muted" id="h-bankname"></span>
+    </div>
+    <div class="grid2">
+      <button class="btn" onclick="start(10)">10 题速刷</button>
+      <button class="btn ghost" onclick="start(20)">20 题</button>
+      <button class="btn ghost" onclick="start(50)">50 题</button>
+      <button class="btn ghost" onclick="start(100)">100 题</button>
+    </div>
+    <div class="hr"></div>
+    <div class="grid2">
+      <button class="btn ok" onclick="start(0,'due')">今日复习 <span id="h-due2">0</span></button>
+      <button class="btn bad" onclick="start(0,'wrong')">错题攻坚 <span id="h-wrong2">0</span></button>
+    </div>
+    <div class="hr"></div>
+    <div class="small muted" style="margin-bottom:8px">按标签刷（可多选）</div>
+    <div class="fabrow" id="h-tags"></div>
+    <div style="margin-top:12px"><button class="btn ghost" id="h-taggo" onclick="startByTag()">按所选标签开始</button></div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:10px">近 14 天刷题量</h3>
+    <div class="heat" id="h-heat"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:10px">各模块正确率</h3>
+    <div id="h-tagrank"></div>
+  </div>
+</section>
+
+<!-- ================= 答题页 ================= -->
+<section class="page" id="p-quiz">
+  <div class="card" style="padding:12px 16px">
+    <div class="between small muted" style="margin-bottom:6px">
+      <span id="q-prog">1 / 10</span>
+      <span class="row"><span id="q-meta"></span><button class="chip" onclick="quit()">结束本轮</button></span>
+    </div>
+    <div class="progress"><i id="q-bar" style="width:0"></i></div>
+  </div>
+
+  <div class="card" id="q-card">
+    <div class="fabrow" style="margin-bottom:6px" id="q-tags"></div>
+    <div class="q" id="q-text"></div>
+    <div id="q-opts"></div>
+    <div id="q-fill" style="display:none">
+      <input type="text" id="q-input" placeholder="输入答案后回车提交" autocomplete="off">
+      <div class="small muted" style="margin-top:6px">填空题：提交后对照标准答案自评（更接近真实记忆效果）</div>
+    </div>
+    <div id="q-why"></div>
+    <div id="q-actions" style="margin-top:14px"></div>
+  </div>
+
+  <div class="card center" id="q-lastcard" style="display:none">
+    <div style="font-size:34px">🎉</div>
+    <h2 style="margin:6px 0">本轮完成</h2>
+    <div class="grid3" style="margin:14px 0">
+      <div class="stat"><div class="n" id="r-acc">0%</div><div class="l">正确率</div></div>
+      <div class="stat"><div class="n" id="r-time">0s</div><div class="l">用时</div></div>
+      <div class="stat"><div class="n" id="r-newmaster">0</div><div class="l">新掌握</div></div>
+    </div>
+    <div class="small muted" id="r-tip"></div>
+    <div style="margin-top:14px" class="grid2">
+      <button class="btn" onclick="start(0,'wrong')">立即巩固错题</button>
+      <button class="btn ghost" onclick="go('home')">返回首页</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 统计页 ================= -->
+<section class="page" id="p-stat">
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:12px">掌握度分布</h3>
+    <div class="grid3">
+      <div class="stat"><div class="n" id="s-new">0</div><div class="l">未学</div></div>
+      <div class="stat"><div class="n" id="s-learn">0</div><div class="l">学习中</div></div>
+      <div class="stat"><div class="n" id="s-master">0</div><div class="l">已掌握</div></div>
+    </div>
+    <div style="margin-top:14px" class="progress"><i id="s-bar" style="width:0"></i></div>
+    <div class="small muted" style="margin-top:6px">已掌握 = 连续答对达到 3 次以上且近期无错</div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:12px">模块表现</h3>
+    <div id="s-tags"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:12px">复习负担（未来 7 天到期）</h3>
+    <div class="heat" id="s-load"></div>
+    <div class="small muted" style="margin-top:6px">柱子越高，那天要复习的题越多</div>
+  </div>
+
+  <div class="card">
+    <div class="between" style="margin-bottom:10px">
+      <h3 style="font-size:16px">错题本 <span class="small muted" id="s-wrongn"></span></h3>
+      <div class="fabrow" id="s-wrongfilter"></div>
+    </div>
+    <div class="list" id="s-wronglist"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:10px">收藏夹 <span class="small muted" id="s-starn"></span></h3>
+    <div class="list" id="s-starlist"></div>
+  </div>
+</section>
+
+<!-- ================= 设置/题库页 ================= -->
+<section class="page" id="p-set">
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:10px">题库管理</h3>
+    <div id="set-banks"></div>
+    <div class="hr"></div>
+    <div class="small muted" style="margin-bottom:8px">
+      导入新题库：选择符合格式的 .json 文件即可挂载（如操作系统、计算机网络、MySQL…）。<br>
+      格式：<span class="kbd">{"name":"计算机网络","questions":[{...}]}</span>
+    </div>
+    <input type="file" id="set-file" accept=".json,application/json" style="display:none">
+    <button class="btn ghost" onclick="document.getElementById('set-file').click()">导入题库 JSON</button>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:10px">学习设置</h3>
+    <div class="between" style="padding:8px 0">
+      <div><div>每轮新题上限</div><div class="small muted">一次练习中最多引入多少道没见过的新题</div></div>
+      <div class="seg" style="width:150px" id="set-newcap"></div>
+    </div>
+    <div class="between" style="padding:8px 0">
+      <div><div>错题重出密度</div><div class="small muted">本轮答错的题，隔几题后再插入一次</div></div>
+      <div class="seg" style="width:150px" id="set-rep"></div>
+    </div>
+    <div class="between" style="padding:8px 0">
+      <div><div>选项乱序</div><div class="small muted">每道题的选项顺序随机打乱，避免背位置</div></div>
+      <div class="seg" style="width:150px" id="set-shuffle"></div>
+    </div>
+    <div class="between" style="padding:8px 0">
+      <div><div>深色模式</div></div>
+      <div class="seg" style="width:150px" id="set-dark"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:10px">数据</h3>
+    <div class="grid2">
+      <button class="btn ghost" onclick="exportData()">导出学习进度</button>
+      <button class="btn ghost" onclick="document.getElementById('set-importdata').click()">导入学习进度</button>
+    </div>
+    <input type="file" id="set-importdata" accept=".json" style="display:none">
+    <div class="hr"></div>
+    <button class="btn gray" onclick="resetAll()">清空全部进度</button>
+    <div class="small muted" style="margin-top:10px">
+      进度保存在本机浏览器（localStorage），换设备请先导出再导入。建议每周导出一次备份。
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:10px">记忆规则</h3>
+    <table>
+      <tr><th>结果</th><th>下次出现</th></tr>
+      <tr><td>答错 / 点「模糊」</td><td>本轮内重出 + 1 天后</td></tr>
+      <tr><td>第 1 次答对</td><td>2 天后</td></tr>
+      <tr><td>连续答对 2 次</td><td>4 天后</td></tr>
+      <tr><td>连续答对 3 次</td><td>7 天后</td></tr>
+      <tr><td>连续答对 4 次</td><td>15 天后</td></tr>
+      <tr><td>连续答对 5 次及以上</td><td>30 天后（低频抽查）</td></tr>
+    </table>
+    <div class="small muted" style="margin-top:8px">已掌握的题不会消失，会以低概率混入练习长期抽查。</div>
+  </div>
+</section>
+
+</div>
+
+<nav class="nav">
+  <button class="on" id="n-home" onclick="go('home')"><span class="ic">🏠</span>首页</button>
+  <button id="n-quiz" onclick="go('quiz')"><span class="ic">✏️</span>刷题</button>
+  <button id="n-stat" onclick="go('stat')"><span class="ic">📊</span>统计</button>
+  <button id="n-set" onclick="go('set')"><span class="ic">⚙️</span>题库</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= 八股刷题 · 重复记忆引擎 ================= */
+(function(){
+"use strict";
+var DAY=86400000, KEY='bg8_state_v1';
+var GAP=[0,1,2,4,7,15,30,60];           // 每级对应的下次间隔（天）
+var BANK=[];
+try{ BANK=JSON.parse(document.getElementById('BANK').textContent||'[]'); }catch(e){ BANK=[]; }
+if(!Array.isArray(BANK)) BANK=[BANK];
+
+/* ---------- 状态 ---------- */
+var S=load();
+function load(){
+  try{
+    var s=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(!s||typeof s!=='object') throw 0;
+    s.cards=s.cards||{}; s.daily=s.daily||{}; s.custom=s.custom||[];
+    s.off=s.off||{}; s.set=s.set||{};
+    if(s.set.newCap==null)s.set.newCap=20;
+    if(s.set.rep==null)s.set.rep=4;
+    if(s.set.shuffle==null)s.set.shuffle=1;
+    if(s.set.dark==null)s.set.dark=0;
+    return s;
+  }catch(e){
+    return {cards:{},daily:{},custom:[],off:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
+  }
+}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){ toast('存储空间不足，请导出备份后清理'); } }
+function today(){ var d=new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+function todayKey(){ var d=new Date(),m=d.getMonth()+1,dd=d.getDate(); return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dd<10?'0':'')+dd; }
+
+/* ---------- 题库 ---------- */
+function allBanks(){
+  var out=[];
+  BANK.forEach(function(b,i){ if(!S.off['b'+i]) out.push({key:'b'+i,name:b.name||('题库'+(i+1)),qs:b.questions||[],builtin:true}); });
+  (S.custom||[]).forEach(function(b,i){ if(!S.off['c'+i]) out.push({key:'c'+i,name:b.name||('自定义'+(i+1)),qs:b.questions||[],builtin:false}); });
+  return out;
+}
+function allQ(){
+  var out=[];
+  allBanks().forEach(function(b){ b.qs.forEach(function(q){ out.push(q); }); });
+  return out;
+}
+var TAGLIST=['基础语法','指针与引用','内存管理','面向对象','STL容器','智能指针','新特性','模板泛型','编译链接'];
+function tagsOfPool(){
+  var t=Object.create(null);
+  allQ().forEach(function(q){ (q.tags||[]).forEach(function(x){ t[x]=1; }); });
+  return Object.keys(t);
+}
+
+/* ---------- 卡片 ---------- */
+function card(id){
+  if(!S.cards[id]) S.cards[id]={lv:0,due:0,ok:0,bad:0,seen:0,star:0,last:0};
+  return S.cards[id];
+}
+function isMaster(c){ return c.lv>=4 && c.ok>c.bad; }
+function isDue(c){ return c.seen>0 && c.due<=Date.now() && !isMaster(c); }
+function isWrong(c){ return c.bad>0 && !isMaster(c); }
+
+/* ---------- 组卷 ---------- */
+var Q=[], qi=0, session=null, reinsert=[], repCount={}, tagSel={};
+function buildQueue(n,mode,tags){
+  var pool=allQ().filter(function(q){
+    if(!tags||!tags.length) return true;
+    return (q.tags||[]).some(function(t){ return tags.indexOf(t)>=0; });
+  });
+  var now=Date.now(), caps=S.set;
+  var due=[], fresh=[], wrong=[], master=[];
+  pool.forEach(function(q){
+    var c=S.cards[q.id];
+    if(!c||!c.seen) fresh.push(q);
+    else if(isMaster(c)) master.push(q);
+    else if(isDue(c)) due.push(q);
+    else if(isWrong(c)) wrong.push(q);
+    else master.push(q);
+  });
+  due.sort(function(a,b){ return S.cards[a.id].due-S.cards[b.id].due; });
+  wrong.sort(function(a,b){ return (S.cards[b.id].bad-S.cards[b.id].ok)-(S.cards[a.id].bad-S.cards[a.id].ok); });
+  shuffle(fresh); shuffle(master); shuffle(wrong);
+
+  var out=[], used={};
+  function push(q){ if(used[q.id])return; used[q.id]=1; out.push(q); }
+  function take(arr,k){ var t=0; for(var i=0;i<arr.length&&t<k;i++){ if(!used[arr[i].id]){ push(arr[i]); t++; } } return t; }
+
+  if(mode==='due'){ due.forEach(push); wrong.slice(0,Math.max(0,60-due.length)).forEach(push); }
+  else if(mode==='wrong'){ wrong.forEach(push); due.slice(0,Math.max(0,40-wrong.length)).forEach(push); }
+  if(mode==='due'||mode==='wrong'){ if(out.length>100) out=out.slice(0,100); return out; }
+  else{
+    // 到期题优先（不超过一半），其余新题 + 错题 + 掌握抽查
+    var nDue=Math.min(due.length, Math.ceil(n*0.5));
+    take(due,nDue);
+    take(wrong, Math.max(0, Math.ceil(n*0.2)));
+    take(fresh, Math.min(caps.newCap, n-out.length));
+    take(due, n-out.length);
+    take(fresh, n-out.length);
+    take(master, Math.ceil(n*0.1));
+    take(wrong, n-out.length);
+    take(master, n-out.length);
+  }
+  return out;
+}
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
+
+function start(n,mode,tags){
+  if(!allQ().length){ toast('当前没有可用题库，请先导入'); go('set'); return; }
+  var q=buildQueue(n||10,mode,tags);
+  if(!q.length){ toast('没有符合条件的题目'); return; }
+  Q=q; qi=0; reinsert=[]; repCount={}; sinceIns=0;
+  session={n:Q.length,mode:mode||'mix',t0:Date.now(),ok:0,bad:0,ids:[],results:[],masterBefore:countMaster()};
+  document.getElementById('q-lastcard').style.display='none';
+  document.getElementById('q-card').style.display='';
+  go('quiz'); render();
+}
+function countMaster(){ var c=0; allQ().forEach(function(q){ var x=S.cards[q.id]; if(x&&isMaster(x))c++; }); return c; }
+
+/* ---------- 渲染答题 ---------- */
+function esc(s){ return String(s).replace(/[&<>]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+function render(){
+  if(qi>=Q.length){ finish(); return; }
+  var q=Q[qi], c=S.cards[q.id]||{lv:0,due:0,ok:0,bad:0,seen:0,star:0};
+  document.getElementById('q-prog').textContent=(qi+1)+' / '+Q.length;
+  document.getElementById('q-bar').style.width=((qi+1)/Q.length*100)+'%';
+  var meta=[];
+  meta.push(q.type==='fill'?'填空题':'选择题');
+  if(c.seen) meta.push('答过 '+c.seen+' 次');
+  else meta.push('新题');
+  if(isDue(c)) meta.push('到期复习');
+  document.getElementById('q-meta').textContent=meta.join(' · ');
+  document.getElementById('q-tags').innerHTML=(q.tags||[]).map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join('')
+    + '<span class="chip" style="margin-left:auto" onclick="toggleStar(\''+q.id+'\')">'+(c.star?'★ 已收藏':'☆ 收藏')+'</span>';
+  document.getElementById('q-text').innerHTML=esc(q.q).replace(/______/g,'<span class="blank">?</span>');
+  document.getElementById('q-why').innerHTML='';
+  document.getElementById('q-actions').innerHTML='';
+
+  var opts=document.getElementById('q-opts'), fill=document.getElementById('q-fill');
+  if(q.type==='fill'){
+    opts.innerHTML=''; fill.style.display='';
+    var inp=document.getElementById('q-input'); inp.value=''; inp.focus();
+  }else{
+    fill.style.display='none';
+    var idx=q.options.map(function(_,i){ return i; });
+    if(S.set.shuffle) shuffle(idx);
+    var map={};
+    idx.forEach(function(orig,i){ map['ABCDE'[i]]=orig; });
+    q._map=map;
+    opts.innerHTML=idx.map(function(orig,i){
+      return '<button class="opt" id="o'+i+'" onclick="pick('+i+')"><span class="k">'+'ABCDE'[i]+'</span><span>'+esc(q.options[orig])+'</span></button>';
+    }).join('');
+  }
+  window.__curQ=q; window.scrollTo(0,0);
+}
+function pick(i){
+  var q=Q[qi];
+  if(q.type!=='choice'||!q._map) return;
+  var map=q._map, orig=map['ABCDE'[i]], right=(orig===q.ans);
+  for(var k=0;k<q.options.length;k++){
+    var el=document.getElementById('o'+k); if(!el)continue;
+    var o=map['ABCDE'[k]];
+    el.classList.add('dim');
+    if(o===q.ans){ el.classList.add('correct'); el.querySelector('.k').classList.add('on'); }
+    else if(o===orig){ el.classList.add('wrong'); el.querySelector('.k').classList.add('no'); }
+  }
+  showWhy(right,q);
+}
+function norm(s){
+  return String(s||'').toLowerCase().replace(/\s+/g,'').replace(/[，。、；：""''（）()]/g,'')
+    .replace(/std::/g,'').replace(/_/g,'');
+}
+function submitFill(){
+  var q=Q[qi], v=document.getElementById('q-input').value.trim();
+  if(!v){ toast('请输入答案'); return; }
+  var okAns=(q.ans||[]).some(function(a){ return norm(a)===norm(v) || (norm(a)&&norm(v).indexOf(norm(a))===0&&norm(a).length>=4); });
+  showWhy(okAns,q,true);
+}
+function showWhy(right,q,isFill){
+  var box=document.getElementById('q-why');
+  var ansTxt = q.type==='fill' ? (q.ans||[]).join(' / ') : q.options[q.ans];
+  box.innerHTML='<div class="why '+(right?'ok':'bad')+'">'
+    +'<div style="font-weight:800;margin-bottom:4px">'+(right?'✅ 答对了':'❌ 答错了')+'</div>'
+    +'<div class="small muted" style="margin-bottom:6px">正确答案：<b style="color:var(--ink)">'+esc(ansTxt)+'</b></div>'
+    +'<div>'+esc(q.why)+'</div></div>';
+  var act=document.getElementById('q-actions');
+  if(q.type==='fill'&&isFill){
+    act.innerHTML='<div class="grid2"><button class="btn ok" onclick="grade(true)">我答对了</button>'
+      +'<button class="btn bad" onclick="grade(false)">我答错了</button></div>';
+  }else{
+    grade(right);
+  }
+}
+function grade(right){
+  if(qi>=Q.length||!Q.length) return;
+  var q=Q[qi], c=card(q.id);
+  c.seen++; c.last=Date.now();
+  if(right){ c.ok++; c.lv=Math.min(7,c.lv+1); }
+  else{ c.bad++; c.lv=1; }
+  c.due=Date.now()+GAP[Math.min(7,c.lv||1)]*DAY;
+  if(!right && S.set.rep>0){ var rc=repCount[q.id]||0; if(rc<2){ repCount[q.id]=rc+1; reinsert.push(q); } }
+  var d=todayKey(); S.daily[d]=(S.daily[d]||0)+1;
+  session.ids.push(q.id); session.results.push({id:q.id,ok:right,q:q.q});
+  right?session.ok++:session.bad++;
+  save();
+  document.getElementById('q-actions').innerHTML='<button class="btn" onclick="next()">下一题 →</button>';
+  document.getElementById('q-actions').innerHTML+='<div class="small muted center" style="margin-top:8px">'
+    +(right?'下次出现：'+GAP[Math.min(7,c.lv)]+' 天后':'已加入本轮重出 + 明天再复习')+'</div>';
+}
+var sinceIns=0;
+function next(){
+  qi++; sinceIns++;
+  // 错题重出：每隔 rep 题插回一道本轮答错的题；没插完的在末尾全部补上
+  if(reinsert.length && sinceIns>=Math.max(2,S.set.rep)){ Q.splice(qi,0,reinsert.shift()); sinceIns=0; }
+  if(qi>=Q.length && reinsert.length){ Q=Q.concat(reinsert.splice(0,reinsert.length)); }
+  render();
+}
+function quit(){
+  if(!confirm('结束本轮？已答的题会正常计入记忆进度。')) return;
+  reinsert=[]; document.getElementById('q-lastcard').style.display='none';
+  document.getElementById('q-card').style.display='';
+  go('home');
+}
+function toggleStar(id){
+  var c=card(id); c.star=c.star?0:1; save(); render();
+}
+function finish(){
+  window.__curQ=null; reinsert=[];
+  var sec=Math.round((Date.now()-session.t0)/1000);
+  var m=Math.floor(sec/60), s=sec%60;
+  var acc=session.results.length?Math.round(session.ok/session.results.length*100):0;
+  document.getElementById('q-card').style.display='none';
+  var lc=document.getElementById('q-lastcard'); lc.style.display='';
+  document.getElementById('r-acc').textContent=acc+'%';
+  document.getElementById('r-time').textContent=(m?m+'m':'')+s+'s';
+  document.getElementById('r-newmaster').textContent=Math.max(0,countMaster()-session.masterBefore);
+  var wrong=session.bad;
+  document.getElementById('r-tip').textContent = wrong? ('本轮 '+wrong+' 道题答错，它们已排在明天的复习队列里，建议现在就巩固一遍。') : '全部答对，错题池保持清爽 👏';
+  save(); window.scrollTo(0,0);
+}
+
+/* ---------- 首页 ---------- */
+function home(){
+  var qs=allQ(), now=Date.now(), dueN=0,newN=0,wrongN=0,doneN=0,okN=0,badN=0,masterN=0;
+  qs.forEach(function(q){
+    var c=S.cards[q.id];
+    if(!c||!c.seen){ newN++; return; }
+    doneN++; okN+=c.ok; badN+=c.bad;
+    if(isMaster(c)) masterN++;
+    else if(isDue(c)) dueN++;
+    if(isWrong(c)) wrongN++;
+  });
+  var tot=qs.length||1;
+  set('h-total',qs.length); set('h-done',doneN); set('h-wrong',wrongN); set('h-wrong2',wrongN);
+  set('h-due',dueN); set('h-due2',dueN); set('h-new',newN);
+  set('h-acc',(okN+badN)?Math.round(okN/(okN+badN)*100)+'%':'—');
+  var mp=Math.round(masterN/tot*100);
+  set('h-master-txt',mp+'%'); document.getElementById('h-master').style.width=mp+'%';
+  var banks=allBanks().map(function(b){ return b.name; }).join(' + ');
+  set('h-bankname',banks||'—');
+
+  var t=today(), sk=0;
+  for(var i=0;i<400;i++){
+    var d=new Date(t-i*DAY), k=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    if(S.daily[k]) sk++;
+    else if(i===0) continue;
+    else break;
+  }
+  set('h-streak',sk);
+
+  // 近 14 天
+  var heat=document.getElementById('h-heat'), mx=1, vals=[];
+  for(var j=13;j>=0;j--){ var dd=new Date(t-j*DAY); var kk=dd.getFullYear()+'-'+pad(dd.getMonth()+1)+'-'+pad(dd.getDate()); var v=S.daily[kk]||0; vals.push(v); if(v>mx)mx=v; }
+  heat.innerHTML=vals.map(function(v){ return '<i class="'+(v?'':'z')+'" style="height:'+(v?Math.max(6,v/mx*60):4)+'px" title="'+v+'"></i>'; }).join('');
+
+  // 标签选择
+  var tw=document.getElementById('h-tags');
+  var tags=tagsOfPool();
+  tw.innerHTML=tags.map(function(t){ return '<button class="chip'+(tagSel[t]?' on':'')+'" onclick="tagToggle(\''+t+'\')">'+esc(t)+'</button>'; }).join('');
+  document.getElementById('h-taggo').textContent = Object.keys(tagSel).filter(function(k){return tagSel[k];}).length ? '按所选标签开始（20 题）' : '按标签刷题（请先选标签）';
+
+  // 标签正确率
+  var agg={};
+  qs.forEach(function(q){ (q.tags||[]).forEach(function(t){ var c=S.cards[q.id]; if(!c||!c.seen)return; agg[t]=agg[t]||{o:0,b:0}; agg[t].o+=c.ok; agg[t].b+=c.bad; }); });
+  var rank=Object.keys(agg).map(function(t){ var a=agg[t], n=a.o+a.b; return {t:t,r:n?Math.round(a.o/n*100):0,n:n}; }).sort(function(x,y){ return x.r-y.r; });
+  document.getElementById('h-tagrank').innerHTML= rank.length? rank.map(function(x){
+    var color = x.r>=80?'var(--ok)':(x.r>=60?'var(--warn)':'var(--bad)');
+    return '<div style="margin:9px 0"><div class="between small"><span>'+esc(x.t)+'</span><span class="muted">'+x.r+'% · '+x.n+'次</span></div>'
+      +'<div class="bar"><i style="width:'+x.r+'%;background:'+color+'"></i></div></div>';
+  }).join('') : '<div class="small muted">还没有答题记录，先去刷一轮吧</div>';
+}
+function pad(n){ return (n<10?'0':'')+n; }
+function set(id,v){ var e=document.getElementById(id); if(e)e.textContent=v; }
+function tagToggle(t){ tagSel[t]=!tagSel[t]; home(); }
+function startByTag(){
+  var t=Object.keys(tagSel).filter(function(k){ return tagSel[k]; });
+  if(!t.length){ toast('先选择至少一个标签'); return; }
+  start(20,'mix',t);
+}
+
+/* ---------- 统计页 ---------- */
+function stat(){
+  var qs=allQ(), n=0,l=0,m=0;
+  qs.forEach(function(q){ var c=S.cards[q.id]; if(!c||!c.seen)n++; else if(isMaster(c))m++; else l++; });
+  set('s-new',n); set('s-learn',l); set('s-master',m);
+  document.getElementById('s-bar').style.width=(qs.length?Math.round(m/qs.length*100):0)+'%';
+
+  var agg={};
+  qs.forEach(function(q){ (q.tags||[]).forEach(function(t){ var c=S.cards[q.id]; if(!c||!c.seen)return; agg[t]=agg[t]||{o:0,b:0}; agg[t].o+=c.ok; agg[t].b+=c.bad; }); });
+  var arr=Object.keys(agg).map(function(t){ var a=agg[t],nn=a.o+a.b; return {t:t,r:Math.round(a.o/nn*100),n:nn,b:a.b}; }).sort(function(x,y){return x.r-y.r;});
+  document.getElementById('s-tags').innerHTML=arr.length?arr.map(function(x){
+    var color=x.r>=80?'var(--ok)':(x.r>=60?'var(--warn)':'var(--bad)');
+    return '<div style="margin:10px 0"><div class="between small"><span>'+esc(x.t)+'</span><span class="muted">'+x.r+'% · 错 '+x.b+' 次</span></div><div class="bar"><i style="width:'+x.r+'%;background:'+color+'"></i></div></div>';
+  }).join(''):'<div class="small muted">暂无数据</div>';
+
+  // 未来 7 天负担
+  var t=today(), days=[], mx=1;
+  for(var i=0;i<7;i++){
+    var d0=t+i*DAY, d1=d0+DAY, cnt=0;
+    qs.forEach(function(q){ var c=S.cards[q.id]; if(c&&c.seen&&!isMaster(c)&&c.due>=d0&&c.due<d1) cnt++; });
+    days.push(cnt); if(cnt>mx)mx=cnt;
+  }
+  document.getElementById('s-load').innerHTML=days.map(function(v,i){
+    return '<div style="flex:1;text-align:center"><i style="display:block;height:'+(v?Math.max(6,v/mx*54):4)+'px;background:'+(v?'var(--brand)':'var(--line)')+';border-radius:4px;margin-bottom:4px"></i><span class="small muted">'+(i?'+'+i:'今')+'</span></div>';
+  }).join('');
+
+  // 错题本
+  var wl=qs.filter(function(q){ var c=S.cards[q.id]; return c&&isWrong(c); })
+    .sort(function(a,b){ return (S.cards[b.id].bad-S.cards[b.id].ok)-(S.cards[a.id].bad-S.cards[a.id].ok); });
+  set('s-wrongn','('+wl.length+')');
+  var wtags={}; wl.forEach(function(q){ (q.tags||[]).forEach(function(t){ wtags[t]=(wtags[t]||0)+1; }); });
+  document.getElementById('s-wrongfilter').innerHTML=Object.keys(wtags).sort(function(a,b){return wtags[b]-wtags[a];}).slice(0,4)
+    .map(function(t){ return '<button class="chip" onclick="quickWrong(\''+t+'\')">'+esc(t)+' '+wtags[t]+'</button>'; }).join('');
+  document.getElementById('s-wronglist').innerHTML=wl.length?wl.slice(0,50).map(function(q){
+    var c=S.cards[q.id];
+    return '<div class="item" onclick="peek(\''+q.id+'\')"><div class="small muted">错 '+c.bad+' 次 · 对 '+c.ok+' 次 · '+(q.tags||[]).join('/')+'</div><div style="font-weight:600;margin-top:3px">'+esc(q.q).replace(/______/g,'____')+'</div></div>';
+  }).join(''):'<div class="small muted">错题本是空的，保持住 💪</div>';
+
+  var sl=qs.filter(function(q){ var c=S.cards[q.id]; return c&&c.star; });
+  set('s-starn','('+sl.length+')');
+  document.getElementById('s-starlist').innerHTML=sl.length?sl.map(function(q){
+    return '<div class="item" onclick="peek(\''+q.id+'\')"><div style="font-weight:600">★ '+esc(q.q).replace(/______/g,'____')+'</div></div>';
+  }).join(''):'<div class="small muted">还没有收藏的题目</div>';
+}
+function quickWrong(t){ start(0,'wrong',[t]); }
+function peek(id){
+  var q=allQ().filter(function(x){ return x.id===id; })[0]; if(!q)return;
+  Q=[q]; qi=0; reinsert=[]; repCount={}; sinceIns=0;
+  session={n:1,mode:'peek',t0:Date.now(),ok:0,bad:0,ids:[],results:[],masterBefore:countMaster()};
+  document.getElementById('q-lastcard').style.display='none';
+  document.getElementById('q-card').style.display='';
+  go('quiz'); render();
+}
+
+/* ---------- 设置页 ---------- */
+function setting(){
+  var box=document.getElementById('set-banks');
+  var bs=allBanks(); var all=allBanks().concat((BANK.map(function(b,i){return {key:'b'+i,name:b.name,builtin:true};})).filter(function(x){return S.off[x.key];}))
+    .concat((S.custom||[]).map(function(b,i){return {key:'c'+i,name:b.name,builtin:false};}).filter(function(x){return S.off[x.key];}));
+  var seen={};
+  box.innerHTML=all.filter(function(b){ if(seen[b.key])return false; seen[b.key]=1; return true; }).map(function(b){
+    var qs=(b.key[0]==='b'?BANK[+b.key.slice(1)].questions:S.custom[+b.key.slice(1)].questions)||[];
+    return '<div class="between" style="padding:8px 0;border-bottom:1px solid var(--line)">'
+      +'<div><div style="font-weight:700">'+esc(b.name)+' <span class="small muted">'+qs.length+' 题</span></div>'
+      +'<div class="small muted">'+(b.builtin?'内置题库':'导入题库')+'</div></div>'
+      +'<button class="chip'+(S.off[b.key]?'':' on')+'" onclick="toggleBank(\''+b.key+'\')">'+(S.off[b.key]?'已停用':'启用中')+'</button></div>';
+  }).join('');
+  seg('set-newcap',[10,20,40,999],S.set.newCap,function(v){ S.set.newCap=v; save(); },function(v){ return v===999?'不限':v+'题'; });
+  seg('set-rep',[3,4,6,0],S.set.rep,function(v){ S.set.rep=v; save(); },function(v){ return v?'隔'+v+'题':'关闭'; });
+  seg('set-shuffle',[1,0],S.set.shuffle,function(v){ S.set.shuffle=v; save(); },function(v){ return v?'开':'关'; });
+  seg('set-dark',[0,1],S.set.dark,function(v){ S.set.dark=v; save(); applyDark(); },function(v){ return v?'开':'关'; });
+}
+function seg(id,vals,cur,cb,lab){
+  document.getElementById(id).innerHTML=vals.map(function(v){
+    return '<button class="'+(v===cur?'on':'')+'" onclick="segSet(\''+id+'\','+v+')">'+lab(v)+'</button>';
+  }).join('');
+}
+function segSet(id,v){
+  if(id==='set-newcap'){S.set.newCap=v;} if(id==='set-rep'){S.set.rep=v;}
+  if(id==='set-shuffle'){S.set.shuffle=v;} if(id==='set-dark'){S.set.dark=v;applyDark();}
+  save(); setting();
+}
+function applyDark(){ document.body.classList.toggle('dark',!!S.set.dark); }
+function toggleBank(k){ S.off[k]=!S.off[k]; save(); setting(); home(); }
+function exportData(){
+  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
+  dl(blob,'刷题进度_'+todayKey()+'.json'); toast('已导出');
+}
+function dl(blob,name){
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },3000);
+}
+function resetAll(){
+  if(!confirm('确定清空全部学习进度？此操作不可恢复，建议先导出备份。')) return;
+  S.cards={}; S.daily={}; save(); home(); stat(); toast('已清空');
+}
+function importData(f){
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var d=JSON.parse(r.result);
+      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.set) S.set=Object.assign(S.set,d.set);
+      save(); home(); stat(); setting(); toast('进度已导入');
+    }catch(e){ toast('文件格式不正确'); }
+  };
+  r.readAsText(f);
+}
+function importBank(f){
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var d=JSON.parse(r.result);
+      var banks=Array.isArray(d)?d:[d];
+      banks.forEach(function(b){
+        var qs=b.questions||(Array.isArray(b)?b:null);
+        if(!qs) throw 0;
+        var name=b.name||f.name.replace(/\.json$/i,'');
+        var used={}; allQ().forEach(function(x){ used[x.id]=1; });
+        qs.forEach(function(q,i){ if(used[q.id]) q.id=name.replace(/\s/g,'')+'_'+(q.id||i); });
+        S.custom.push({name:name,questions:qs});
+      });
+      save(); setting(); home(); toast('题库已导入：'+banks.length+' 个');
+    }catch(e){ toast('题库格式不正确，需含 name 与 questions'); }
+  };
+  r.readAsText(f);
+}
+
+/* ---------- 导航 ---------- */
+function go(p){
+  ['home','quiz','stat','set'].forEach(function(x){
+    document.getElementById('p-'+x).classList.toggle('on',x===p);
+    document.getElementById('n-'+x).classList.toggle('on',x===p);
+  });
+  if(p==='home') home();
+  if(p==='stat') stat();
+  if(p==='set') setting();
+  window.scrollTo(0,0);
+}
+var tt;
+function toast(m){
+  var e=document.getElementById('toast'); e.textContent=m; e.classList.add('on');
+  clearTimeout(tt); tt=setTimeout(function(){ e.classList.remove('on'); },1900);
+}
+document.getElementById('set-file').addEventListener('change',function(e){ if(e.target.files[0]) importBank(e.target.files[0]); e.target.value=''; });
+document.getElementById('set-importdata').addEventListener('change',function(e){ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; });
+document.getElementById('q-input').addEventListener('keydown',function(e){ if(e.key==='Enter') submitFill(); });
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('p-quiz').classList.contains('on')&&document.getElementById('q-card').style.display!=='none'){
+    if(e.key==='Enter'&&document.getElementById('q-actions').innerHTML.indexOf('下一题')>=0) next();
+  }
+});
+window.start=start; window.next=next; window.pick=pick; window.grade=grade; window.go=go;
+window.submitFill=submitFill; window.tagToggle=tagToggle; window.startByTag=startByTag;
+window.quit=quit; window.toggleStar=toggleStar; window.quickWrong=quickWrong; window.peek=peek; window.segSet=segSet;
+window.toggleBank=toggleBank; window.exportData=exportData; window.resetAll=resetAll;
+applyDark(); home();
+})();
+
+</script>
+</body>
+</html>

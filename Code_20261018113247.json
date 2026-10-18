@@ -1,0 +1,34 @@
+{
+  "name": "计算机网络（示例）",
+  "questions": [
+    {
+      "id": "net-001",
+      "type": "choice",
+      "tags": [
+        "TCP"
+      ],
+      "q": "TCP 三次握手的第二次握手发送的标志位是？",
+      "options": [
+        "SYN",
+        "SYN+ACK",
+        "ACK",
+        "FIN"
+      ],
+      "ans": 1,
+      "why": "第二次握手由服务端发送 SYN+ACK，表示确认客户端的 SYN 并同步自己的初始序列号。"
+    },
+    {
+      "id": "net-002",
+      "type": "fill",
+      "tags": [
+        "HTTP"
+      ],
+      "q": "HTTPS 在 HTTP 与 TCP 之间加入了 ______ 层。",
+      "ans": [
+        "TLS",
+        "SSL/TLS"
+      ],
+      "why": "HTTPS 在 HTTP 与 TCP 之间加入 TLS（早期为 SSL）层，负责加密、认证与完整性保护。"
+    }
+  ]
+}
