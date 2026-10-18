@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261018-1343">
+<meta name="build" content="20261018-1348">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -690,7 +690,7 @@ function restoreArch(el){
   delete S.arch[id]; save(); setting(); home(); stat(); toast('已恢复，后续会重新出现');
 }
 /* ---------- 标签目录（题库页入口 + 统计页入口 + 抽屉） ---------- */
-var drawerTag=null, df={unmastered:0,wrong:0,archived:0};
+var drawerTag=null, df={unmastered:0,wrong:0,archived:0,newbie:0};
 function tagQs(tag){ return allQ().filter(function(q){ return (q.tags||[]).indexOf(tag)>=0; }); }
 function tagQsAll(tag){ return everyQ().filter(function(q){ return (q.tags||[]).indexOf(tag)>=0; }); }
 function tagCounts(){
@@ -706,7 +706,7 @@ function renderTagIndex(){
   }).join('')||'<div class="small muted">暂无标签</div>';
 }
 function openTagDrawer(tag){
-  drawerTag=tag; df={unmastered:0,wrong:0,archived:0};
+  drawerTag=tag; df={unmastered:0,wrong:0,archived:0,newbie:0};
   document.getElementById('drawer-search').value='';
   document.getElementById('tag-drawer').classList.add('on');
   renderDrawer();
@@ -726,6 +726,7 @@ function renderDrawer(){
     if(df.archived&&!arch) return false;
     if(!df.archived&&arch) return false;
     var c=S.cards[q.id];
+    if(df.newbie&&c&&c.seen) return false;          // 只看未学/新题
     if(df.unmastered&&c&&isMaster(c)) return false;
     if(df.wrong&&!(c&&c.bad>0)) return false;
     if(kw&&q.q.indexOf(kw)<0) return false;
@@ -738,7 +739,8 @@ function renderDrawer(){
   document.getElementById('drawer-stat').innerHTML='共 <b>'+qs.length+'</b> 题（选 '+ch+' / 填 '+(qs.length-ch)+'）· 正确率 '+tagAcc(qs)
     +' · 未学 '+newN+' / 已掌握 '+m+' / 错题 '+wrongN;
   document.getElementById('drawer-filters').innerHTML=
-     '<button class="chip'+(df.unmastered?' on':'')+'" onclick="toggleDrawerFilter(\'unmastered\')">只看未掌握</button>'
+     '<button class="chip'+(df.newbie?' on':'')+'" onclick="toggleDrawerFilter(\'newbie\')">只看未学 / 新题</button>'
+    +'<button class="chip'+(df.unmastered?' on':'')+'" onclick="toggleDrawerFilter(\'unmastered\')">只看未掌握</button>'
     +'<button class="chip'+(df.wrong?' on':'')+'" onclick="toggleDrawerFilter(\'wrong\')">只看错题</button>'
     +'<button class="chip'+(df.archived?' on':'')+'" onclick="toggleDrawerFilter(\'archived\')">显示已归档</button>';
   document.getElementById('drawer-list').innerHTML=qs.length? qs.map(function(q){ return drawerRow(q); }).join('')
