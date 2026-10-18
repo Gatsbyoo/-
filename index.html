@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261018-1433">
+<meta name="build" content="20261018-1607">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -454,14 +454,14 @@ function load(){
     var s=JSON.parse(localStorage.getItem(KEY)||'null');
     if(!s||typeof s!=='object') throw 0;
     s.cards=s.cards||{}; s.daily=s.daily||{}; s.custom=s.custom||[];
-    s.off=s.off||{}; s.set=s.set||{}; s.arch=s.arch||{}; s.hist=s.hist||{};
+    s.off=s.off||{}; s.set=s.set||{}; s.arch=s.arch||{}; s.hist=s.hist||{}; s.del=s.del||{};
     if(s.set.newCap==null)s.set.newCap=20;
     if(s.set.rep==null)s.set.rep=4;
     if(s.set.shuffle==null)s.set.shuffle=1;
     if(s.set.dark==null)s.set.dark=0;
     return s;
   }catch(e){
-    return {cards:{},daily:{},custom:[],off:{},arch:{},hist:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
+    return {cards:{},daily:{},custom:[],off:{},arch:{},hist:{},del:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
   }
 }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){ toast('存储空间不足，请导出备份后清理'); } }
@@ -471,8 +471,15 @@ function todayKey(){ var d=new Date(),m=d.getMonth()+1,dd=d.getDate(); return d.
 /* ---------- 题库 ---------- */
 function allBanks(){
   var out=[];
-  BANK.forEach(function(b,i){ if(!S.off['b'+i]) out.push({key:'b'+i,name:b.name||('题库'+(i+1)),qs:b.questions||[],builtin:true}); });
-  (S.custom||[]).forEach(function(b,i){ if(!S.off['c'+i]) out.push({key:'c'+i,name:b.name||('自定义'+(i+1)),qs:b.questions||[],builtin:false}); });
+  BANK.forEach(function(b,i){ if(!S.off['b'+i]&&!S.del['b'+i]) out.push({key:'b'+i,name:b.name||('题库'+(i+1)),qs:b.questions||[],builtin:true}); });
+  (S.custom||[]).forEach(function(b,i){ if(!S.off['c'+i]&&!S.del['c'+i]) out.push({key:'c'+i,name:b.name||('自定义'+(i+1)),qs:b.questions||[],builtin:false}); });
+  return out;
+}
+/* 题库管理页用：列出所有未删除的题库（含已停用），带题数 */
+function bankEntries(){
+  var out=[];
+  BANK.forEach(function(b,i){ if(!S.del['b'+i]) out.push({key:'b'+i,name:b.name||('题库'+(i+1)),n:(b.questions||[]).length,builtin:true}); });
+  (S.custom||[]).forEach(function(b,i){ if(!S.del['c'+i]) out.push({key:'c'+i,name:b.name||('自定义'+(i+1)),n:(b.questions||[]).length,builtin:false}); });
   return out;
 }
 function allQAll(){
@@ -483,8 +490,8 @@ function allQAll(){
 /* 全部原始题目（忽略题库启用开关），用于归档列表与 id 查重 */
 function everyQ(){
   var out=[];
-  BANK.forEach(function(b){ (b.questions||[]).forEach(function(q){ out.push(q); }); });
-  (S.custom||[]).forEach(function(b){ (b.questions||[]).forEach(function(q){ out.push(q); }); });
+  BANK.forEach(function(b,i){ if(!S.del['b'+i]) (b.questions||[]).forEach(function(q){ out.push(q); }); });
+  (S.custom||[]).forEach(function(b,i){ if(!S.del['c'+i]) (b.questions||[]).forEach(function(q){ out.push(q); }); });
   return out;
 }
 /* 归档的题不进练习、统计、错题本、收藏夹 */
@@ -1018,16 +1025,24 @@ function peek(id){
 /* ---------- 设置页 ---------- */
 function setting(){
   var box=document.getElementById('set-banks');
-  var bs=allBanks(); var all=allBanks().concat((BANK.map(function(b,i){return {key:'b'+i,name:b.name,builtin:true};})).filter(function(x){return S.off[x.key];}))
-    .concat((S.custom||[]).map(function(b,i){return {key:'c'+i,name:b.name,builtin:false};}).filter(function(x){return S.off[x.key];}));
-  var seen={};
-  box.innerHTML=all.filter(function(b){ if(seen[b.key])return false; seen[b.key]=1; return true; }).map(function(b){
-    var qs=(b.key[0]==='b'?BANK[+b.key.slice(1)].questions:S.custom[+b.key.slice(1)].questions)||[];
+  var all=bankEntries();
+  box.innerHTML=all.map(function(b){
     return '<div class="between" style="padding:8px 0;border-bottom:1px solid var(--line)">'
-      +'<div><div style="font-weight:700">'+esc(b.name)+' <span class="small muted">'+qs.length+' 题</span></div>'
+      +'<div><div style="font-weight:700">'+esc(b.name)+' <span class="small muted">'+b.n+' 题</span></div>'
       +'<div class="small muted">'+(b.builtin?'内置题库':'导入题库')+'</div></div>'
-      +'<button class="chip'+(S.off[b.key]?'':' on')+'" onclick="toggleBank(\''+b.key+'\')">'+(S.off[b.key]?'已停用':'启用中')+'</button></div>';
-  }).join('');
+      +'<span class="row" style="gap:6px">'
+      +'<button class="chip'+(S.off[b.key]?'':' on')+'" onclick="toggleBank(\''+b.key+'\')">'+(S.off[b.key]?'已停用':'启用中')+'</button>'
+      +'<button class="chip" style="color:var(--bad)" onclick="delBank(\''+b.key+'\')">删除</button>'
+      +'</span></div>';
+  }).join('')||'<div class="small muted">没有题库，先导入一个 JSON 吧</div>';
+  var dels=Object.keys(S.del||{});
+  if(dels.length){
+    box.innerHTML+='<div class="small muted" style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">已删除：'
+      +dels.map(function(k){
+          var nm=(k[0]==='b'?((BANK[+k.slice(1)]||{}).name||'题库'):'');
+          return '<span class="row" style="gap:6px">'+esc(nm)+'<button class="chip" onclick="restoreBank(\''+k+'\')">恢复</button></span>';
+        }).join('')+'</div>';
+  }
   seg('set-newcap',[10,20,40,999],S.set.newCap,function(v){ S.set.newCap=v; save(); },function(v){ return v===999?'不限':v+'题'; });
   seg('set-rep',[3,4,6,0],S.set.rep,function(v){ S.set.rep=v; save(); },function(v){ return v?'隔'+v+'题':'关闭'; });
   seg('set-shuffle',[1,0],S.set.shuffle,function(v){ S.set.shuffle=v; save(); },function(v){ return v?'开':'关'; });
@@ -1057,8 +1072,30 @@ function segSet(id,v){
 }
 function applyDark(){ document.body.classList.toggle('dark',!!S.set.dark); }
 function toggleBank(k){ S.off[k]=!S.off[k]; save(); setting(); home(); }
+/* 删除题库：内置题库只做隐藏（可恢复）；导入题库直接从 S.custom 里移除 */
+function delBank(k){
+  var e=bankEntries().filter(function(x){ return x.key===k; })[0];
+  if(!e) return;
+  if(!confirm('删除题库「'+e.name+'」（'+e.n+' 题）？\n\n题目会从练习、复习、统计里移除；已有的学习进度记录会保留，之后导入同 id 的题库可以接续。')) return;
+  if(e.builtin){ S.del[k]=1; }
+  else{
+    var idx=+k.slice(1);
+    (S.custom||[]).splice(idx,1);
+    var off={};
+    Object.keys(S.off).forEach(function(x){
+      if(x.charAt(0)!=='c'){ off[x]=S.off[x]; return; }
+      var i=+x.slice(1);
+      if(i===idx) return;
+      off['c'+(i>idx?i-1:i)]=S.off[x];
+    });
+    S.off=off;
+  }
+  save(); setting(); home(); stat(); quizView();
+  toast('已删除题库：'+e.name);
+}
+function restoreBank(k){ delete S.del[k]; save(); setting(); home(); stat(); quizView(); toast('已恢复题库'); }
 function exportData(){
-  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,arch:S.arch,hist:S.hist,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
+  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,arch:S.arch,hist:S.hist,del:S.del,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
   dl(blob,'刷题进度_'+todayKey()+'.json'); toast('已导出');
 }
 function dl(blob,name){
@@ -1074,7 +1111,7 @@ function importData(f){
   r.onload=function(){
     try{
       var d=JSON.parse(r.result);
-      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.arch) S.arch=d.arch; if(d.hist) S.hist=d.hist; if(d.set) S.set=Object.assign(S.set,d.set);
+      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.arch) S.arch=d.arch; if(d.hist) S.hist=d.hist; if(d.del) S.del=d.del; if(d.set) S.set=Object.assign(S.set,d.set);
       save(); home(); stat(); setting(); toast('进度已导入');
     }catch(e){ toast('文件格式不正确'); }
   };
@@ -1168,7 +1205,7 @@ window.openTagDrawer=openTagDrawer; window.closeTagDrawer=closeTagDrawer; window
 window.renderDrawer=renderDrawer; window.renderTagIndex=renderTagIndex; window.peekFromDrawer=peekFromDrawer;
 window.startDrawerQuiz=startDrawerQuiz; window.startList=startList;
 window.prev=prev; window.quizView=quizView; window.quizIdle=quizIdle;
-window.toggleBank=toggleBank; window.exportData=exportData; window.resetAll=resetAll;
+window.toggleBank=toggleBank; window.delBank=delBank; window.restoreBank=restoreBank; window.exportData=exportData; window.resetAll=resetAll;
 window.checkUpdate=checkUpdate; window.applyUpdate=applyUpdate;
 applyDark(); home(); quizView(); checkUpdate(false);
 })();
