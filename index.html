@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261018-1354">
+<meta name="build" content="20261018-1406">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -156,6 +156,16 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
 .qitem .t{font-weight:600;font-size:14px;line-height:1.45;word-break:break-word}
 .qitem .m{font-size:11.5px;color:var(--sub);margin-top:3px}
 .qitem .acts{display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex:0 0 auto}
+/* ---- 错题知识卡（刷题页空态） ---- */
+.kcard{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px;cursor:pointer}
+.kcard .kt{font-weight:700;font-size:15px;line-height:1.55}
+.kcard .km{font-size:11.5px;color:var(--sub);margin-top:5px}
+.kcard .kb{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.kcard.open .kb{display:block}
+.kcard .optline{padding:5px 0;font-size:13.5px;color:var(--sub);line-height:1.5}
+.kcard .optline.ok{color:var(--ok);font-weight:700}
+.kcard .ans{font-size:13.5px;margin-top:6px}
+.kcard .exp{font-size:13px;color:var(--sub);margin-top:6px;line-height:1.6}
 /* ---- 单题历史方块 ---- */
 .hist{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:0 0 10px}
 .hist .sq{width:13px;height:13px;border-radius:4px;background:var(--line);display:inline-block}
@@ -235,7 +245,7 @@ th{color:var(--sub);font-size:12px}
 
 <!-- ================= 答题页 ================= -->
 <section class="page" id="p-quiz">
-  <div class="card" style="padding:12px 16px">
+  <div class="card" id="q-progcard" style="padding:12px 16px">
     <div class="between small muted" style="margin-bottom:6px">
       <span id="q-prog">1 / 10</span>
       <span class="row"><span id="q-meta"></span><button class="chip" onclick="quit()">结束本轮</button></span>
@@ -269,6 +279,17 @@ th{color:var(--sub);font-size:12px}
       <button class="btn" onclick="start(0,'wrong')">立即巩固错题</button>
       <button class="btn ghost" onclick="go('home')">返回首页</button>
     </div>
+  </div>
+
+  <div id="q-idle">
+    <div class="card">
+      <div class="between" style="margin-bottom:8px">
+        <h3 style="font-size:16px">错题知识卡 <span class="small muted" id="idle-n"></span></h3>
+        <span class="chip" onclick="start(0,'wrong')">刷这一批 ›</span>
+      </div>
+      <div class="small muted">没有进行中的练习时，这里按「最近答错」顺序展示错题；点卡片展开答案与解析。</div>
+    </div>
+    <div class="list" id="idle-list"></div>
   </div>
 </section>
 
@@ -485,7 +506,7 @@ function isDue(c){ return c.seen>0 && c.due<=Date.now() && !isMaster(c); }
 function isWrong(c){ return c.bad>0 && !isMaster(c); }
 
 /* ---------- 组卷 ---------- */
-var Q=[], qi=0, session=null, reinsert=[], repCount={}, tagSel={};
+var Q=[], qi=0, session=null, reinsert=[], repCount={}, tagSel={}, Qans=[];
 function buildQueue(n,mode,tags){
   var pool=allQ().filter(function(q){
     if(!tags||!tags.length) return true;
@@ -532,7 +553,7 @@ function start(n,mode,tags){
   if(!allQ().length){ toast('当前没有可用题库，请先导入'); go('set'); return; }
   var q=buildQueue(n||10,mode,tags);
   if(!q.length){ toast('没有符合条件的题目'); return; }
-  Q=q; qi=0; reinsert=[]; repCount={}; sinceIns=0;
+  Q=q; qi=0; reinsert=[]; repCount={}; sinceIns=0; Qans=[];
   session={n:Q.length,mode:mode||'mix',t0:Date.now(),ok:0,bad:0,ids:[],results:[],masterBefore:countMaster()};
   document.getElementById('q-lastcard').style.display='none';
   document.getElementById('q-card').style.display='';
@@ -576,35 +597,64 @@ function render(){
   document.getElementById('q-why').innerHTML='';
   document.getElementById('q-actions').innerHTML='';
 
+  var st=Qans[qi];
+  if(st&&st.graded){ revealQ(q,c,st); window.__curQ=q; window.scrollTo(0,0); return; }
+
   var opts=document.getElementById('q-opts'), fill=document.getElementById('q-fill');
   if(q.type==='fill'){
     opts.innerHTML=''; fill.style.display='';
-    var inp=document.getElementById('q-input'); inp.value=''; inp.blur();   // 不自动聚焦，点输入框才弹键盘
+    var inp=document.getElementById('q-input'); inp.value=''; inp.disabled=false; inp.blur();   // 不自动聚焦，点输入框才弹键盘
   }else{
     fill.style.display='none';
-    var idx=q.options.map(function(_,i){ return i; });
-    if(S.set.shuffle) shuffle(idx);
+    // 选项顺序每题只打乱一次，回看「上一题」时顺序保持一致
+    if(!q._idx){ var idx=q.options.map(function(_,i){ return i; }); if(S.set.shuffle) shuffle(idx); q._idx=idx; }
     var map={};
-    idx.forEach(function(orig,i){ map['ABCDE'[i]]=orig; });
+    q._idx.forEach(function(orig,i){ map['ABCDE'[i]]=orig; });
     q._map=map;
-    opts.innerHTML=idx.map(function(orig,i){
+    opts.innerHTML=q._idx.map(function(orig,i){
       return '<button class="opt" id="o'+i+'" onclick="pick('+i+')"><span class="k">'+'ABCDE'[i]+'</span><span>'+esc(q.options[orig])+'</span></button>';
     }).join('');
   }
   window.__curQ=q; window.scrollTo(0,0);
 }
+/* 已作答状态：显示所选项、正确项、答案与解析 + 上一题/下一题 */
+function revealQ(q,c,st){
+  var opts=document.getElementById('q-opts'), fill=document.getElementById('q-fill'), act=document.getElementById('q-actions');
+  if(q.type==='fill'){
+    opts.innerHTML=''; fill.style.display='';
+    var inp=document.getElementById('q-input'); inp.value=st.text||''; inp.disabled=true; inp.blur();
+  }else{
+    fill.style.display='none';
+    var idx=q._idx||q.options.map(function(_,i){ return i; });
+    opts.innerHTML=idx.map(function(orig,i){
+      var cls='opt dim', kCls='k';
+      if(orig===q.ans){ cls='opt correct'; kCls='k on'; }
+      else if(orig===st.pick){ cls='opt wrong'; kCls='k no'; }
+      return '<button class="'+cls+'" disabled><span class="'+kCls+'">'+'ABCDE'[i]+'</span><span>'+esc(q.options[orig])+'</span></button>';
+    }).join('');
+  }
+  var ansTxt = q.type==='fill' ? (q.ans||[]).join(' / ') : q.options[q.ans];
+  document.getElementById('q-why').innerHTML='<div class="why '+(st.right?'ok':'bad')+'">'
+    +'<div style="font-weight:800;margin-bottom:4px">'+(st.right?'✅ 答对了':'❌ 答错了')+'</div>'
+    +'<div class="small muted" style="margin-bottom:6px">正确答案：<b style="color:var(--ink)">'+esc(ansTxt)+'</b></div>'
+    +'<div>'+esc(q.why)+'</div></div>';
+  var hint = st.right ? ('下次出现：'+GAP[Math.min(7,c.lv||1)]+' 天后') : '已加入本轮重出 + 明天再复习';
+  act.innerHTML='<div class="grid2">'
+    +'<button class="btn ghost" onclick="prev()"'+(qi<=0?' disabled':'')+'>← 上一题</button>'
+    +'<button class="btn" onclick="next()">'+(qi+1>=Q.length?'完成本轮 →':'下一题 →')+'</button></div>'
+    +'<div class="small muted center" style="margin-top:8px">'+hint+'</div>';
+}
+function prev(){
+  if(qi<=0){ toast('已经是第一题'); return; }
+  qi--; render();
+}
 function pick(i){
   var q=Q[qi];
   if(q.type!=='choice'||!q._map) return;
-  var map=q._map, orig=map['ABCDE'[i]], right=(orig===q.ans);
-  for(var k=0;k<q.options.length;k++){
-    var el=document.getElementById('o'+k); if(!el)continue;
-    var o=map['ABCDE'[k]];
-    el.classList.add('dim');
-    if(o===q.ans){ el.classList.add('correct'); el.querySelector('.k').classList.add('on'); }
-    else if(o===orig){ el.classList.add('wrong'); el.querySelector('.k').classList.add('no'); }
-  }
-  showWhy(right,q);
+  if(Qans[qi]&&Qans[qi].graded) return;        // 已作答，回看时不能再选
+  var orig=q._map['ABCDE'[i]];
+  Qans[qi]={pick:orig};
+  grade(orig===q.ans);
 }
 function norm(s){
   return String(s||'').toLowerCase().replace(/\s+/g,'').replace(/[，。、；：""''（）()]/g,'')
@@ -613,7 +663,9 @@ function norm(s){
 function submitFill(){
   var q=Q[qi], v=document.getElementById('q-input').value.trim();
   if(!v){ toast('请输入答案'); return; }
+  if(Qans[qi]&&Qans[qi].graded) return;
   var okAns=(q.ans||[]).some(function(a){ return norm(a)===norm(v) || (norm(a)&&norm(v).indexOf(norm(a))===0&&norm(a).length>=4); });
+  Qans[qi]={text:v};
   showWhy(okAns,q,true);
 }
 function showWhy(right,q,isFill){
@@ -634,6 +686,8 @@ function showWhy(right,q,isFill){
 function grade(right){
   if(qi>=Q.length||!Q.length) return;
   var q=Q[qi], c=card(q.id);
+  if(Qans[qi]&&Qans[qi].graded) return;        // 同一题不重复计分
+  Qans[qi]=Qans[qi]||{}; Qans[qi].graded=true; Qans[qi].right=!!right; Qans[qi].at=Date.now();
   c.seen++; c.last=Date.now();
   // 单题历史：1=对 0=错，最多留最近 30 次
   S.hist[q.id]=((S.hist[q.id]||'')+(right?'1':'0')).slice(-30);
@@ -642,20 +696,16 @@ function grade(right){
   c.due=Date.now()+GAP[Math.min(7,c.lv||1)]*DAY;
   if(!right && S.set.rep>0){ var rc=repCount[q.id]||0; if(rc<2){ repCount[q.id]=rc+1; reinsert.push(q); } }
   var d=todayKey(); S.daily[d]=(S.daily[d]||0)+1;
-  session.ids.push(q.id); session.results.push({id:q.id,ok:right,q:q.q});
-  right?session.ok++:session.bad++;
+  if(session){ session.ids.push(q.id); session.results.push({id:q.id,ok:right,q:q.q}); right?session.ok++:session.bad++; }
   save();
-  renderHist(q,c);   // 把这次的对错也画进方块
-  document.getElementById('q-actions').innerHTML='<button class="btn" onclick="next()">下一题 →</button>';
-  document.getElementById('q-actions').innerHTML+='<div class="small muted center" style="margin-top:8px">'
-    +(right?'下次出现：'+GAP[Math.min(7,c.lv)]+' 天后':'已加入本轮重出 + 明天再复习')+'</div>';
+  render();   // 切到「已作答」视图：答案/解析 + 上一题/下一题
 }
 var sinceIns=0;
 function next(){
   qi++; sinceIns++;
   // 错题重出：每隔 rep 题插回一道本轮答错的题；没插完的在末尾全部补上
-  if(reinsert.length && sinceIns>=Math.max(2,S.set.rep)){ Q.splice(qi,0,reinsert.shift()); sinceIns=0; }
-  if(qi>=Q.length && reinsert.length){ Q=Q.concat(reinsert.splice(0,reinsert.length)); }
+  if(reinsert.length && sinceIns>=Math.max(2,S.set.rep)){ Q.splice(qi,0,reinsert.shift()); Qans.splice(qi,0,undefined); sinceIns=0; }
+  if(qi>=Q.length && reinsert.length){ Q=Q.concat(reinsert.splice(0,reinsert.length)); while(Qans.length<Q.length) Qans.push(undefined); }
   render();
 }
 function quit(){
@@ -677,7 +727,7 @@ function archiveQ(id){
   }
   var cur=-1;
   for(var i=0;i<Q.length;i++){ if(Q[i].id===id){ cur=i; break; } }
-  if(cur>=qi&&cur>=0){ Q.splice(cur,1); if(session) session.n=Q.length; }
+  if(cur>=qi&&cur>=0){ Q.splice(cur,1); Qans.splice(cur,1); if(session) session.n=Q.length; }
   save();
   if(cur===qi&&document.getElementById('p-quiz').classList.contains('on')){
     if(!Q.length){ finish(); } else { render(); }
@@ -779,7 +829,7 @@ function startDrawerQuiz(){
 }
 function startList(list,label){
   if(!list||!list.length){ toast('没有可刷的题目'); return; }
-  Q=list.slice(); qi=0; reinsert=[]; repCount={}; sinceIns=0;
+  Q=list.slice(); qi=0; reinsert=[]; repCount={}; sinceIns=0; Qans=[];
   session={n:Q.length,mode:'list',label:label||'',t0:Date.now(),ok:0,bad:0,ids:[],results:[],masterBefore:countMaster()};
   closeTagDrawer();
   document.getElementById('q-lastcard').style.display='none';
@@ -800,6 +850,38 @@ function finish(){
   var wrong=session.bad;
   document.getElementById('r-tip').textContent = wrong? ('本轮 '+wrong+' 道题答错，它们已排在明天的复习队列里，建议现在就巩固一遍。') : '全部答对，错题池保持清爽 👏';
   save(); window.scrollTo(0,0);
+}
+
+/* ---------- 刷题页空态：错题知识卡 ---------- */
+function quizView(){
+  var active = !!(session && Q.length && qi < Q.length);
+  var idle=document.getElementById('q-idle'), card=document.getElementById('q-card'), last=document.getElementById('q-lastcard'),
+      prog=document.getElementById('q-progcard');
+  if(active){ idle.style.display='none'; card.style.display=''; last.style.display='none'; if(prog) prog.style.display=''; }
+  else { idle.style.display=''; card.style.display='none'; last.style.display='none'; if(prog) prog.style.display='none'; quizIdle(); }
+}
+function quizIdle(){
+  var box=document.getElementById('idle-list'); if(!box) return;
+  var ws=allQ().filter(function(q){ var c=S.cards[q.id]; return c&&isWrong(c); })
+    .sort(function(a,b){ return (S.cards[b.id].last||0)-(S.cards[a.id].last||0); });
+  set('idle-n','('+ws.length+')');
+  box.innerHTML = ws.length? ws.slice(0,30).map(function(q){ return kcard(q); }).join('')
+    :'<div class="card small muted center">错题池是空的，先去刷一轮 💪</div>';
+}
+function kcard(q){
+  var c=S.cards[q.id]||{ok:0,bad:0};
+  var body='';
+  if(q.type==='choice'){
+    body=(q.options||[]).map(function(o,i){
+      return '<div class="optline'+(i===q.ans?' ok':'')+'">'+'ABCDE'[i]+'. '+esc(o)+(i===q.ans?' ✓':'')+'</div>';
+    }).join('');
+  }
+  body+='<div class="ans">正确答案：<b>'+esc(q.type==='fill'?(q.ans||[]).join(' / '):q.options[q.ans])+'</b></div>';
+  body+='<div class="exp">'+esc(q.why)+'</div>';
+  return '<div class="kcard" onclick="this.classList.toggle(\'open\')">'
+    +'<div class="kt">'+esc(q.q).replace(/______/g,'____')+'</div>'
+    +'<div class="km">错 '+c.bad+' 次 · 对 '+c.ok+' 次'+((q.tags||[]).length?' · '+esc(q.tags.join(' / ')):'')+' · 点击展开答案</div>'
+    +'<div class="kb">'+body+'</div></div>';
 }
 
 /* ---------- 首页 ---------- */
@@ -912,7 +994,7 @@ function stat(){
 function quickWrong(t){ start(0,'wrong',[t]); }
 function peek(id){
   var q=allQ().filter(function(x){ return x.id===id; })[0]; if(!q)return;
-  Q=[q]; qi=0; reinsert=[]; repCount={}; sinceIns=0;
+  Q=[q]; qi=0; reinsert=[]; repCount={}; sinceIns=0; Qans=[];
   session={n:1,mode:'peek',t0:Date.now(),ok:0,bad:0,ids:[],results:[],masterBefore:countMaster()};
   document.getElementById('q-lastcard').style.display='none';
   document.getElementById('q-card').style.display='';
@@ -1048,6 +1130,7 @@ function go(p){
   if(p==='home') home();
   if(p==='stat') stat();
   if(p==='set') setting();
+  if(p==='quiz') quizView();
   window.scrollTo(0,0);
 }
 var tt;
@@ -1070,9 +1153,10 @@ window.archiveQ=archiveQ; window.archFromEl=archFromEl; window.restoreArch=resto
 window.openTagDrawer=openTagDrawer; window.closeTagDrawer=closeTagDrawer; window.toggleDrawerFilter=toggleDrawerFilter;
 window.renderDrawer=renderDrawer; window.renderTagIndex=renderTagIndex; window.peekFromDrawer=peekFromDrawer;
 window.startDrawerQuiz=startDrawerQuiz; window.startList=startList;
+window.prev=prev; window.quizView=quizView; window.quizIdle=quizIdle;
 window.toggleBank=toggleBank; window.exportData=exportData; window.resetAll=resetAll;
 window.checkUpdate=checkUpdate; window.applyUpdate=applyUpdate;
-applyDark(); home(); checkUpdate(false);
+applyDark(); home(); quizView(); checkUpdate(false);
 })();
 
 </script>
