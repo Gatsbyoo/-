@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261018-1607">
+<meta name="build" content="20261018-1627">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -185,16 +185,16 @@ th{color:var(--sub);font-size:12px}
   <div class="card" style="background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff">
     <div class="between">
       <div>
-        <div style="opacity:.85;font-size:13px">今日任务</div>
-        <div class="big" id="h-due">0</div>
-        <div class="small" style="opacity:.85">道待复习 · 新题 <span id="h-new">0</span> 道</div>
+        <div style="opacity:.85;font-size:13px">今日已刷</div>
+        <div class="big"><span id="h-today">0</span><span style="font-size:14px;font-weight:600"> 题</span></div>
       </div>
       <div style="text-align:right">
-        <div style="opacity:.85;font-size:13px">连续打卡</div>
-        <div class="big" id="h-streak">0<span style="font-size:14px;font-weight:600"> 天</span></div>
+        <div style="opacity:.85;font-size:13px">学习时长</div>
+        <div class="big" id="h-time">0<span style="font-size:14px;font-weight:600"> 分钟</span></div>
       </div>
     </div>
-    <div style="margin-top:14px">
+    <div class="small" style="opacity:.88;margin-top:8px">待复习 <b id="h-due">0</b> 道 · 新题 <b id="h-new">0</b> 道 · 连续打卡 <b id="h-streak">0</b> 天</div>
+    <div style="margin-top:12px">
       <div class="between small" style="opacity:.9;margin-bottom:5px"><span>总掌握度</span><span id="h-master-txt">0%</span></div>
       <div style="height:8px;border-radius:8px;background:rgba(255,255,255,.28);overflow:hidden">
         <div id="h-master" style="height:100%;width:0;background:#fff;border-radius:8px;transition:width .4s"></div>
@@ -454,14 +454,14 @@ function load(){
     var s=JSON.parse(localStorage.getItem(KEY)||'null');
     if(!s||typeof s!=='object') throw 0;
     s.cards=s.cards||{}; s.daily=s.daily||{}; s.custom=s.custom||[];
-    s.off=s.off||{}; s.set=s.set||{}; s.arch=s.arch||{}; s.hist=s.hist||{}; s.del=s.del||{};
+    s.off=s.off||{}; s.set=s.set||{}; s.arch=s.arch||{}; s.hist=s.hist||{}; s.del=s.del||{}; s.time=s.time||{};
     if(s.set.newCap==null)s.set.newCap=20;
     if(s.set.rep==null)s.set.rep=4;
     if(s.set.shuffle==null)s.set.shuffle=1;
     if(s.set.dark==null)s.set.dark=0;
     return s;
   }catch(e){
-    return {cards:{},daily:{},custom:[],off:{},arch:{},hist:{},del:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
+    return {cards:{},daily:{},custom:[],off:{},arch:{},hist:{},del:{},time:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
   }
 }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){ toast('存储空间不足，请导出备份后清理'); } }
@@ -513,7 +513,7 @@ function isDue(c){ return c.seen>0 && c.due<=Date.now() && !isMaster(c); }
 function isWrong(c){ return c.bad>0 && !isMaster(c); }
 
 /* ---------- 组卷 ---------- */
-var Q=[], qi=0, session=null, reinsert=[], repCount={}, tagSel={}, Qans=[];
+var Q=[], qi=0, session=null, reinsert=[], repCount={}, tagSel={}, Qans=[], qShownAt=0;
 function buildQueue(n,mode,tags){
   var pool=allQ().filter(function(q){
     if(!tags||!tags.length) return true;
@@ -594,6 +594,7 @@ function render(){
   var _inp=document.getElementById('q-input');
   if(_inp&&document.activeElement===_inp) _inp.blur();   // 换题时收起手机键盘
   var q=Q[qi], c=S.cards[q.id]||{lv:0,due:0,ok:0,bad:0,seen:0,star:0};
+  qShownAt=Date.now();   // 本题开始计时（用于统计学习时长）
   document.getElementById('q-prog').textContent=(qi+1)+' / '+Q.length;
   document.getElementById('q-bar').style.width=((qi+1)/Q.length*100)+'%';
   var meta=[];
@@ -717,6 +718,7 @@ function grade(right){
   c.due=Date.now()+GAP[Math.min(7,c.lv||1)]*DAY;
   if(!right && S.set.rep>0){ var rc=repCount[q.id]||0; if(rc<2){ repCount[q.id]=rc+1; reinsert.push(q); } }
   var d=todayKey(); S.daily[d]=(S.daily[d]||0)+1;
+  if(qShownAt){ S.time[d]=(S.time[d]||0)+Math.min(Date.now()-qShownAt,300000); qShownAt=0; }   // 单题最多计 5 分钟
   if(session){ session.ids.push(q.id); session.results.push({id:q.id,ok:right,q:q.q}); right?session.ok++:session.bad++; }
   save();
   render();   // 切到「已作答」视图：答案/解析 + 上一题/下一题
@@ -920,6 +922,13 @@ function home(){
   set('h-total',qs.length); set('h-done',doneN); set('h-wrong',wrongN); set('h-wrong2',wrongN);
   set('h-due',dueN); set('h-due2',dueN); set('h-new',newN);
   set('h-acc',(okN+badN)?Math.round(okN/(okN+badN)*100)+'%':'—');
+  // 今日已刷 / 学习时长
+  var tk=todayKey();
+  set('h-today', S.daily[tk]||0);
+  var msToday=(S.time&&S.time[tk])||0, mins=Math.round(msToday/60000), th=document.getElementById('h-time');
+  if(th) th.innerHTML = (msToday>0&&mins<1) ? '<1<span style="font-size:14px;font-weight:600"> 分钟</span>'
+    : (mins<60 ? mins+'<span style="font-size:14px;font-weight:600"> 分钟</span>'
+    : Math.floor(mins/60)+'<span style="font-size:14px;font-weight:600"> 小时</span>'+(mins%60?' '+mins%60+'<span style="font-size:14px;font-weight:600"> 分</span>':''));
   var mp=Math.round(masterN/tot*100);
   set('h-master-txt',mp+'%'); document.getElementById('h-master').style.width=mp+'%';
   var banks=allBanks().map(function(b){ return b.name; }).join(' + ');
@@ -1095,7 +1104,7 @@ function delBank(k){
 }
 function restoreBank(k){ delete S.del[k]; save(); setting(); home(); stat(); quizView(); toast('已恢复题库'); }
 function exportData(){
-  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,arch:S.arch,hist:S.hist,del:S.del,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
+  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,arch:S.arch,hist:S.hist,del:S.del,time:S.time,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
   dl(blob,'刷题进度_'+todayKey()+'.json'); toast('已导出');
 }
 function dl(blob,name){
@@ -1111,7 +1120,7 @@ function importData(f){
   r.onload=function(){
     try{
       var d=JSON.parse(r.result);
-      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.arch) S.arch=d.arch; if(d.hist) S.hist=d.hist; if(d.del) S.del=d.del; if(d.set) S.set=Object.assign(S.set,d.set);
+      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.arch) S.arch=d.arch; if(d.hist) S.hist=d.hist; if(d.del) S.del=d.del; if(d.time) S.time=d.time; if(d.set) S.set=Object.assign(S.set,d.set);
       save(); home(); stat(); setting(); toast('进度已导入');
     }catch(e){ toast('文件格式不正确'); }
   };
