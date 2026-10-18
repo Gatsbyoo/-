@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
+<!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
+<meta name="build" content="20261018-1343">
+<script>
+/* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
+(function(){
+  try{
+    var m=document.querySelector('meta[name="build"]'); var b=m?m.content:''; if(!b) return;
+    var seen=localStorage.getItem('bg8_build')||'';
+    if(seen>b){
+      if(!/[?&]v=/.test(location.search)&&!sessionStorage.getItem('bg8_jumped')){
+        sessionStorage.setItem('bg8_jumped','1');
+        location.replace(location.pathname+'?v='+encodeURIComponent(seen));
+      }
+    } else if(b>seen){ localStorage.setItem('bg8_build',b); }
+  }catch(e){}
+})();
+</script>
 <style>
 :root{
   --bg:#f4f6fb; --card:#ffffff; --ink:#1a1d29; --sub:#6b7280; --line:#e6e9f0;
@@ -110,6 +127,13 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
   padding:10px 18px;border-radius:12px;font-size:14px;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none;max-width:80%;text-align:center
 }
 .toast.on{opacity:1}
+.updbar{
+  position:fixed;left:0;right:0;top:0;z-index:95;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-size:13.5px;font-weight:700;
+  padding:calc(9px + env(safe-area-inset-top)) 14px 9px;box-shadow:0 4px 14px rgba(32,45,90,.22)
+}
+.updbar b{background:rgba(255,255,255,.24);padding:4px 11px;border-radius:999px;cursor:pointer;font-size:13px}
+.updbar .x{opacity:.85;cursor:pointer;font-size:15px;margin-left:2px}
 .blank{display:inline-block;min-width:88px;border-bottom:2px solid var(--brand);text-align:center;color:var(--brand);font-weight:800}
 .kbd{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--line);padding:1px 6px;border-radius:5px;font-size:12.5px}
 .switch{display:flex;align-items:center;gap:8px}
@@ -342,6 +366,9 @@ th{color:var(--sub);font-size:12px}
       <button class="btn ghost" onclick="document.getElementById('set-importdata').click()">导入学习进度</button>
     </div>
     <input type="file" id="set-importdata" accept=".json" style="display:none">
+    <div class="hr"></div>
+    <div class="between" style="margin-bottom:8px"><span class="small muted">当前版本</span><span class="small muted" id="set-build">—</span></div>
+    <button class="btn ghost" onclick="checkUpdate(true)">检查更新</button>
     <div class="hr"></div>
     <button class="btn gray" onclick="resetAll()">清空全部进度</button>
     <div class="small muted" style="margin-top:10px">
@@ -894,6 +921,7 @@ function setting(){
       +'<span class="chip" data-id="'+escAttr(id)+'" onclick="restoreArch(this)">恢复</span></div>';
   }).join(''):'<div class="small muted">没有归档的题目</div>';
   renderTagIndex();
+  set('set-build',fmtBuild(BUILD));
 }
 function seg(id,vals,cur,cb,lab){
   document.getElementById(id).innerHTML=vals.map(function(v){
@@ -950,6 +978,41 @@ function importBank(f){
   r.readAsText(f);
 }
 
+/* ---------- 线上版本检测 ---------- */
+var BUILD=(document.querySelector('meta[name="build"]')||{}).content||'';
+function fmtBuild(b){ return b&&b.length>=13? b.slice(0,4)+'-'+b.slice(4,6)+'-'+b.slice(6,8)+' '+b.slice(9,11)+':'+b.slice(11,13) : (b||'—'); }
+function checkUpdate(force){
+  var now=Date.now();
+  if(!force){
+    var last=0; try{ last=+localStorage.getItem('bg8_lastcheck')||0; }catch(e){}
+    if(now-last<6*3600*1000) return;   // 自动检查最多 6 小时一次（省流量），手动「检查更新」不受限
+  }
+  try{ localStorage.setItem('bg8_lastcheck',String(now)); }catch(e){}
+  if(force) toast('正在检查更新…');
+  fetch('index.html?_='+now,{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+    var m=t.match(/<meta name="build" content="([0-9A-Za-z\-]+)"/);
+    if(!m){ if(force) toast('检查失败：未找到版本标记'); return; }
+    var remote=m[1];
+    if(remote>BUILD){ showUpdateBar(remote); if(force) toast('发现新版本 '+fmtBuild(remote)); }
+    else if(force) toast('已是最新版本 · '+fmtBuild(BUILD));
+  }).catch(function(){ if(force) toast('网络不通，检查失败'); });
+}
+function showUpdateBar(remote){
+  window.__remoteBuild=remote;
+  if(document.getElementById('updbar')) return;
+  var d=document.createElement('div'); d.id='updbar'; d.className='updbar';
+  d.innerHTML='<span>🔄 有新版本可用</span><b onclick="applyUpdate()">立即更新</b>'
+    +'<span class="x" onclick="this.parentNode.parentNode.removeChild(this.parentNode)">✕</span>';
+  document.body.appendChild(d);
+}
+function applyUpdate(){
+  var b=window.__remoteBuild||String(Date.now());
+  try{ localStorage.setItem('bg8_build',b); }catch(e){}
+  // 带 ?v= 跳转，绕开主屏图标/浏览器缓存；同域跳转不会丢 localStorage 进度
+  location.replace(location.pathname+'?v='+encodeURIComponent(b));
+}
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) checkUpdate(false); });
+
 /* ---------- 导航 ---------- */
 function go(p){
   ['home','quiz','stat','set'].forEach(function(x){
@@ -981,7 +1044,8 @@ window.archiveQ=archiveQ; window.archFromEl=archFromEl; window.restoreArch=resto
 window.openTagDrawer=openTagDrawer; window.closeTagDrawer=closeTagDrawer; window.toggleDrawerFilter=toggleDrawerFilter;
 window.renderDrawer=renderDrawer; window.renderTagIndex=renderTagIndex; window.peekFromDrawer=peekFromDrawer;
 window.toggleBank=toggleBank; window.exportData=exportData; window.resetAll=resetAll;
-applyDark(); home();
+window.checkUpdate=checkUpdate; window.applyUpdate=applyUpdate;
+applyDark(); home(); checkUpdate(false);
 })();
 
 </script>
