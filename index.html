@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261018-1627">
+<meta name="build" content="20261022-1719">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -454,14 +454,14 @@ function load(){
     var s=JSON.parse(localStorage.getItem(KEY)||'null');
     if(!s||typeof s!=='object') throw 0;
     s.cards=s.cards||{}; s.daily=s.daily||{}; s.custom=s.custom||[];
-    s.off=s.off||{}; s.set=s.set||{}; s.arch=s.arch||{}; s.hist=s.hist||{}; s.del=s.del||{}; s.time=s.time||{};
+    s.off=s.off||{}; s.set=s.set||{}; s.arch=s.arch||{}; s.hist=s.hist||{}; s.del=s.del||{}; s.time=s.time||{}; s.fix=s.fix||{};
     if(s.set.newCap==null)s.set.newCap=20;
     if(s.set.rep==null)s.set.rep=4;
     if(s.set.shuffle==null)s.set.shuffle=1;
     if(s.set.dark==null)s.set.dark=0;
     return s;
   }catch(e){
-    return {cards:{},daily:{},custom:[],off:{},arch:{},hist:{},del:{},time:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
+    return {cards:{},daily:{},custom:[],off:{},arch:{},hist:{},del:{},time:{},fix:{},set:{newCap:20,rep:4,shuffle:1,dark:0}};
   }
 }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){ toast('存储空间不足，请导出备份后清理'); } }
@@ -639,9 +639,13 @@ function orderActions(beforeWhy){
   if(beforeWhy){ if(act.nextElementSibling!==why) why.parentNode.insertBefore(act,why); }
   else { if(why.nextElementSibling!==act) why.parentNode.insertBefore(act,why.nextElementSibling); }
 }
+/* 正确答案（本机可纠正：S.fix[qid] 覆盖题库原答案） */
+function ansOf(q){ return (S.fix&&S.fix[q.id]!=null)?S.fix[q.id]:q.ans; }
+function isFixed(q){ return !!(S.fix&&S.fix[q.id]!=null); }
 function revealQ(q,c,st){
   var opts=document.getElementById('q-opts'), fill=document.getElementById('q-fill'), act=document.getElementById('q-actions');
   orderActions(q.type==='choice');   // 选择题：按钮紧跟选项，解析放最后，方便快速连刷
+  var rightAns=ansOf(q);
   if(q.type==='fill'){
     opts.innerHTML=''; fill.style.display='';
     var inp=document.getElementById('q-input'); inp.value=st.text||''; inp.disabled=true; inp.blur();
@@ -650,21 +654,46 @@ function revealQ(q,c,st){
     var idx=q._idx||q.options.map(function(_,i){ return i; });
     opts.innerHTML=idx.map(function(orig,i){
       var cls='opt dim', kCls='k';
-      if(orig===q.ans){ cls='opt correct'; kCls='k on'; }
+      if(orig===rightAns){ cls='opt correct'; kCls='k on'; }
       else if(orig===st.pick){ cls='opt wrong'; kCls='k no'; }
+      if(fixMode) return '<button class="opt" onclick="setFixAt('+i+')"><span class="k">'+'ABCDE'[i]+'</span><span>'+esc(q.options[orig])+'</span></button>';
       return '<button class="'+cls+'" disabled><span class="'+kCls+'">'+'ABCDE'[i]+'</span><span>'+esc(q.options[orig])+'</span></button>';
     }).join('');
   }
-  var ansTxt = q.type==='fill' ? (q.ans||[]).join(' / ') : q.options[q.ans];
-  document.getElementById('q-why').innerHTML='<div class="why '+(st.right?'ok':'bad')+'">'
-    +'<div style="font-weight:800;margin-bottom:4px">'+(st.right?'✅ 答对了':'❌ 答错了')+'</div>'
-    +'<div class="small muted" style="margin-bottom:6px">正确答案：<b style="color:var(--ink)">'+esc(ansTxt)+'</b></div>'
-    +'<div>'+esc(q.why)+'</div></div>';
-  var hint = st.right ? ('下次出现：'+GAP[Math.min(7,c.lv||1)]+' 天后') : '已加入本轮重出 + 明天再复习';
+  var ansTxt = q.type==='fill' ? (q.ans||[]).join(' / ') : q.options[rightAns];
+  // 选择题：按纠正后的答案重算这次是否答对
+  var shownRight = (q.type==='choice'&&st.pick!=null) ? (st.pick===rightAns) : st.right;
+  var fixBar = fixMode
+    ? '<div class="small" style="margin-top:8px;color:var(--brand);font-weight:700">👆 点一下你认为正确的选项（只改本机题库）　<span class="chip" onclick="cancelFix()">取消</span></div>'
+    : ('<div style="margin-top:8px">'
+        + '<span class="chip" onclick="startFix()">✎ 答案有误？改正</span>'
+        + (isFixed(q)?' <span class="chip on" onclick="unfixAnswer()">已纠正 · 恢复原答案</span>':'')
+        + '</div>');
+  document.getElementById('q-why').innerHTML='<div class="why '+(shownRight?'ok':'bad')+'">'
+    +'<div style="font-weight:800;margin-bottom:4px">'+(shownRight?'✅ 答对了':'❌ 答错了')+'</div>'
+    +'<div class="small muted" style="margin-bottom:6px">正确答案：<b style="color:var(--ink)">'+esc(ansTxt)+'</b>'+(isFixed(q)?' <span class="tag y">已按你的纠正</span>':'')+'</div>'
+    +'<div>'+esc(q.why)+'</div>'+fixBar+'</div>';
+  var hint = shownRight ? ('下次出现：'+GAP[Math.min(7,c.lv||1)]+' 天后') : '已加入本轮重出 + 明天再复习';
   act.innerHTML='<div class="grid2">'
     +'<button class="btn ghost" onclick="prev()"'+(qi<=0?' disabled':'')+'>← 上一题</button>'
     +'<button class="btn" onclick="next()">'+(qi+1>=Q.length?'完成本轮 →':'下一题 →')+'</button></div>'
     +'<div class="small muted center" style="margin-top:8px">'+hint+'</div>';
+}
+/* 纠正答案 */
+var fixMode=false;
+function startFix(){ fixMode=true; render(); }
+function cancelFix(){ fixMode=false; render(); }
+function setFixAt(i){
+  var q=Q[qi]; if(!q||q.type!=='choice') return;
+  var idx=q._idx||q.options.map(function(_,j){ return j; });
+  var orig=idx[i];
+  S.fix=S.fix||{}; S.fix[q.id]=orig; fixMode=false; save(); render();
+  toast('已把正确答案改为「'+q.options[orig]+'」');
+}
+function unfixAnswer(){
+  var q=Q[qi]; if(!q) return;
+  if(S.fix) delete S.fix[q.id];
+  fixMode=false; save(); render(); toast('已恢复题库原答案');
 }
 function prev(){
   if(qi<=0){ toast('已经是第一题'); return; }
@@ -676,7 +705,7 @@ function pick(i){
   if(Qans[qi]&&Qans[qi].graded) return;        // 已作答，回看时不能再选
   var orig=q._map['ABCDE'[i]];
   Qans[qi]={pick:orig};
-  grade(orig===q.ans);
+  grade(orig===ansOf(q));
 }
 function norm(s){
   return String(s||'').toLowerCase().replace(/\s+/g,'').replace(/[，。、；：""''（）()]/g,'')
@@ -692,7 +721,7 @@ function submitFill(){
 }
 function showWhy(right,q,isFill){
   var box=document.getElementById('q-why');
-  var ansTxt = q.type==='fill' ? (q.ans||[]).join(' / ') : q.options[q.ans];
+  var ansTxt = q.type==='fill' ? (q.ans||[]).join(' / ') : q.options[ansOf(q)];
   box.innerHTML='<div class="why '+(right?'ok':'bad')+'">'
     +'<div style="font-weight:800;margin-bottom:4px">'+(right?'✅ 答对了':'❌ 答错了')+'</div>'
     +'<div class="small muted" style="margin-bottom:6px">正确答案：<b style="color:var(--ink)">'+esc(ansTxt)+'</b></div>'
@@ -892,14 +921,14 @@ function quizIdle(){
     :'<div class="card small muted center">错题池是空的，先去刷一轮 💪</div>';
 }
 function kcard(q){
-  var c=S.cards[q.id]||{ok:0,bad:0};
+  var c=S.cards[q.id]||{ok:0,bad:0}, rightAns=ansOf(q);
   var body='';
   if(q.type==='choice'){
     body=(q.options||[]).map(function(o,i){
-      return '<div class="optline'+(i===q.ans?' ok':'')+'">'+'ABCDE'[i]+'. '+esc(o)+(i===q.ans?' ✓':'')+'</div>';
+      return '<div class="optline'+(i===rightAns?' ok':'')+'">'+'ABCDE'[i]+'. '+esc(o)+(i===rightAns?' ✓':'')+'</div>';
     }).join('');
   }
-  body+='<div class="ans">正确答案：<b>'+esc(q.type==='fill'?(q.ans||[]).join(' / '):q.options[q.ans])+'</b></div>';
+  body+='<div class="ans">正确答案：<b>'+esc(q.type==='fill'?(q.ans||[]).join(' / '):q.options[rightAns])+'</b></div>';
   body+='<div class="exp">'+esc(q.why)+'</div>';
   return '<div class="kcard">'
     +'<div class="kt">'+esc(q.q).replace(/______/g,'____')+'</div>'
@@ -1104,7 +1133,7 @@ function delBank(k){
 }
 function restoreBank(k){ delete S.del[k]; save(); setting(); home(); stat(); quizView(); toast('已恢复题库'); }
 function exportData(){
-  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,arch:S.arch,hist:S.hist,del:S.del,time:S.time,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
+  var blob=new Blob([JSON.stringify({cards:S.cards,daily:S.daily,arch:S.arch,hist:S.hist,del:S.del,time:S.time,fix:S.fix,set:S.set,exportAt:new Date().toISOString()})],{type:'application/json'});
   dl(blob,'刷题进度_'+todayKey()+'.json'); toast('已导出');
 }
 function dl(blob,name){
@@ -1120,7 +1149,7 @@ function importData(f){
   r.onload=function(){
     try{
       var d=JSON.parse(r.result);
-      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.arch) S.arch=d.arch; if(d.hist) S.hist=d.hist; if(d.del) S.del=d.del; if(d.time) S.time=d.time; if(d.set) S.set=Object.assign(S.set,d.set);
+      if(d.cards) S.cards=d.cards; if(d.daily) S.daily=d.daily; if(d.arch) S.arch=d.arch; if(d.hist) S.hist=d.hist; if(d.del) S.del=d.del; if(d.time) S.time=d.time; if(d.fix) S.fix=d.fix; if(d.set) S.set=Object.assign(S.set,d.set);
       save(); home(); stat(); setting(); toast('进度已导入');
     }catch(e){ toast('文件格式不正确'); }
   };
@@ -1214,6 +1243,7 @@ window.openTagDrawer=openTagDrawer; window.closeTagDrawer=closeTagDrawer; window
 window.renderDrawer=renderDrawer; window.renderTagIndex=renderTagIndex; window.peekFromDrawer=peekFromDrawer;
 window.startDrawerQuiz=startDrawerQuiz; window.startList=startList;
 window.prev=prev; window.quizView=quizView; window.quizIdle=quizIdle;
+window.startFix=startFix; window.cancelFix=cancelFix; window.setFixAt=setFixAt; window.unfixAnswer=unfixAnswer;
 window.toggleBank=toggleBank; window.delBank=delBank; window.restoreBank=restoreBank; window.exportData=exportData; window.resetAll=resetAll;
 window.checkUpdate=checkUpdate; window.applyUpdate=applyUpdate;
 applyDark(); home(); quizView(); checkUpdate(false);
