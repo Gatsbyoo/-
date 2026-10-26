@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261022-1719">
+<meta name="build" content="20261027-0054">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -98,7 +98,7 @@ input[type=text]:focus{border-color:var(--brand)}
 .why.bad{border-left-color:var(--bad)}
 .nav{
   position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);
-  display:grid;grid-template-columns:repeat(4,1fr);padding:6px 0 calc(6px + env(safe-area-inset-bottom));
+  display:grid;grid-template-columns:repeat(5,1fr);padding:6px 0 calc(6px + env(safe-area-inset-bottom));
   z-index:50;
 }
 .nav button{background:none;border:none;color:var(--sub);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px}
@@ -173,6 +173,64 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
 th{color:var(--sub);font-size:12px}
+
+/* ---- 代码默写 ---- */
+/* ================= 代码默写（算法模板） ================= */
+.wr-tpl{padding:12px;border-radius:12px;background:var(--bg);margin-top:9px}
+.wr-title{font-weight:700;font-size:14.5px;line-height:1.4}
+.wr-btns{display:flex;gap:8px;margin-top:10px}
+.wr-btns .btn{width:auto;flex:1;min-width:0}
+.wr-dots{display:flex;gap:5px;align-items:center}
+.wr-dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
+.wr-dots i.p{background:var(--ok)}
+.wr-dots i.c{background:var(--brand);box-shadow:0 0 0 3px rgba(79,110,247,.18)}
+.wr-run{position:fixed;left:0;right:0;top:0;bottom:0;z-index:90;background:var(--bg);display:none;flex-direction:column}
+.wr-run.on{display:flex}
+.wr-top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:var(--card);border-bottom:1px solid var(--line);flex:0 0 auto}
+.wr-ttl{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wr-sub{font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wr-cnt{font-size:12px;font-weight:800;color:var(--brand);flex:0 0 auto}
+.wr-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 20px}
+.wr-keys{display:none;gap:6px;overflow-x:auto;padding:8px 10px;background:var(--card);border-top:1px solid var(--line);flex:0 0 auto}
+.wr-keys button{flex:0 0 auto;min-width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;font-weight:700;cursor:pointer}
+.wr-foot{padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line);flex:0 0 auto}
+.wr-fb{font-size:13.5px;margin-bottom:0;line-height:1.5;display:none}
+.wr-fb.on{display:block}
+.wr-fb .btn{font-size:14px;padding:10px 12px}
+.wr-code{background:var(--card);border-radius:12px;padding:10px 4px;box-shadow:var(--shadow);overflow-x:auto;overscroll-behavior-x:contain}
+.wr-line{display:flex;gap:5px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:2;white-space:pre}
+.wr-ln{flex:0 0 16px;color:var(--sub);opacity:.5;text-align:right;font-size:10.5px;padding-top:3px;user-select:none}
+.wr-src{flex:1;min-width:0;white-space:pre}
+.wr-note{font-size:11px;color:var(--sub);padding:0 0 3px 22px;line-height:1.5}
+.wr-hole{display:inline-block;min-width:48px;padding:0 6px;margin:0 1px;border-bottom:2px solid var(--brand);border-radius:4px;background:rgba(79,110,247,.10);color:var(--brand);font-weight:700;text-align:center;cursor:pointer}
+.wr-hole.act{background:rgba(79,110,247,.22);box-shadow:0 0 0 2px rgba(79,110,247,.28)}
+.wr-hole.sel{background:rgba(79,110,247,.20)}
+.wr-hole.ok{border-color:var(--ok);color:var(--ok);background:var(--ok-bg)}
+.wr-hole.no{border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.wr-opts{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 2px 22px}
+.wr-opts button{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:7px 10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;cursor:pointer}
+.wr-opts button.on{border-color:var(--brand);background:rgba(79,110,247,.12);color:var(--brand);font-weight:700}
+input.wr-in{width:auto;min-width:52px;max-width:100%;padding:1px 5px;border:none;border-bottom:2px solid var(--brand);background:rgba(79,110,247,.09);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;border-radius:4px;outline:none}
+input.wr-in.ok{border-color:var(--ok);background:var(--ok-bg)}
+input.wr-in.no{border-color:var(--bad);background:var(--bad-bg)}
+input.wr-linein{width:100%;padding:2px 6px;border:none;border-bottom:2px dashed var(--brand);background:transparent;color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border-radius:4px;outline:none}
+input.wr-linein.ok{border-bottom-color:var(--ok);background:var(--ok-bg)}
+input.wr-linein.no{border-bottom-color:var(--bad);background:var(--bad-bg)}
+.wr-tip{font-size:11.5px;color:var(--warn);padding:1px 0 3px 0;line-height:1.5}
+.wr-exp{font-size:11.5px;color:var(--ok);padding:2px 0 4px 22px;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;line-height:1.6}
+.wr-bad{font-size:11.5px;color:var(--bad);padding:0 0 4px 22px;line-height:1.55}
+.wr-hint{font-size:12.5px;color:var(--sub);margin:0 0 10px;line-height:1.6}
+.wr-k{color:#6d4aff;font-weight:700}
+.wr-t{color:#0e7490}
+.wr-n{color:#b45309}
+.wr-p{color:var(--sub)}
+.wr-c{color:var(--sub);font-style:italic}
+body.dark .wr-k{color:#a78bfa}
+body.dark .wr-t{color:#5eead4}
+body.dark .wr-n{color:#fbbf24}
+body.dark .wr-hole{background:rgba(124,92,255,.18)}
+body.dark input.wr-in{background:rgba(124,92,255,.16)}
+
 </style>
 </head>
 <body>
@@ -412,6 +470,48 @@ th{color:var(--sub);font-size:12px}
   </div>
 </section>
 
+<!-- ================= 代码默写（算法模板） ================= -->
+<section class="page" id="p-write">
+  <div class="card" style="background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff">
+    <div class="between">
+      <div>
+        <div style="opacity:.85;font-size:13px">今日默写</div>
+        <div class="big"><span id="w-today">0</span><span style="font-size:14px;font-weight:600"> 空</span></div>
+      </div>
+      <div style="text-align:right">
+        <div style="opacity:.85;font-size:13px">已掌握模板</div>
+        <div class="big" id="w-master">0/0</div>
+      </div>
+    </div>
+    <div class="small" style="opacity:.88;margin-top:8px">待复习 <b id="w-due">0</b> 个 · 连续默写 <b id="w-streak">0</b> 天 · 已解锁 <span id="w-prog">—</span></div>
+  </div>
+
+  <div class="card">
+    <div class="between" style="margin-bottom:10px">
+      <h3 style="font-size:16px">今日默写</h3>
+      <span class="small muted">严格模式</span>
+    </div>
+    <div class="grid2">
+      <button class="btn ok" onclick="WR.review()">复习到期 <span id="w-due2">0</span></button>
+      <button class="btn" onclick="WR.resume()">继续上次</button>
+    </div>
+    <div class="small muted" style="margin-top:8px">每轮<b>一次全对</b>才解锁下一轮：第①轮 选择题 → 第②轮 填空 → 第③轮 整行默写关键行。三轮全过才算掌握，之后按 1/2/4/7/15/30 天复习。</div>
+  </div>
+
+  <div id="w-cats"></div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:10px">数据</h3>
+    <div class="grid2">
+      <button class="btn ghost" onclick="WR.exp()">导出默写进度</button>
+      <button class="btn ghost" onclick="document.getElementById('w-imp').click()">导入默写进度</button>
+    </div>
+    <input type="file" id="w-imp" accept="application/json,.json" style="display:none">
+    <div style="margin-top:10px"><button class="btn gray" onclick="WR.reset()">清空默写进度</button></div>
+    <div class="small muted" style="margin-top:8px">默写进度单独保存，不影响八股刷题的题库与进度；换设备前请先导出。</div>
+  </div>
+</section>
+
 </div>
 
 <div class="drawer" id="tag-drawer">
@@ -429,9 +529,47 @@ th{color:var(--sub);font-size:12px}
   </div>
 </div>
 
+<!-- ================= 代码默写 · 全屏练习层 ================= -->
+<div class="wr-run" id="wr-run">
+  <div class="wr-top">
+    <button class="chip" onclick="WR.back()">← 退出</button>
+    <div style="flex:1;min-width:0">
+      <div class="wr-ttl" id="wr-ttl">—</div>
+      <div class="wr-sub" id="wr-sub">—</div>
+    </div>
+    <div class="wr-cnt" id="wr-cnt">—</div>
+  </div>
+  <div class="wr-scroll" id="wr-scroll"><div id="wr-body"></div></div>
+  <div class="wr-keys" id="wr-keys">
+    <button onclick="WR.key('{')">{</button>
+    <button onclick="WR.key('}')">}</button>
+    <button onclick="WR.key('(')">(</button>
+    <button onclick="WR.key(')')">)</button>
+    <button onclick="WR.key(';')">;</button>
+    <button onclick="WR.key('&lt;')">&lt;</button>
+    <button onclick="WR.key('&gt;')">&gt;</button>
+    <button onclick="WR.key('=')">=</button>
+    <button onclick="WR.key('[')">[</button>
+    <button onclick="WR.key(']')">]</button>
+    <button onclick="WR.key('+')">+</button>
+    <button onclick="WR.key('-')">-</button>
+    <button onclick="WR.key('*')">*</button>
+    <button onclick="WR.key('&amp;')">&amp;</button>
+    <button onclick="WR.key('|')">|</button>
+    <button onclick="WR.key(':')">:</button>
+    <button onclick="WR.key('&quot;')">&quot;</button>
+    <button onclick="WR.key('_')">_</button>
+  </div>
+  <div class="wr-foot">
+    <div class="wr-fb" id="wr-fb"></div>
+    <button class="btn" id="wr-submit" onclick="WR.submit()">提交</button>
+  </div>
+</div>
+
 <nav class="nav">
   <button class="on" id="n-home" onclick="go('home')"><span class="ic">🏠</span>首页</button>
   <button id="n-quiz" onclick="go('quiz')"><span class="ic">✏️</span>刷题</button>
+  <button id="n-write" onclick="go('write')"><span class="ic">⌨️</span>默写</button>
   <button id="n-stat" onclick="go('stat')"><span class="ic">📊</span>统计</button>
   <button id="n-set" onclick="go('set')"><span class="ic">⚙️</span>题库</button>
 </nav>
@@ -1212,7 +1350,7 @@ document.addEventListener('visibilitychange',function(){ if(!document.hidden) ch
 
 /* ---------- 导航 ---------- */
 function go(p){
-  ['home','quiz','stat','set'].forEach(function(x){
+  ['home','quiz','write','stat','set'].forEach(function(x){
     document.getElementById('p-'+x).classList.toggle('on',x===p);
     document.getElementById('n-'+x).classList.toggle('on',x===p);
   });
@@ -1220,6 +1358,7 @@ function go(p){
   if(p==='stat') stat();
   if(p==='set') setting();
   if(p==='quiz') quizView();
+  if(p==='write'&&window.WR) WR.render();
   window.scrollTo(0,0);
 }
 var tt;
@@ -1247,6 +1386,625 @@ window.startFix=startFix; window.cancelFix=cancelFix; window.setFixAt=setFixAt; 
 window.toggleBank=toggleBank; window.delBank=delBank; window.restoreBank=restoreBank; window.exportData=exportData; window.resetAll=resetAll;
 window.checkUpdate=checkUpdate; window.applyUpdate=applyUpdate;
 applyDark(); home(); quizView(); checkUpdate(false);
+})();
+
+</script>
+
+<!-- ================= 算法模板题库（哈希） ================= -->
+<script id="TPL" type="application/json">
+[
+  {
+    "id": "hash-two-sum",
+    "cat": "01 哈希",
+    "title": "两数之和 · 边遍历边查表",
+    "problems": [
+      {"lc": 1, "name": "两数之和", "diff": "Easy"}
+    ],
+    "essence": "内层循环只在找一个确定的值 → 把见过的值提前存进哈希表，内层变成 O(1) 查表",
+    "code": [
+      "class Solution {",
+      "public:",
+      "    vector<int> twoSum(vector<int>& nums, int target) {",
+      "        unordered_map<int, int> seen;",
+      "        for (int i = 0; i < (int)nums.size(); ++i) {",
+      "            int want = target - nums[i];",
+      "            if (seen.count(want)) return {seen[want], i};",
+      "            seen[nums[i]] = i;",
+      "        }",
+      "        return {};",
+      "    }",
+      "};"
+    ],
+    "notes": {
+      "3": "值 → 下标，存「已经见过」的元素",
+      "4": "先查后存，一趟遍历就够",
+      "5": "搭档 = 目标和 − 当前值",
+      "6": "先查：搭档出现过就直接返回两个下标",
+      "7": "后存：把自己登记进表",
+      "9": "题目保证有解，兜底返回空"
+    },
+    "blanks": [
+      {"l": 3, "text": "unordered_map<int, int>", "opts": ["unordered_map<int, int>", "map<int, int>", "set<int>", "vector<int>"], "why": "要 O(1) 查值还要存下标：map 查询是 O(log n)，set 存不了下标，vector 查一次是 O(n)"},
+      {"l": 4, "text": "i < (int)nums.size()", "opts": ["i < (int)nums.size()", "i <= (int)nums.size()", "i < (int)nums.size() - 1", "i < sizeof(nums)"], "why": "size() 返回无符号的 size_t，和 int i 比较会出符号警告，所以显式 (int) 转；别用 sizeof(nums)（那是 vector 对象本身的大小，不是元素个数）"},
+      {"l": 5, "text": "target - nums[i]", "opts": ["target - nums[i]", "target + nums[i]", "nums[i] - target", "target - want"], "why": "搭档 = target − 当前值；写成 nums[i] - target 符号就反了"},
+      {"l": 6, "text": "seen.count(want)", "opts": ["seen.count(want)", "seen.count(nums[i])", "seen[want] == 0", "want == 0"], "why": "查的是「搭档」在不在表里，不是查自己——查自己会让 [3,3], target=6 这种用例把自己当搭档"},
+      {"l": 6, "text": "{seen[want], i}", "opts": ["{seen[want], i}", "{i, seen[want]}", "{want, i}", "{seen[nums[i]], i}"], "why": "返回两个下标：先出现的搭档下标 + 当前下标；不是值 want"},
+      {"l": 7, "text": "seen[nums[i]] = i", "opts": ["seen[nums[i]] = i", "seen[i] = nums[i]", "seen[want] = i", "seen[nums[i]]++"], "why": "存的是「值 → 下标」；写成 seen[i] = nums[i] 键值就反了"}
+    ]
+  },
+  {
+    "id": "hash-group",
+    "cat": "01 哈希",
+    "title": "等价分组 · 规范化 key",
+    "problems": [
+      {"lc": 49, "name": "字母异位词分组", "diff": "Medium"}
+    ],
+    "essence": "等价分组的通用解法：给每个元素算一个「身份证」（规范形），同身份证进同一组",
+    "code": [
+      "class Solution {",
+      "public:",
+      "    vector<vector<string>> groupAnagrams(vector<string>& strs) {",
+      "        unordered_map<string, vector<string>> groups;",
+      "        for (auto& s : strs) {",
+      "            string key = s;",
+      "            sort(key.begin(), key.end());",
+      "            groups[key].push_back(s);",
+      "        }",
+      "        vector<vector<string>> ans;",
+      "        for (auto& kv : groups) ans.push_back(kv.second);",
+      "        return ans;",
+      "    }",
+      "};"
+    ],
+    "notes": {
+      "3": "规范形 → 同组字符串列表",
+      "5": "先复制一份，排序不能改原串",
+      "6": "排序后的串就是异位词的共同身份证",
+      "7": "同 key 自动归到一组",
+      "10": "只取值（成员列表），key 不需要"
+    },
+    "blanks": [
+      {"l": 3, "text": "unordered_map<string, vector<string>>", "opts": ["unordered_map<string, vector<string>>", "map<string, int>", "unordered_set<string>", "vector<string>"], "why": "要「key → 一组字符串」；set 只能去重，存不了成员列表"},
+      {"l": 5, "text": "string key = s", "opts": ["string key = s", "string key = \"\"", "string& key = s", "string key = s + s"], "why": "要在副本上排序；写成引用会直接把原串 s 改掉，分组结果就错了"},
+      {"l": 6, "text": "sort(key.begin(), key.end())", "opts": ["sort(key.begin(), key.end())", "sort(s.begin(), s.end())", "reverse(key.begin(), key.end())", "sort(key.rbegin(), key.rend())"], "why": "sort 生成规范形：异位词排完都变成同一个串。必须排副本 key，排 s 会把原串改掉；reverse 记的是逆序身份，同组能对齐但不是标准写法，面试按 sort 写"},
+      {"l": 7, "text": "groups[key].push_back(s)", "opts": ["groups[key].push_back(s)", "groups[s].push_back(key)", "groups[key].push_back(key)", "groups.push_back(s)"], "why": "规范形当 key，原串进组；用 s 当 key 就退化成「一个词一组」"},
+      {"l": 10, "text": "kv.second", "opts": ["kv.second", "kv.first", "kv", "groups[kv]"], "why": "first 是 key，second 才是那组字符串"}
+    ]
+  },
+  {
+    "id": "hash-prefix",
+    "cat": "01 哈希",
+    "title": "前缀和 + 哈希 · 和为 K 的子数组",
+    "problems": [
+      {"lc": 560, "name": "和为 K 的子数组", "diff": "Medium"}
+    ],
+    "essence": "子数组和 = 两个前缀和之差 → 把「查两数之和」换成「查 prefix − k 出现过几次」",
+    "code": [
+      "class Solution {",
+      "public:",
+      "    int subarraySum(vector<int>& nums, int k) {",
+      "        unordered_map<int, int> cnt;",
+      "        cnt[0] = 1;",
+      "        int prefix = 0, ans = 0;",
+      "        for (int x : nums) {",
+      "            prefix += x;",
+      "            ans += cnt[prefix - k];",
+      "            cnt[prefix]++;",
+      "        }",
+      "        return ans;",
+      "    }",
+      "};"
+    ],
+    "notes": {
+      "3": "前缀和 → 出现次数",
+      "4": "空前缀：让「从下标 0 开始」的子数组能被统计",
+      "7": "走到当前位置的累计前缀和",
+      "8": "之前有几次前缀和等于 prefix − k，就有几个以当前结尾的答案",
+      "9": "先查后存：现在才把当前前缀和登记进表"
+    },
+    "blanks": [
+      {"l": 3, "text": "unordered_map<int, int> cnt", "opts": ["unordered_map<int, int> cnt", "unordered_set<int> cnt", "vector<int> cnt", "map<int, int> cnt"], "why": "要记「每个前缀和出现几次」，只有 map 能计数；set 去重会把次数丢掉"},
+      {"l": 4, "text": "cnt[0] = 1", "opts": ["cnt[0] = 1", "cnt[0] = 0", "cnt[1] = 0", "cnt[k] = 1"], "why": "空前缀必须计 1，否则所有从下标 0 开始的子数组全部漏计——这是本题最高频的错"},
+      {"l": 7, "text": "prefix += x", "opts": ["prefix += x", "prefix = x", "prefix -= x", "prefix = ans + x"], "why": "前缀和是累加；写成 prefix = x 就只是当前元素"},
+      {"l": 8, "text": "ans += cnt[prefix - k]", "opts": ["ans += cnt[prefix - k]", "ans += cnt[prefix + k]", "ans = cnt[prefix - k]", "ans += cnt[k - prefix]"], "why": "统计的是个数所以必须 +=；查的是 prefix − k（子数组和 = 两前缀和之差）"},
+      {"l": 9, "text": "cnt[prefix]++", "opts": ["cnt[prefix]++", "cnt[x]++", "cnt[prefix] = 1", "++cnt[prefix - k]"], "why": "登记的是当前前缀和，而且必须在「查」之后；写成 cnt[x]++ 记的变成单个元素"}
+    ]
+  },
+  {
+    "id": "hash-set-chain",
+    "cat": "01 哈希",
+    "title": "set + 只从链头出发",
+    "problems": [
+      {"lc": 128, "name": "最长连续序列", "diff": "Medium"}
+    ],
+    "essence": "用 set 把「排序」换成 O(1) 存在性查询，并且只在序列起点启动，摊还 O(n)",
+    "code": [
+      "class Solution {",
+      "public:",
+      "    int longestConsecutive(vector<int>& nums) {",
+      "        unordered_set<int> st(nums.begin(), nums.end());",
+      "        int best = 0;",
+      "        for (int x : st) {",
+      "            if (st.count(x - 1)) continue;",
+      "            int cur = x, len = 1;",
+      "            while (st.count(cur + 1)) { ++cur; ++len; }",
+      "            best = max(best, len);",
+      "        }",
+      "        return best;",
+      "    }",
+      "};"
+    ],
+    "notes": {
+      "3": "一次构建顺带去重，之后查询 O(1)",
+      "6": "x−1 存在说明 x 不是链头，直接跳过",
+      "7": "cur 是链尾，len 是链长",
+      "8": "从链头一路向右数到底",
+      "9": "比的是链长 len，不是链尾的值 cur"
+    },
+    "blanks": [
+      {"l": 3, "text": "unordered_set<int> st(nums.begin(), nums.end())", "opts": ["unordered_set<int> st(nums.begin(), nums.end())", "unordered_map<int, int> st(nums.begin(), nums.end())", "vector<int> st(nums.begin(), nums.end())", "set<int> st(nums.begin(), nums.end())"], "why": "只做存在性查询就该用 unordered_set，O(1) 且不存多余信息；vector 查一次 O(n)，有序 set 是 O(log n)"},
+      {"l": 6, "text": "st.count(x - 1)", "opts": ["st.count(x - 1)", "st.count(x + 1)", "st.count(x)", "st.count(cur - 1)"], "why": "只有 x−1 不存在时 x 才是链头；判 x+1 会让每条链都被从中间数，复杂度退化 O(n²)"},
+      {"l": 8, "text": "st.count(cur + 1)", "opts": ["st.count(cur + 1)", "st.count(cur)", "st.count(x + 1)", "st.count(cur - 1)"], "why": "向右延伸查的是下一个数 cur+1；查 st.count(cur) 恒真会死循环，查 x+1 只数得动一步"},
+      {"l": 9, "text": "max(best, len)", "opts": ["max(best, len)", "max(best, cur)", "min(best, len)", "best + len"], "why": "要比的是链长 len，写成 cur 比的是链尾数值（[100] 会得到 100 这种荒谬答案）"}
+    ]
+  }
+]
+</script>
+
+<script>
+/* ================= 代码默写 · 算法模板引擎（哈希篇） ================= */
+(function(){
+"use strict";
+
+var KEY='bg8_algo_v1', DAY=86400000;
+var GAP=[0,1,2,4,7,15,30,60];          // 掌握后的复习间隔（天），与八股刷题同一套节奏
+var TPL=[];
+try{ TPL=JSON.parse(document.getElementById('TPL').textContent||'[]'); }catch(e){ TPL=[]; }
+var MAP={}; for(var _i=0;_i<TPL.length;_i++) MAP[TPL[_i].id]=TPL[_i];
+
+var HINT={
+  0:'看模板：代码全给，带底色的就是考点空。看懂了点下面「开始」进入第①轮。',
+  1:'第①轮 · 选择题：点代码里的空位切换，底部选一个填进去。全部选完提交，<b>一次全对</b>才解锁第②轮。',
+  2:'第②轮 · 填空题：直接在空里打字（空格、分号不严格）。<b>一次全对</b>才解锁第③轮。',
+  3:'第③轮 · 默写关键行：把被清空的整行写出来，缩进和空格不严格。写不出来点 💡 看提示。'
+};
+
+/* ---------- 状态 ---------- */
+var ST=load(), RUN=null, ACT=0;
+
+function load(){
+  var s={v:1,tpl:{},day:{}};
+  try{
+    var r=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(r&&typeof r==='object'){ s.tpl=r.tpl||{}; s.day=r.day||{}; }
+  }catch(e){}
+  return s;
+}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(ST)); }catch(e){ toast('存储空间不足，请先导出默写进度'); } }
+function pad2(n){ return n<10?'0'+n:''+n; }
+function keyOf(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function todayKey(){ return keyOf(new Date()); }
+function dayRec(){ var k=todayKey(); if(!ST.day[k]) ST.day[k]={b:0,sec:0}; return ST.day[k]; }
+function P(id){
+  var p=ST.tpl[id];
+  if(!p){ p={u:1,pass:{},lvl:0,due:0,last:0}; ST.tpl[id]=p; }
+  p.pass=p.pass||{}; if(!p.u)p.u=1; p.lvl=p.lvl||0; p.due=p.due||0;
+  return p;
+}
+function isMaster(p){ return !!p.pass[3]; }
+function isDue(p){ return isMaster(p)&&p.due&&p.due<=Date.now(); }
+
+/* ---------- 工具 ---------- */
+function $(id){ return document.getElementById(id); }
+function setTxt(id,v){ var e=$(id); if(e) e.textContent=v; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+var _tt;
+function toast(m){
+  var e=$('toast'); if(!e) return;
+  e.textContent=m; e.classList.add('on');
+  clearTimeout(_tt); _tt=setTimeout(function(){ e.classList.remove('on'); },1900);
+}
+/* 判分归一化：去行尾注释、行尾分号、std::、所有多余空格，大小写不敏感 */
+function norm(s){
+  s=String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\t/g,'    ');
+  s=s.replace(/\/\/.*$/,'');
+  s=s.replace(/\s*;\s*$/,'');
+  s=s.replace(/std::/g,'');
+  s=s.replace(/\s+/g,' ');
+  s=s.replace(/\s*([(){}\[\];,.<>=+\-*\/%!&|?:])\s*/g,'$1');
+  return s.trim().toLowerCase();
+}
+function indentOf(line){ var m=/^[ ]*/.exec(line); return m?m[0]:''; }
+/* 手机上代码区宽度有限：显示时把 4 空格缩进折成 2 空格，省 1/3 宽度（判分不看缩进） */
+function disp(line){
+  var m=/^( +)/.exec(line);
+  if(!m) return line;
+  var n=Math.ceil(m[1].length/2);
+  return new Array(n+1).join(' ')+line.slice(m[1].length);
+}
+
+/* ---------- 轻量 C++ 语法高亮（无外部依赖） ---------- */
+var TYSET={vector:1,string:1,unordered_map:1,unordered_set:1,map:1,set:1,int:1,void:1,bool:1,char:1,long:1,unsigned:1,size_t:1,auto:1};
+var KWSET={class:1,public:1,private:1,protected:1,struct:1,return:1,if:1,else:1,for:1,while:1,continue:1,break:1,true:1,false:1,nullptr:1,const:1,new:1,delete:1};
+var TOK=/(\/\/[^\n]*)|("(?:[^"\\]|\\.)*")|([A-Za-z_]\w*)|(\d+)|([^\sA-Za-z_\d]+)|(\s+)/g;
+function hl(s){
+  var out='',m; TOK.lastIndex=0;
+  while((m=TOK.exec(s))!==null){
+    var t=m[0];
+    if(m[1]) out+='<span class="wr-c">'+esc(t)+'</span>';
+    else if(m[2]) out+='<span class="wr-n">'+esc(t)+'</span>';
+    else if(m[3]) out+=TYSET[t]?'<span class="wr-t">'+esc(t)+'</span>':(KWSET[t]?'<span class="wr-k">'+esc(t)+'</span>':esc(t));
+    else if(m[4]) out+='<span class="wr-n">'+esc(t)+'</span>';
+    else if(m[5]) out+='<span class="wr-p">'+esc(t)+'</span>';
+    else out+=esc(t);
+  }
+  return out;
+}
+
+/* ---------- 列表渲染 ---------- */
+function keyLines(t){
+  var seen={}, arr=[];
+  t.blanks.forEach(function(b){ if(!seen[b.l]){ seen[b.l]=1; arr.push(b.l); } });
+  return arr.sort(function(a,b){ return a-b; });
+}
+function holesOfLine(t,li){
+  var r=[];
+  t.blanks.forEach(function(b,i){ if(b.l===li) r.push({b:b,i:i}); });
+  return r;
+}
+
+function refreshList(){
+  if(!$('w-cats')) return;
+  var tot=TPL.length, mas=0, due=0, unlocked=0;
+  TPL.forEach(function(t){ var p=P(t.id); if(isMaster(p)){ mas++; if(isDue(p)) due++; } unlocked+=p.u; });
+  setTxt('w-today', dayRec().b);
+  setTxt('w-master', mas+'/'+tot);
+  setTxt('w-due', due); setTxt('w-due2', due);
+  var sk=0, d=new Date();
+  while(true){ var r=ST.day[keyOf(d)]; if(r&&r.b>0){ sk++; d.setDate(d.getDate()-1); } else break; }
+  setTxt('w-streak', sk);
+  setTxt('w-prog', unlocked+'/'+(tot*3)+' 轮');
+
+  var cats=[], cmap={};
+  TPL.forEach(function(t){ if(!cmap[t.cat]){ cmap[t.cat]=[]; cats.push(t.cat); } cmap[t.cat].push(t); });
+  var h='';
+  cats.forEach(function(c){
+    var list=cmap[c], m2=0;
+    list.forEach(function(t){ if(isMaster(P(t.id))) m2++; });
+    h+='<div class="card">'
+      +'<div class="between" style="margin-bottom:6px"><h3 style="font-size:16px">'+esc(c)+'</h3>'
+      +'<span class="small muted">已掌握 '+m2+'/'+list.length+'</span></div>'
+      +'<div class="small muted" style="margin-bottom:2px">'+esc(list[0].essence||'')+'</div>';
+    list.forEach(function(t){ h+=tplCard(t); });
+    h+='</div>';
+  });
+  $('w-cats').innerHTML=h;
+}
+
+function tplCard(t){
+  var p=P(t.id);
+  var lc=t.problems.map(function(x){ return 'LC'+x.lc+' '+x.name; }).join(' · ');
+  var dots='';
+  for(var n=1;n<=3;n++){
+    var cls=p.pass[n]?'p':(n===p.u?'c':'');
+    dots+='<i class="'+cls+'"></i>';
+  }
+  var right='', btn='';
+  if(isMaster(p)){
+    var left=Math.ceil((p.due-Date.now())/DAY);
+    if(isDue(p)){
+      right='<span class="tag y">待复习</span>';
+      btn='<button class="btn sm ok" onclick="WR.start(\''+t.id+'\',1)">复习 · 第③轮</button>';
+    }else{
+      right='<span class="tag g">已掌握</span>';
+      btn='<button class="btn sm ghost" onclick="WR.start(\''+t.id+'\',1)">提前复习</button>';
+    }
+    right+='<div class="small muted" style="margin-top:4px">'+(isDue(p)?'今天到期':(left+' 天后'))+'</div>';
+  }else{
+    right='<span class="tag">第'+p.u+'轮</span>';
+    btn='<button class="btn sm" onclick="WR.start(\''+t.id+'\')">第'+p.u+'轮 · 开始</button>';
+  }
+  return '<div class="wr-tpl">'
+    +'<div class="between"><div style="flex:1;min-width:0">'
+    +'<div class="wr-title">'+esc(t.title)+'</div>'
+    +'<div class="small muted" style="margin-top:3px">'+esc(lc)+' · '+t.blanks.length+' 空 / '+keyLines(t).length+' 行</div>'
+    +'</div><div style="text-align:right;flex:0 0 auto">'+right
+    +'<div class="wr-dots" style="justify-content:flex-end;margin-top:6px">'+dots+'</div></div></div>'
+    +'<div class="wr-btns"><button class="btn sm ghost" onclick="WR.view(\''+t.id+'\')">看模板</button>'+btn+'</div>'
+    +'</div>';
+}
+
+/* ---------- 打开一轮 ---------- */
+function start(id, review){
+  var t=MAP[id]; if(!t) return;
+  var p=P(id);
+  var stage=review?3:(p.u||1);
+  RUN={id:id,stage:stage,review:!!review,t0:Date.now(),done:false,ans:{},res:null,good:0,total:0};
+  ACT=stage===3?keyLines(t)[0]:0;
+  $('wr-run').classList.add('on');
+  paint();
+  window.scrollTo(0,0);
+}
+function view(id){
+  var t=MAP[id]; if(!t) return;
+  RUN={id:id,stage:0,review:false,t0:Date.now(),done:true,ans:{},res:null,good:0,total:0};
+  ACT=-1;
+  $('wr-run').classList.add('on');
+  paint();
+  window.scrollTo(0,0);
+}
+function back(){
+  if(RUN&&!RUN.done&&RUN.stage>0){ /* 中途退出不记分 */ }
+  RUN=null; $('wr-run').classList.remove('on'); refreshList();
+}
+function retry(){ if(!RUN) return; var id=RUN.id; RUN=null; start(id,0); }
+function nextStage(){ if(!RUN) return; var id=RUN.id; RUN=null; start(id); }
+
+/* ---------- 绘制 ---------- */
+function paint(){
+  var t=MAP[RUN.id], st=RUN.stage;
+  $('wr-ttl').textContent=t.title;
+  var sub=RUN.review?'复习 · 第③轮':(st===0?'看模板':'第'+st+'轮');
+  if(t.problems[0]) sub+=' / LC'+t.problems[0].lc+' '+t.problems[0].name;
+  $('wr-sub').textContent=sub;
+  $('wr-cnt').textContent=st===3?keyLines(t).length+' 行':(st===0?t.blanks.length+' 空':t.blanks.length+' 空');
+
+  var sc=$('wr-scroll'), top=sc?sc.scrollTop:0;
+  var ks=keyLines(t), h='<div class="wr-hint">'+HINT[st]+'</div><div class="wr-code">';
+  t.code.forEach(function(line,li){
+    var hs=holesOfLine(t,li), src='', dl=disp(line);
+    if(st===3&&ks.indexOf(li)>=0){
+      var v=RUN.done?(RUN.ans[li]||''):indentOf(dl);
+      var cl='wr-linein'+(RUN.res?(RUN.res[li]?' ok':' no'):'');
+      src='<input class="'+cl+'" id="in-'+li+'" value="'+esc(v)+'" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="整行默写…">'
+         +'<div class="wr-tip" id="tip-'+li+'"></div>';
+    }else if(hs.length){
+      src=renderHolesLine(t,dl,hs,st);
+    }else{
+      src=hl(dl);
+    }
+    h+='<div class="wr-line"><span class="wr-ln">'+(li+1)+'</span><span class="wr-src">'+src+'</span></div>';
+    if(st!==3&&t.notes&&t.notes[li]) h+='<div class="wr-note">// '+esc(t.notes[li])+'</div>';
+    if(RUN.res){
+      if(st===3&&ks.indexOf(li)>=0&&!RUN.res[li]){
+        h+='<div class="wr-exp">正确：'+esc(t.code[li].trim())+'</div>';
+      }else if(st!==3&&hs.length){
+        hs.forEach(function(x){
+          if(!RUN.res[x.i]) h+='<div class="wr-bad">✗ 空'+(x.i+1)+' 应为 <b>'+esc(x.b.text)+'</b> — '+esc(x.b.why)+'</div>';
+        });
+      }
+    }
+  });
+  h+='</div>';
+  if(st===0){
+    h+='<div class="card" style="margin-top:12px"><div class="small muted">这一轮不用动手，看懂骨架和每个空的考点即可。第①轮开始就靠这些底色空来考你。</div>'
+      +'<div style="margin-top:10px"><button class="btn" onclick="WR.begin()">开始第'+P(RUN.id).u+'轮</button></div></div>';
+  }
+  $('wr-body').innerHTML=h;
+  if(sc) sc.scrollTop=top;
+
+  /* 底部：答题条 / 结果条 */
+  var fb=$('wr-fb'), sub2=$('wr-submit'), keys=$('wr-keys');
+  fb.className='wr-fb'; fb.innerHTML='';
+  sub2.style.display=(st===0)?'none':'block';
+  sub2.textContent='提交';
+  keys.style.display=(st===2||st===3)?'flex':'none';
+  if(st===1) renderPicker();
+  if(st===0) keys.style.display='none';
+  if(!RUN.done&&st>0) sub2.style.display='block';
+}
+
+function renderHolesLine(t,line,hs,st){
+  var out='', pos=0;
+  hs.forEach(function(x){
+    var b=x.b, at=line.indexOf(b.text,pos);
+    if(at<0) at=line.indexOf(b.text);
+    if(at<0) at=pos;
+    out+=hl(line.slice(pos,at));
+    pos=at+b.text.length;
+    if(st===0){
+      out+='<span class="wr-hole ok">'+esc(b.text)+'</span>';
+    }else if(st===1){
+      var a=RUN.ans[x.i], cls='wr-hole';
+      if(a!==undefined) cls+=(RUN.res?(RUN.res[x.i]?' ok':' no'):' sel');
+      if(ACT===x.i&&!RUN.res) cls+=' act';
+      out+='<span class="'+cls+'" onclick="WR.pick('+x.i+')">'+(a!==undefined?esc(a):'（空'+(x.i+1)+'）')+'</span>';
+    }else{
+      var v=RUN.done?(RUN.ans[x.i]||''):'';
+      var cl='wr-in'+(RUN.res?(RUN.res[x.i]?' ok':' no'):'');
+      out+='<input class="'+cl+'" id="in-'+x.i+'" value="'+esc(v)+'" size="'+Math.max(6,Math.min(26,b.text.length))+'" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="…">';
+    }
+  });
+  out+=hl(line.slice(pos));
+  return out;
+}
+
+function pick(i){ if(!RUN||RUN.stage!==1||RUN.done) return; ACT=i; paint(); }
+function choose(i,val){
+  if(!RUN||RUN.stage!==1||RUN.done) return;
+  RUN.ans[i]=val;
+  var t=MAP[RUN.id], next=-1;
+  for(var k=0;k<t.blanks.length;k++){ var j=(i+1+k)%t.blanks.length; if(RUN.ans[j]===undefined){ next=j; break; } }
+  if(next>=0) ACT=next;
+  paint();
+}
+function renderPicker(){
+  var t=MAP[RUN.id], b=t.blanks[ACT], fb=$('wr-fb');
+  if(!b) return;
+  fb.className='wr-fb on';
+  var h='<div class="small muted" style="margin-bottom:6px">空 '+(ACT+1)+'/'+t.blanks.length
+       +'　第 '+(b.l+1)+' 行　点代码里的空可切换</div><div class="wr-opts" style="padding-left:0">';
+  b.opts.forEach(function(o){
+    h+='<button class="'+(RUN.ans[ACT]===o?'on':'')+'" onclick="WR.choose('+ACT+',\''+esc(o)+'\')">'+esc(o)+'</button>';
+  });
+  h+='</div>';
+  fb.innerHTML=h;
+}
+
+/* ---------- 提交判分 ---------- */
+function submit(){
+  if(!RUN||RUN.done||RUN.stage===0) return;
+  var t=MAP[RUN.id], st=RUN.stage, res={}, good=0, total=0;
+  if(st===1){
+    for(var i=0;i<t.blanks.length;i++){
+      if(RUN.ans[i]===undefined){ ACT=i; paint(); toast('还有空没选：空'+(i+1)); return; }
+    }
+    t.blanks.forEach(function(b,i){
+      total++;
+      var ok=String(RUN.ans[i]).trim()===b.text;
+      res[i]=ok; if(ok) good++;
+    });
+  }else if(st===2){
+    t.blanks.forEach(function(b,i){
+      var el=$('in-'+i), v=el?el.value:'';
+      RUN.ans[i]=v; total++;
+      var ok=norm(v)===norm(b.text);
+      if(!ok&&b.alts) ok=b.alts.some(function(a){ return norm(a)===norm(v); });
+      res[i]=ok; if(ok) good++;
+    });
+  }else{
+    keyLines(t).forEach(function(li){
+      var el=$('in-'+li), v=el?el.value:'';
+      RUN.ans[li]=v; total++;
+      var ok=norm(v)===norm(t.code[li]);
+      res[li]=ok; if(ok) good++;
+    });
+  }
+  RUN.done=true; RUN.res=res; RUN.good=good; RUN.total=total;
+  var d=dayRec(); d.b+=good; d.sec+=Math.round((Date.now()-RUN.t0)/1000); save();
+  paint();
+  finish(good===total);
+}
+
+function finish(pass){
+  var t=MAP[RUN.id], st=RUN.stage, p=P(RUN.id), fb=$('wr-fb'), msg='', btns='';
+  if(pass){
+    if(st<3){
+      p.pass[st]=1; p.u=Math.max(p.u,st+1); p.last=Date.now();
+      msg='✅ 第'+st+'轮一次全对（'+RUN.good+'/'+RUN.total+'），已解锁第'+(st+1)+'轮';
+      btns='<button class="btn ok" onclick="WR.nextStage()">练第'+(st+1)+'轮</button>'
+          +'<button class="btn gray" onclick="WR.back()">回列表</button>';
+    }else if(RUN.review){
+      p.lvl=Math.min(GAP.length-1,(p.lvl||1)+1); p.due=Date.now()+GAP[p.lvl]*DAY; p.last=Date.now();
+      msg='✅ 复习通过，下次 '+GAP[p.lvl]+' 天后（第 '+p.lvl+' 级）';
+      btns='<button class="btn ok" onclick="WR.back()">回列表</button>';
+    }else{
+      p.pass[3]=1; p.lvl=1; p.due=Date.now()+GAP[1]*DAY; p.last=Date.now();
+      msg='🎉 三轮全过，已掌握！明天进入第③轮复习';
+      btns='<button class="btn ok" onclick="WR.back()">回列表</button>';
+    }
+  }else{
+    if(RUN.review){
+      p.u=2; p.lvl=0; p.pass[3]=0; msg='❌ 复习没过（'+RUN.good+'/'+RUN.total+'），退回第②轮重练';
+    }else{
+      msg='❌ '+(RUN.total-RUN.good)+' 处没有一次答对（'+RUN.good+'/'+RUN.total+'），这一轮不算过';
+    }
+    btns='<button class="btn" onclick="WR.retry()">重来这一轮</button>'
+        +'<button class="btn gray" onclick="WR.back()">回列表</button>';
+  }
+  save();
+  fb.className='wr-fb on';
+  fb.innerHTML='<div style="font-weight:700;margin-bottom:2px">'+msg+'</div>'
+    +'<div class="small muted" style="margin-bottom:8px">'+esc(RUN.review?'复习检验模式':'严格模式：必须一次全对')+'</div>'
+    +'<div class="wr-btns" style="margin:0">'+btns+'</div>';
+  $('wr-submit').style.display='none';
+  try{ $('wr-scroll').scrollTop=0; }catch(e){}
+}
+
+/* ---------- 快捷字符条 ---------- */
+var KEYCH=['{','}','(',')',';','<','>','=','[',']','+','-','*','&','|',':','"','_'];
+function key(ch){
+  var el=document.activeElement;
+  if(!el||el.tagName!=='INPUT'){ toast('先点一下要填的输入框'); return; }
+  var s=el.selectionStart||0, e=el.selectionEnd||0, v=el.value;
+  el.value=v.slice(0,s)+ch+v.slice(e);
+  var pos=s+ch.length;
+  try{ el.setSelectionRange(pos,pos); }catch(x){}
+  el.focus();
+}
+
+/* ---------- 今日复习 / 继续 / 数据 ---------- */
+function review(){
+  var cand=TPL.filter(function(t){ return isDue(P(t.id)); });
+  if(!cand.length){ toast('今天没有到期的模板'); return; }
+  cand.sort(function(a,b){ return P(a.id).due-P(b.id).due; });
+  start(cand[0].id,1);
+}
+function resume(){
+  var cand=TPL.filter(function(t){ var p=P(t.id); return !isMaster(p)&&p.u>1; });
+  cand.sort(function(a,b){ return (P(b.id).last||0)-(P(a.id).last||0); });
+  if(cand.length) { start(cand[0].id); return; }
+  var fresh=TPL.filter(function(t){ return !isMaster(P(t.id))&&p1(t); });
+  function p1(t){ return !P(t.id).pass[1]&&!P(t.id).pass[2]; }
+  if(fresh.length){ start(fresh[0].id); return; }
+  if(TPL.length) start(TPL[0].id,1);
+}
+function exp(){
+  var blob=new Blob([JSON.stringify(ST,null,1)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='algo-progress-'+todayKey()+'.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.parentNode.removeChild(a); },2000);
+}
+function imp(file){
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var d=JSON.parse(r.result);
+      if(!d||typeof d!=='object') throw 0;
+      if(d.tpl) Object.keys(d.tpl).forEach(function(k){ ST.tpl[k]=d.tpl[k]; });
+      if(d.day) Object.keys(d.day).forEach(function(k){ ST.day[k]=d.day[k]; });
+      save(); refreshList(); toast('已导入默写进度');
+    }catch(e){ toast('文件格式不对'); }
+  };
+  r.readAsText(file);
+}
+function reset(){
+  if(!confirm('清空全部默写进度？（八股刷题进度不受影响）')) return;
+  ST={v:1,tpl:{},day:{}}; save(); refreshList(); toast('已清空默写进度');
+}
+function begin(){ var id=RUN.id, m=isMaster(P(id)); RUN=null; start(id, m?1:0); }
+
+/* ---------- 回车跳到下一个输入框 ---------- */
+document.addEventListener('keydown',function(e){
+  if(!RUN||RUN.done||!e.target||e.target.tagName!=='INPUT'||e.key!=='Enter') return;
+  e.preventDefault();
+  var ins=[].slice.call(document.querySelectorAll('#wr-body input'));
+  var i=ins.indexOf(e.target);
+  if(i>=0&&i<ins.length-1){ ins[i+1].focus(); ins[i+1].select&&ins[i+1].select(); return; }
+  submit();
+});
+
+/* ---------- 挂钩 & 初始化 ---------- */
+document.addEventListener('DOMContentLoaded',function(){ refreshList(); });
+document.addEventListener('input',function(e){
+  if(!RUN||RUN.done) return;
+  if(e.target&&e.target.tagName==='INPUT'&&RUN.stage===3){ /* 预留 */ }
+});
+var _win;
+(function(){
+  var imp=document.getElementById('w-imp');
+  if(imp) imp.addEventListener('change',function(e){ if(e.target.files[0]) WR.imp(e.target.files[0]); e.target.value=''; });
+})();
+
+window.WR={
+  render:refreshList, start:start, view:view, back:back, retry:retry, nextStage:nextStage,
+  pick:pick, choose:choose, submit:submit, key:key, begin:begin,
+  review:review, resume:resume, exp:exp, imp:imp, reset:reset
+};
+/* 深链：#wr=<模板id> 直接进该模板，#wr=review 进今日复习，#tpl=<id> 看模板 */
+function boot(){
+  refreshList();
+  if(location.hash==='#write'){ if(window.go) go('write'); return; }
+  var m=/^#(wr|tpl)=(.+)$/.exec(location.hash||'');
+  if(!m) return;
+  var id=decodeURIComponent(m[2]);
+  if(id==='review'){ if(window.go) go('write'); review(); return; }
+  if(!MAP[id]) return;
+  if(window.go) go('write');
+  if(m[1]==='tpl') view(id); else start(id);
+}
+try{ boot(); }catch(e){}
 })();
 
 </script>
