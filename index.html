@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261027-0940">
+<meta name="build" content="20261027-1000">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -497,7 +497,7 @@ body.dark input.wr-in{background:rgba(124,92,255,.16)}
   <div class="card">
     <div class="between" style="margin-bottom:10px">
       <h3 style="font-size:16px">今日默写</h3>
-      <span class="small muted">严格模式</span>
+      <span class="small muted">三轮任选</span>
     </div>
     <div class="grid2">
       <button class="btn ok" onclick="WR.review()">复习到期 <span id="w-due2">0</span></button>
@@ -509,14 +509,25 @@ body.dark input.wr-in{background:rgba(124,92,255,.16)}
   <div id="w-cats"></div>
 
   <div class="card">
-    <h3 style="font-size:16px;margin-bottom:10px">数据</h3>
+    <h3 style="font-size:16px;margin-bottom:10px">模板题库</h3>
+    <div class="grid2">
+      <button class="btn ghost" onclick="WR.expTpl()">导出全部模板</button>
+      <button class="btn ghost" onclick="document.getElementById('w-tplimp').click()">导入模板题库</button>
+    </div>
+    <input type="file" id="w-tplimp" accept="application/json,.json" style="display:none">
+    <div id="w-banks"></div>
+    <div class="small muted" style="margin-top:8px">题库是标准 JSON（<span class="kbd">{"name":"…","templates":[…]}</span>），直接编辑文件也能加载；导入的题库单独一份保存，可整批删除。</div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:10px">学习进度</h3>
     <div class="grid2">
       <button class="btn ghost" onclick="WR.exp()">导出默写进度</button>
       <button class="btn ghost" onclick="document.getElementById('w-imp').click()">导入默写进度</button>
     </div>
     <input type="file" id="w-imp" accept="application/json,.json" style="display:none">
     <div style="margin-top:10px"><button class="btn gray" onclick="WR.reset()">清空默写进度</button></div>
-    <div class="small muted" style="margin-top:8px">默写进度单独保存，不影响八股刷题的题库与进度；换设备前请先导出。</div>
+    <div class="small muted" style="margin-top:8px">进度与题库分开保存，都不影响八股刷题的 318 题；换设备前请先导出。</div>
   </div>
 </section>
 
@@ -1818,9 +1829,23 @@ applyDark(); home(); quizView(); checkUpdate(false);
 
 var KEY='bg8_algo_v1', DAY=86400000;
 var GAP=[0,1,2,4,7,15,30,60];          // 掌握后的复习间隔（天），与八股刷题同一套节奏
-var TPL=[];
-try{ TPL=JSON.parse(document.getElementById('TPL').textContent||'[]'); }catch(e){ TPL=[]; }
-var MAP={}; for(var _i=0;_i<TPL.length;_i++) MAP[TPL[_i].id]=TPL[_i];
+var TPL_B=[];
+try{ TPL_B=JSON.parse(document.getElementById('TPL').textContent||'[]'); }catch(e){ TPL_B=[]; }
+if(!Array.isArray(TPL_B)) TPL_B=[TPL_B];
+var TPL=[], MAP={};
+/* 有效题库 = 内置 + 已导入（同 id 时导入的覆盖内置） */
+function rebuild(){
+  var imp=[], ids={};
+  (ST&&ST.banks?ST.banks:[]).forEach(function(b){
+    (b.templates||[]).forEach(function(t){ imp.push(t); ids[t.id]=1; });
+  });
+  TPL=TPL_B.filter(function(t){ return !ids[t.id]; }).concat(imp);
+  MAP={};
+  for(var i=0;i<TPL.length;i++) MAP[TPL[i].id]=TPL[i];
+  (ST&&ST.banks?ST.banks:[]).forEach(function(b){
+    (b.templates||[]).forEach(function(t){ P(t.id); });
+  });
+}
 
 var HINT={
   0:'看模板：代码全给，带底色的就是考点空。看懂了点下面「开始」进入第①轮。',
@@ -1831,12 +1856,14 @@ var HINT={
 
 /* ---------- 状态 ---------- */
 var ST=load(), RUN=null, ACT=0;
+if(!ST.banks) ST.banks=[];
+rebuild();
 
 function load(){
   var s={v:1,tpl:{},day:{}};
   try{
     var r=JSON.parse(localStorage.getItem(KEY)||'null');
-    if(r&&typeof r==='object'){ s.tpl=r.tpl||{}; s.day=r.day||{}; }
+    if(r&&typeof r==='object'){ s.tpl=r.tpl||{}; s.day=r.day||{}; s.banks=Array.isArray(r.banks)?r.banks:[]; }
   }catch(e){}
   return s;
 }
@@ -1942,11 +1969,13 @@ function refreshList(){
     h+='</div>';
   });
   $('w-cats').innerHTML=h;
+  renderBanks();
 }
 
 function tplCard(t){
   var p=P(t.id);
   var lc=t.problems.map(function(x){ return 'LC'+x.lc+' '+x.name; }).join(' · ');
+  if(!lc) lc=t.cat;
   var done=0, dots='';
   for(var n=1;n<=3;n++){ if(p.pass[n]) done++; dots+='<i class="'+(p.pass[n]?'p':'')+'"></i>'; }
   var right='', sub='';
@@ -2261,6 +2290,85 @@ function reset(){
 }
 function begin(){ var id=RUN.id; RUN=null; start(id,0,firstOpen(P(id))); }
 
+/* ---------- 模板题库：可加载的 JSON ---------- */
+function normTpl(o){
+  if(!o||typeof o!=='object') throw '不是对象';
+  if(!o.id||!o.title||!Array.isArray(o.code)||!o.code.length) throw '缺少 id / title / code';
+  o.code=o.code.map(function(x){ return String(x); });
+  if(!Array.isArray(o.blanks)) o.blanks=[];
+  o.blanks=o.blanks.map(function(b){
+    if(typeof b.l!=='number'||b.l<0||b.l>=o.code.length) throw o.id+'：空的行号越界（'+b.l+'）';
+    if(typeof b.text!=='string'||!b.text) throw o.id+'：有空没有 text';
+    if(o.code[b.l].indexOf(b.text)<0) throw o.id+'：空「'+b.text+'」在第 '+(b.l+1)+' 行找不到';
+    var opts=Array.isArray(b.opts)?b.opts.slice(0):[];
+    if(opts.indexOf(b.text)<0) opts.unshift(b.text);
+    b.opts=opts.slice(0,6);
+    if(typeof b.why!=='string') b.why='';
+    return b;
+  });
+  o.cat=String(o.cat||'导入模板');
+  o.problems=Array.isArray(o.problems)?o.problems:[];
+  o.notes=(o.notes&&typeof o.notes==='object')?o.notes:{};
+  if(typeof o.brief!=='string') o.brief='';
+  if(!Array.isArray(o.stmt)) o.stmt=[];
+  if(typeof o.generic!=='string') o.generic='';
+  return o;
+}
+function impTpl(file){
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var d=JSON.parse(r.result);
+      var list=Array.isArray(d)?d:(d&&d.templates);
+      if(!Array.isArray(list)||!list.length) throw '没找到 templates 数组';
+      var tpls=list.map(normTpl);
+      var name=(d&&d.name)||('导入题库 '+todayKey());
+      var ids={}; tpls.forEach(function(t){ ids[t.id]=1; });
+      ST.banks=ST.banks||[];
+      /* 同 id 覆盖：先把已加载批次里的同 id 摘掉（内置的会被 rebuild 自动让位） */
+      ST.banks.forEach(function(b){ b.templates=(b.templates||[]).filter(function(t){ return !ids[t.id]; }); });
+      ST.banks=ST.banks.filter(function(b){ return (b.templates||[]).length>0; });
+      ST.banks.push({name:name, at:Date.now(), templates:tpls});
+      save(); rebuild(); refreshList();
+      toast('已加载 '+tpls.length+' 个模板：'+name);
+    }catch(e){
+      toast('导入失败：'+(typeof e==='string'?e:'JSON 格式不对'));
+    }
+  };
+  r.readAsText(file);
+}
+function delBank(i){
+  var b=ST.banks[i]; if(!b) return;
+  if(!confirm('删除题库「'+b.name+'」的 '+(b.templates||[]).length+' 个模板？（学习进度保留）')) return;
+  ST.banks.splice(i,1); save(); rebuild(); refreshList(); toast('已删除题库');
+}
+function expTpl(){
+  var out={name:'算法模板（全部）', version:1, exportedAt:new Date().toISOString(), templates:TPL};
+  var blob=new Blob([JSON.stringify(out,null,1)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='algo-templates-'+todayKey()+'.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.parentNode.removeChild(a); },2000);
+}
+function renderBanks(){
+  var el=$('w-banks'); if(!el) return;
+  var bs=ST.banks||[];
+  if(!bs.length){
+    el.innerHTML='<div class="small muted" style="margin-top:10px">当前只有内置题库：哈希 '+TPL_B.length+' 个模板。</div>';
+    return;
+  }
+  var h='<div class="small muted" style="margin-top:10px;margin-bottom:6px">已加载题库</div>';
+  bs.forEach(function(b,i){
+    var cats=[];
+    (b.templates||[]).forEach(function(t){ if(cats.indexOf(t.cat)<0) cats.push(t.cat); });
+    h+='<div class="between" style="padding:9px 10px;border-radius:10px;background:var(--bg);margin-bottom:6px;gap:8px">'
+      +'<div style="min-width:0"><div style="font-weight:700;font-size:13px;line-height:1.4">'+esc(b.name)+'</div>'
+      +'<div class="small muted">'+(b.templates||[]).length+' 个模板 · '+esc(cats.join('、'))+'</div></div>'
+      +'<button class="chip" style="flex:0 0 auto" onclick="WR.delBank('+i+')">删除</button></div>';
+  });
+  el.innerHTML=h;
+}
+
 /* ---------- 回车跳到下一个输入框 ---------- */
 document.addEventListener('keydown',function(e){
   if(!RUN||RUN.done||!e.target||e.target.tagName!=='INPUT'||e.key!=='Enter') return;
@@ -2279,6 +2387,8 @@ document.addEventListener('input',function(e){
 });
 var _win;
 (function(){
+  var ti=document.getElementById('w-tplimp');
+  if(ti) ti.addEventListener('change',function(e){ if(e.target.files[0]) WR.impTpl(e.target.files[0]); e.target.value=''; });
   var imp=document.getElementById('w-imp');
   if(imp) imp.addEventListener('change',function(e){ if(e.target.files[0]) WR.imp(e.target.files[0]); e.target.value=''; });
 })();
@@ -2286,7 +2396,8 @@ var _win;
 window.WR={
   render:refreshList, start:start, view:view, back:back, retry:retry, nextStage:nextStage,
   pick:pick, choose:choose, submit:submit, key:key, begin:begin,
-  review:review, resume:resume, exp:exp, imp:imp, reset:reset, toggleStmt:toggleStmt
+  review:review, resume:resume, exp:exp, imp:imp, reset:reset, toggleStmt:toggleStmt,
+  expTpl:expTpl, impTpl:impTpl, delBank:delBank
 };
 /* 深链：#wr=<模板id> 直接进该模板，#wr=review 进今日复习，#tpl=<id> 看模板 */
 function boot(){

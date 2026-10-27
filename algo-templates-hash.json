@@ -1,0 +1,415 @@
+{
+ "name": "算法模板 · 01 哈希",
+ "version": 1,
+ "format": "algo-templates",
+ "note": "每张模板 = 一个分类下的一种写法。code 为 C++ 源码行；blanks 标出考点空（l=行号从0起，text=原文，opts=选项，why=坑点讲解，可选 alts=等价写法）",
+ "templates": [
+  {
+   "id": "hash-two-sum",
+   "cat": "01 哈希",
+   "title": "两数之和 · 边遍历边查表",
+   "problems": [
+    {
+     "lc": 1,
+     "name": "两数之和",
+     "diff": "Easy"
+    }
+   ],
+   "essence": "内层循环只在找一个确定的值 → 把见过的值提前存进哈希表，内层变成 O(1) 查表",
+   "code": [
+    "class Solution {",
+    "public:",
+    "    vector<int> twoSum(vector<int>& nums, int target) {",
+    "        unordered_map<int, int> seen;",
+    "        for (int i = 0; i < (int)nums.size(); ++i) {",
+    "            int want = target - nums[i];",
+    "            if (seen.count(want)) return {seen[want], i};",
+    "            seen[nums[i]] = i;",
+    "        }",
+    "        return {};",
+    "    }",
+    "};"
+   ],
+   "notes": {
+    "3": "值 → 下标，存「已经见过」的元素",
+    "4": "先查后存，一趟遍历就够",
+    "5": "搭档 = 目标和 − 当前值",
+    "6": "先查：搭档出现过就直接返回两个下标",
+    "7": "后存：把自己登记进表",
+    "9": "题目保证有解，兜底返回空"
+   },
+   "blanks": [
+    {
+     "l": 3,
+     "text": "unordered_map<int, int>",
+     "opts": [
+      "unordered_map<int, int>",
+      "map<int, int>",
+      "set<int>",
+      "vector<int>"
+     ],
+     "why": "要 O(1) 查值还要存下标：map 查询是 O(log n)，set 存不了下标，vector 查一次是 O(n)"
+    },
+    {
+     "l": 4,
+     "text": "i < (int)nums.size()",
+     "opts": [
+      "i < (int)nums.size()",
+      "i <= (int)nums.size()",
+      "i < (int)nums.size() - 1",
+      "i < sizeof(nums)"
+     ],
+     "why": "size() 返回无符号的 size_t，和 int i 比较会出符号警告，所以显式 (int) 转；别用 sizeof(nums)（那是 vector 对象本身的大小，不是元素个数）"
+    },
+    {
+     "l": 5,
+     "text": "target - nums[i]",
+     "opts": [
+      "target - nums[i]",
+      "target + nums[i]",
+      "nums[i] - target",
+      "target - want"
+     ],
+     "why": "搭档 = target − 当前值；写成 nums[i] - target 符号就反了"
+    },
+    {
+     "l": 6,
+     "text": "seen.count(want)",
+     "opts": [
+      "seen.count(want)",
+      "seen.count(nums[i])",
+      "seen[want] == 0",
+      "want == 0"
+     ],
+     "why": "查的是「搭档」在不在表里，不是查自己——查自己会让 [3,3], target=6 这种用例把自己当搭档"
+    },
+    {
+     "l": 6,
+     "text": "{seen[want], i}",
+     "opts": [
+      "{seen[want], i}",
+      "{i, seen[want]}",
+      "{want, i}",
+      "{seen[nums[i]], i}"
+     ],
+     "why": "返回两个下标：先出现的搭档下标 + 当前下标；不是值 want"
+    },
+    {
+     "l": 7,
+     "text": "seen[nums[i]] = i",
+     "opts": [
+      "seen[nums[i]] = i",
+      "seen[i] = nums[i]",
+      "seen[want] = i",
+      "seen[nums[i]]++"
+     ],
+     "why": "存的是「值 → 下标」；写成 seen[i] = nums[i] 键值就反了"
+    }
+   ],
+   "brief": "一次遍历里用哈希表把「找搭档」从 O(n) 扫描降成 O(1) 查表——「内层只在查一个确定值」的通用原型",
+   "stmt": [
+    "题目：两数之和（LC1，Easy）",
+    "输入：整数数组 nums、整数 target",
+    "输出：两个下标 [i, j]，使 nums[i] + nums[j] == target",
+    "例：[2,7,11,15], target=9 → [0,1]",
+    "要求：同一元素不能重复用；保证恰好一个答案；时间 O(n)，空间 O(n)"
+   ],
+   "generic": "两数之差、四数相加 II（两两分组存和）、和为 K 的子数组（前缀和查表）"
+  },
+  {
+   "id": "hash-group",
+   "cat": "01 哈希",
+   "title": "等价分组 · 规范化 key",
+   "problems": [
+    {
+     "lc": 49,
+     "name": "字母异位词分组",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "等价分组的通用解法：给每个元素算一个「身份证」（规范形），同身份证进同一组",
+   "code": [
+    "class Solution {",
+    "public:",
+    "    vector<vector<string>> groupAnagrams(vector<string>& strs) {",
+    "        unordered_map<string, vector<string>> groups;",
+    "        for (auto& s : strs) {",
+    "            string key = s;",
+    "            sort(key.begin(), key.end());",
+    "            groups[key].push_back(s);",
+    "        }",
+    "        vector<vector<string>> ans;",
+    "        for (auto& kv : groups) ans.push_back(kv.second);",
+    "        return ans;",
+    "    }",
+    "};"
+   ],
+   "notes": {
+    "3": "规范形 → 同组字符串列表",
+    "5": "先复制一份，排序不能改原串",
+    "6": "排序后的串就是异位词的共同身份证",
+    "7": "同 key 自动归到一组",
+    "10": "只取值（成员列表），key 不需要"
+   },
+   "blanks": [
+    {
+     "l": 3,
+     "text": "unordered_map<string, vector<string>>",
+     "opts": [
+      "unordered_map<string, vector<string>>",
+      "map<string, int>",
+      "unordered_set<string>",
+      "vector<string>"
+     ],
+     "why": "要「key → 一组字符串」；set 只能去重，存不了成员列表"
+    },
+    {
+     "l": 5,
+     "text": "string key = s",
+     "opts": [
+      "string key = s",
+      "string key = \"\"",
+      "string& key = s",
+      "string key = s + s"
+     ],
+     "why": "要在副本上排序；写成引用会直接把原串 s 改掉，分组结果就错了"
+    },
+    {
+     "l": 6,
+     "text": "sort(key.begin(), key.end())",
+     "opts": [
+      "sort(key.begin(), key.end())",
+      "sort(s.begin(), s.end())",
+      "reverse(key.begin(), key.end())",
+      "sort(key.rbegin(), key.rend())"
+     ],
+     "why": "sort 生成规范形：异位词排完都变成同一个串。必须排副本 key，排 s 会把原串改掉；reverse 记的是逆序身份，同组能对齐但不是标准写法，面试按 sort 写"
+    },
+    {
+     "l": 7,
+     "text": "groups[key].push_back(s)",
+     "opts": [
+      "groups[key].push_back(s)",
+      "groups[s].push_back(key)",
+      "groups[key].push_back(key)",
+      "groups.push_back(s)"
+     ],
+     "why": "规范形当 key，原串进组；用 s 当 key 就退化成「一个词一组」"
+    },
+    {
+     "l": 10,
+     "text": "kv.second",
+     "opts": [
+      "kv.second",
+      "kv.first",
+      "kv",
+      "groups[kv]"
+     ],
+     "why": "first 是 key，second 才是那组字符串"
+    }
+   ],
+   "brief": "给每个元素算一个「身份证」，同身份证自动归一组——所有「分组 / 归类 / 判等价」题的原型",
+   "stmt": [
+    "题目：字母异位词分组（LC49，Medium）",
+    "输入：字符串数组 strs",
+    "输出：把互为异位词的串放进同一组，返回所有组（组间、组内顺序不限）",
+    "例：[\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"] → [[\"eat\",\"tea\",\"ate\"],[\"tan\",\"nat\"],[\"bat\"]]",
+    "要求：异位词＝字母相同顺序不同；时间 O(n·KlogK)，K 为最长串长"
+   ],
+   "generic": "一切「同一把牌不同打法」的等价分组：同构字符串、按字符计数分类、按质因数分解分类"
+  },
+  {
+   "id": "hash-prefix",
+   "cat": "01 哈希",
+   "title": "前缀和 + 哈希 · 和为 K 的子数组",
+   "problems": [
+    {
+     "lc": 560,
+     "name": "和为 K 的子数组",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "子数组和 = 两个前缀和之差 → 把「查两数之和」换成「查 prefix − k 出现过几次」",
+   "code": [
+    "class Solution {",
+    "public:",
+    "    int subarraySum(vector<int>& nums, int k) {",
+    "        unordered_map<int, int> cnt;",
+    "        cnt[0] = 1;",
+    "        int prefix = 0, ans = 0;",
+    "        for (int x : nums) {",
+    "            prefix += x;",
+    "            ans += cnt[prefix - k];",
+    "            cnt[prefix]++;",
+    "        }",
+    "        return ans;",
+    "    }",
+    "};"
+   ],
+   "notes": {
+    "3": "前缀和 → 出现次数",
+    "4": "空前缀：让「从下标 0 开始」的子数组能被统计",
+    "7": "走到当前位置的累计前缀和",
+    "8": "之前有几次前缀和等于 prefix − k，就有几个以当前结尾的答案",
+    "9": "先查后存：现在才把当前前缀和登记进表"
+   },
+   "blanks": [
+    {
+     "l": 3,
+     "text": "unordered_map<int, int> cnt",
+     "opts": [
+      "unordered_map<int, int> cnt",
+      "unordered_set<int> cnt",
+      "vector<int> cnt",
+      "map<int, int> cnt"
+     ],
+     "why": "要记「每个前缀和出现几次」，只有 map 能计数；set 去重会把次数丢掉"
+    },
+    {
+     "l": 4,
+     "text": "cnt[0] = 1",
+     "opts": [
+      "cnt[0] = 1",
+      "cnt[0] = 0",
+      "cnt[1] = 0",
+      "cnt[k] = 1"
+     ],
+     "why": "空前缀必须计 1，否则所有从下标 0 开始的子数组全部漏计——这是本题最高频的错"
+    },
+    {
+     "l": 7,
+     "text": "prefix += x",
+     "opts": [
+      "prefix += x",
+      "prefix = x",
+      "prefix -= x",
+      "prefix = ans + x"
+     ],
+     "why": "前缀和是累加；写成 prefix = x 就只是当前元素"
+    },
+    {
+     "l": 8,
+     "text": "ans += cnt[prefix - k]",
+     "opts": [
+      "ans += cnt[prefix - k]",
+      "ans += cnt[prefix + k]",
+      "ans = cnt[prefix - k]",
+      "ans += cnt[k - prefix]"
+     ],
+     "why": "统计的是个数所以必须 +=；查的是 prefix − k（子数组和 = 两前缀和之差）"
+    },
+    {
+     "l": 9,
+     "text": "cnt[prefix]++",
+     "opts": [
+      "cnt[prefix]++",
+      "cnt[x]++",
+      "cnt[prefix] = 1",
+      "++cnt[prefix - k]"
+     ],
+     "why": "登记的是当前前缀和，而且必须在「查」之后；写成 cnt[x]++ 记的变成单个元素"
+    }
+   ],
+   "brief": "子数组和 = 两个前缀和之差 → 把「求和为 k 的区间」变成「查某个前缀和之前出现过几次」",
+   "stmt": [
+    "题目：和为 K 的子数组（LC560，Medium）",
+    "输入：整数数组 nums（元素可能为负数）、整数 k",
+    "输出：和恰好等于 k 的连续子数组的个数",
+    "例：[1,1,1], k=2 → 2（[0,1] 与 [1,2]）",
+    "要求：时间 O(n)；因为有负数，滑动窗口不成立"
+   ],
+   "generic": "前缀和模 k 的余数（LC523）、0/1 转 ±1 后找和为 0（LC525）、二维前缀和求子矩阵和"
+  },
+  {
+   "id": "hash-set-chain",
+   "cat": "01 哈希",
+   "title": "set + 只从链头出发",
+   "problems": [
+    {
+     "lc": 128,
+     "name": "最长连续序列",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "用 set 把「排序」换成 O(1) 存在性查询，并且只在序列起点启动，摊还 O(n)",
+   "code": [
+    "class Solution {",
+    "public:",
+    "    int longestConsecutive(vector<int>& nums) {",
+    "        unordered_set<int> st(nums.begin(), nums.end());",
+    "        int best = 0;",
+    "        for (int x : st) {",
+    "            if (st.count(x - 1)) continue;",
+    "            int cur = x, len = 1;",
+    "            while (st.count(cur + 1)) { ++cur; ++len; }",
+    "            best = max(best, len);",
+    "        }",
+    "        return best;",
+    "    }",
+    "};"
+   ],
+   "notes": {
+    "3": "一次构建顺带去重，之后查询 O(1)",
+    "6": "x−1 存在说明 x 不是链头，直接跳过",
+    "7": "cur 是链尾，len 是链长",
+    "8": "从链头一路向右数到底",
+    "9": "比的是链长 len，不是链尾的值 cur"
+   },
+   "blanks": [
+    {
+     "l": 3,
+     "text": "unordered_set<int> st(nums.begin(), nums.end())",
+     "opts": [
+      "unordered_set<int> st(nums.begin(), nums.end())",
+      "unordered_map<int, int> st(nums.begin(), nums.end())",
+      "vector<int> st(nums.begin(), nums.end())",
+      "set<int> st(nums.begin(), nums.end())"
+     ],
+     "why": "只做存在性查询就该用 unordered_set，O(1) 且不存多余信息；vector 查一次 O(n)，有序 set 是 O(log n)"
+    },
+    {
+     "l": 6,
+     "text": "st.count(x - 1)",
+     "opts": [
+      "st.count(x - 1)",
+      "st.count(x + 1)",
+      "st.count(x)",
+      "st.count(cur - 1)"
+     ],
+     "why": "只有 x−1 不存在时 x 才是链头；判 x+1 会让每条链都被从中间数，复杂度退化 O(n²)"
+    },
+    {
+     "l": 8,
+     "text": "st.count(cur + 1)",
+     "opts": [
+      "st.count(cur + 1)",
+      "st.count(cur)",
+      "st.count(x + 1)",
+      "st.count(cur - 1)"
+     ],
+     "why": "向右延伸查的是下一个数 cur+1；查 st.count(cur) 恒真会死循环，查 x+1 只数得动一步"
+    },
+    {
+     "l": 9,
+     "text": "max(best, len)",
+     "opts": [
+      "max(best, len)",
+      "max(best, cur)",
+      "min(best, len)",
+      "best + len"
+     ],
+     "why": "要比的是链长 len，写成 cur 比的是链尾数值（[100] 会得到 100 这种荒谬答案）"
+    }
+   ],
+   "brief": "用 set 把「排序」换成 O(1) 存在性查询，并且只从序列起点启动，做到摊还 O(n)",
+   "stmt": [
+    "题目：最长连续序列（LC128，Medium）",
+    "输入：无序整数数组 nums",
+    "输出：最长「值连续」序列的长度（不要求下标连续）",
+    "例：[100,4,200,1,3,2] → 4（序列 1,2,3,4）",
+    "要求：必须 O(n)；排序解法 O(nlogn) 不合格"
+   ],
+   "generic": "「只在起点启动」的摊还套路：连续区间计数、数组原地哈希（值域 1..n）、缺失的第一个正数"
+  }
+ ]
+}
