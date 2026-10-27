@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261027-1056">
+<meta name="build" content="20261027-1128">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -325,6 +325,37 @@ body.dark .wr-hole{background:rgba(124,92,255,.16)}
 body.dark input.wr-in{background:rgba(124,92,255,.14)}
 body.dark .wr-res-btns .main{background:var(--brand);color:#fff}
 
+/* ---------- 同类题（模板迁移） ---------- */
+.ap-run{position:fixed;left:0;right:0;top:0;bottom:0;z-index:92;background:var(--bg);display:none;flex-direction:column}
+.ap-run.on{display:flex}
+.ap-tip{padding:12px 14px 2px;font-size:12px;color:var(--sub);line-height:1.7}
+.ap-list{padding:0 12px 20px}
+.ap-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-top:10px}
+.ap-top{display:flex;gap:9px;align-items:flex-start}
+.ap-no{flex:0 0 20px;height:20px;border-radius:999px;background:var(--line);color:var(--sub);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ap-name{font-weight:800;font-size:14.5px;line-height:1.45;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ap-lc{font-weight:800;color:var(--brand);letter-spacing:.3px;font-size:11.5px}
+.ap-why{margin-top:8px;font-size:12.5px;line-height:1.75;background:var(--bg);border-radius:10px;padding:8px 10px}
+.ap-why:before{content:"为什么能用";display:block;font-size:9.5px;font-weight:800;letter-spacing:.4px;color:var(--brand);opacity:.8;margin-bottom:2px}
+.ap-hint{margin-top:7px;font-size:11.5px;color:var(--sub);line-height:1.7;border-left:2px solid var(--line);padding-left:8px}
+.ap-hint:before{content:"变形点 · ";font-weight:800;opacity:.85}
+.ap-acts{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.ap-btn{font-family:inherit;font-size:11.5px;font-weight:700;padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block;line-height:1.2}
+.ap-btn:active{transform:scale(.98)}
+.ap-btn.link{color:var(--brand);border-color:var(--brand);background:transparent}
+.ap-btn.tpl{background:rgba(124,92,255,.12);color:var(--brand2);border-color:transparent}
+.ap-btn.done{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.ap-done-t{font-size:11px;font-weight:800;color:var(--ok)}
+.ap-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;line-height:1.65;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;overflow-x:auto;margin:9px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink)}
+.ap-k{font-weight:800;color:var(--brand)}
+.ap-p{font-size:12.5px;line-height:1.75;margin-top:8px}
+.ap-li{font-size:12px;color:var(--sub);line-height:1.8;margin-top:6px;padding-left:12px;position:relative}
+.ap-li:before{content:"·";position:absolute;left:3px;color:var(--brand);font-weight:800}
+.wr-ap-link{display:inline-block;margin-top:7px;font-size:11.5px;font-weight:800;color:var(--brand);cursor:pointer}
+.wr-ap-cta{margin-top:10px;text-align:center;font-size:12.5px;font-weight:800;color:var(--brand);cursor:pointer;padding:10px;border:1px dashed var(--line);border-radius:10px;background:var(--card)}
+.ap-foot{display:flex;gap:8px;padding:16px 14px 26px}
+.ap-foot .wr-seg-b{flex:1}
+body.dark .ap-btn.tpl{background:rgba(124,92,255,.22)}
 </style>
 </head>
 <body>
@@ -590,10 +621,11 @@ body.dark .wr-res-btns .main{background:var(--brand);color:#fff}
     <div class="wr-quick" style="margin-top:0">
       <button onclick="WR.expTpl()">导出全部模板</button>
       <button onclick="document.getElementById('w-tplimp').click()">导入模板题库</button>
+      <button onclick="WR.apGuide()">同类题怎么配</button>
     </div>
     <input type="file" id="w-tplimp" accept="application/json,.json" style="display:none">
     <div id="w-banks"></div>
-    <div class="small muted" style="margin-top:8px;line-height:1.7">题库是标准 JSON（<span class="kbd">{"name":"…","templates":[…]}</span>），导入的题库单独保存，可整批删除。</div>
+    <div class="small muted" style="margin-top:8px;line-height:1.7">题库是标准 JSON（<span class="kbd">{"name":"…","templates":[…]}</span>），导入的题库单独保存，可整批删除。模板里加一个 <span class="kbd">apply</span> 数组就能配同类题。</div>
   </div>
 
   <div class="card">
@@ -661,6 +693,20 @@ body.dark .wr-res-btns .main{background:var(--brand);color:#fff}
     <div class="wr-fb" id="wr-fb"></div>
     <button class="wr-submit" id="wr-submit" onclick="WR.submit()">提交</button>
   </div>
+</div>
+
+<!-- ================= 代码默写 · 同类题（模板迁移） ================= -->
+<div class="ap-run" id="ap-run">
+  <div class="wr-hd">
+    <button class="wr-back" onclick="WR.apBack()">‹</button>
+    <div class="wr-hd-m">
+      <div class="wr-hd-t" id="ap-ttl">同类题</div>
+      <div class="wr-hd-s" id="ap-sub">—</div>
+    </div>
+    <div class="wr-hd-r" id="ap-cnt">0/0</div>
+  </div>
+  <div class="wr-pbar"><i id="ap-pbar-i"></i></div>
+  <div class="wr-scroll" id="ap-scroll"><div id="ap-body"></div></div>
 </div>
 
 <nav class="nav">
@@ -1498,7 +1544,7 @@ var GAP=[0,1,2,4,7,15,30,60];          // 掌握后的复习间隔（天），�
 var TPL_B=[];
 try{ TPL_B=JSON.parse(document.getElementById('TPL').textContent||'[]'); }catch(e){ TPL_B=[]; }
 if(!Array.isArray(TPL_B)) TPL_B=[TPL_B];
-var TPL=[], MAP={};
+var TPL=[], MAP={}, BYLC={};
 /* 有效题库 = 内置 + 已导入（同 id 时导入的覆盖内置） */
 function rebuild(){
   var imp=[], ids={};
@@ -1506,8 +1552,13 @@ function rebuild(){
     (b.templates||[]).forEach(function(t){ imp.push(t); ids[t.id]=1; });
   });
   TPL=TPL_B.filter(function(t){ return !ids[t.id]; }).concat(imp);
-  MAP={};
+  MAP={}; BYLC={};
   for(var i=0;i<TPL.length;i++) MAP[TPL[i].id]=TPL[i];
+  /* lc → 模板：同类题里如果这道题自己也有模板，就能互链过去默写 */
+  for(var j=0;j<TPL.length;j++){
+    var ps=TPL[j].problems||[];
+    for(var k=0;k<ps.length;k++){ if(ps[k]&&ps[k].lc) BYLC[ps[k].lc]=TPL[j]; }
+  }
   (ST&&ST.banks?ST.banks:[]).forEach(function(b){
     (b.templates||[]).forEach(function(t){ P(t.id); });
   });
@@ -1526,10 +1577,15 @@ if(!ST.banks) ST.banks=[];
 rebuild();
 
 function load(){
-  var s={v:1,tpl:{},day:{}};
+  var s={v:1,tpl:{},day:{},ap:{}};
   try{
     var r=JSON.parse(localStorage.getItem(KEY)||'null');
-    if(r&&typeof r==='object'){ s.tpl=r.tpl||{}; s.day=r.day||{}; s.banks=Array.isArray(r.banks)?r.banks:[]; }
+    if(r&&typeof r==='object'){
+      s.tpl=r.tpl||{}; s.day=r.day||{};
+      s.banks=Array.isArray(r.banks)?r.banks:[];
+      s.ap=(r.ap&&typeof r.ap==='object')?r.ap:{};
+      s.stmtClosed=(r.stmtClosed&&typeof r.stmtClosed==='object')?r.stmtClosed:{};
+    }
   }catch(e){}
   return s;
 }
@@ -1647,6 +1703,9 @@ function refreshList(){
 function tplCard(t){
   var p=P(t.id), pr=t.problems[0], segs='', done=0;
   for(var n=1;n<=3;n++){ if(p.pass[n]) done++; segs+='<i class="'+(p.pass[n]?'on':'')+'"></i>'; }
+  var apn=apOf(t).length, apd=apn?apDoneN(t):0;
+  var apLine=apn?('<div class="wr-ap-link" onclick="WR.apply(\''+t.id+'\')">同类题 '+apn+' 道'
+    +(apd?' · 已做 '+apd:'')+' ›</div>'):'';
   var badge, cls;
   if(isMaster(p)){
     var left=Math.ceil((p.due-Date.now())/DAY);
@@ -1667,6 +1726,7 @@ function tplCard(t){
     +'<div class="wr-tpl-meta">'+meta+'</div>'
     +'<div class="wr-tpl-title">'+esc(t.title)+'</div>'
     +'<div class="wr-tpl-brief">'+esc(t.brief||'')+'</div>'
+    +apLine
     +'</div><span class="wr-badge '+cls+'">'+badge+'</span></div>'
     +'<div class="wr-prog3">'+segs+'</div>'
     +'<div class="wr-seg">'
@@ -1768,7 +1828,10 @@ function paint(){
       +'<button class="wr-seg-b" onclick="WR.start(\''+RUN.id+'\',0,1)"><span class="wr-seg-n">1</span>选择</button>'
       +'<button class="wr-seg-b" onclick="WR.start(\''+RUN.id+'\',0,2)"><span class="wr-seg-n">2</span>填空</button>'
       +'<button class="wr-seg-b" onclick="WR.start(\''+RUN.id+'\',0,3)"><span class="wr-seg-n">3</span>默写</button>'
-      +'</div></div>';
+      +'</div>'
+      +(apOf(t).length?'<div class="wr-ap-cta" onclick="WR.apply(\''+RUN.id+'\')">它还能解决 '
+        +apOf(t).length+' 道同类题 ›</div>':'')
+      +'</div>';
   }
   $('wr-body').innerHTML=h;
   if(sc) sc.scrollTop=top;
@@ -1942,10 +2005,16 @@ function finish(pass){
       msg=ROM[st]+' 通过（'+RUN.good+'/'+RUN.total+'），还差 '+left.join('、');
       btns='<button class="sub" onclick="WR.back()">回列表</button>';
     }
+    var apn=apOf(t).length, extra='';
     if(!all&&!RUN.review){
       var nx=firstOpen(t);
-      btns='<button class="main" onclick="WR.start(\''+id+'\',0,'+nx+')">顺手练'+ROM[nx]+'</button>'+btns;
+      extra+='<button class="main" onclick="WR.start(\''+id+'\',0,'+nx+')">顺手练'+ROM[nx]+'</button>';
     }
+    /* 默写通过（或刚好凑满三轮掌握）才提示下一步：拿这个模板去打同类题 */
+    if(apn&&(st===3||(all&&!hadMaster))){
+      extra+='<button class="'+((all||RUN.review)?'main':'sub')+'" onclick="WR.apply(\''+id+'\')">练同类题 · '+apn+'</button>';
+    }
+    btns=extra+btns;
   }else{
     var wrongN=RUN.total-RUN.good, unit=(st===3?'行':'处');
     if(RUN.review){
@@ -2012,6 +2081,7 @@ function imp(file){
       if(!d||typeof d!=='object') throw 0;
       if(d.tpl) Object.keys(d.tpl).forEach(function(k){ ST.tpl[k]=d.tpl[k]; });
       if(d.day) Object.keys(d.day).forEach(function(k){ ST.day[k]=d.day[k]; });
+      if(d.ap){ ST.ap=ST.ap||{}; Object.keys(d.ap).forEach(function(k){ ST.ap[k]=d.ap[k]; }); }
       save(); refreshList(); toast('已导入默写进度');
     }catch(e){ toast('文件格式不对'); }
   };
@@ -2019,7 +2089,7 @@ function imp(file){
 }
 function reset(){
   if(!confirm('清空全部默写进度？（八股刷题进度不受影响）')) return;
-  ST={v:1,tpl:{},day:{}}; save(); refreshList(); toast('已清空默写进度');
+  ST={v:1,tpl:{},day:{},ap:{}}; save(); refreshList(); toast('已清空默写进度');
 }
 function begin(){ var id=RUN.id; RUN=null; start(id,0,firstOpen(P(id))); }
 
@@ -2045,6 +2115,8 @@ function normTpl(o){
   if(typeof o.brief!=='string') o.brief='';
   if(!Array.isArray(o.stmt)) o.stmt=[];
   if(typeof o.generic!=='string') o.generic='';
+  /* apply：同类题清单（可选）。允许写成单个对象，读取时 apOf() 还会再降级一次 */
+  if(!Array.isArray(o.apply)) o.apply=(o.apply&&typeof o.apply==='object')?[o.apply]:[];
   return o;
 }
 function impTpl(file){
@@ -2103,6 +2175,164 @@ function renderBanks(){
   el.innerHTML=h;
 }
 
+/* ---------- 同类题：默写完这个模板，还能拿它去打哪些题 ---------- */
+var AP=null;                       // {id:模板id} 或 {guide:1}（字段说明页）
+
+/* 容错读取：apply 可以是数组或单个对象，缺字段一律降级成空串 */
+function apOf(t){
+  var a=t&&t.apply;
+  if(!a) return [];
+  if(!Array.isArray(a)) a=[a];
+  var out=[];
+  a.forEach(function(x){
+    if(!x||typeof x!=='object') return;
+    if(!x.name&&!x.lc) return;
+    out.push({
+      lc:+x.lc||0,
+      name:String(x.name||('LC'+x.lc)),
+      diff:String(x.diff||''),
+      why:String(x.why||''),
+      hint:String(x.hint||''),
+      url:String(x.url||'')
+    });
+  });
+  return out;
+}
+function apKey(it,i){ return it.lc?('l'+it.lc):('i'+i); }
+/* create=1 才真正落库；只读时返回临时对象，避免把 88 个空对象写进 localStorage */
+function apRec(id,create){
+  ST.ap=ST.ap||{};
+  if(!ST.ap[id]){
+    if(!create) return {};
+    ST.ap[id]={};
+  }
+  return ST.ap[id];
+}
+function apDoneN(t){
+  var rec=apRec(t.id), n=0;
+  apOf(t).forEach(function(it,i){ if(rec[apKey(it,i)]) n++; });
+  return n;
+}
+/* 没配 url 就退回 leetcode.cn 题库搜索，题名对得上就能点进去 */
+function apUrl(it){
+  if(it.url) return it.url;
+  return 'https://leetcode.cn/problemset/all/?search='+encodeURIComponent(it.name||'');
+}
+
+function apply(id){
+  var t=MAP[id]; if(!t) return;
+  AP={id:id};
+  $('ap-run').classList.add('on');
+  paintApply();
+  window.scrollTo(0,0);
+}
+function apGuide(){
+  AP={guide:1};
+  $('ap-run').classList.add('on');
+  paintApply();
+  window.scrollTo(0,0);
+}
+function apBack(){
+  $('ap-run').classList.remove('on');
+  AP=null;
+  var wr=$('wr-run');
+  if(!wr||!wr.classList.contains('on')) refreshList();
+}
+function apToggle(i){
+  if(!AP||!AP.id) return;
+  var t=MAP[AP.id]; if(!t) return;
+  var it=apOf(t)[i]; if(!it) return;
+  var rec=apRec(AP.id,1), k=apKey(it,i);
+  if(rec[k]){ delete rec[k]; toast('已取消标记'); }
+  else { rec[k]=Date.now(); toast('记下了：'+it.name); }
+  save(); paintApply(); refreshList();
+}
+/* 互链：这道题自己也有模板 → 直接进它的第①轮（已过就接着往下） */
+function apGoto(i){
+  if(!AP||!AP.id) return;
+  var t=MAP[AP.id], it=apOf(t)[i]; if(!it) return;
+  var own=it.lc?BYLC[it.lc]:null; if(!own) return;
+  $('ap-run').classList.remove('on'); AP=null;
+  start(own.id,0,firstOpen(P(own.id)));
+}
+
+function paintApply(){
+  var body=$('ap-body'); if(!body) return;
+  var t=(AP&&AP.id)?MAP[AP.id]:null;
+  if(!t){
+    setTxt('ap-ttl','同类题 · 怎么配');
+    setTxt('ap-sub','给模板加一个 apply 数组');
+    setTxt('ap-cnt','');
+    var gb=$('ap-pbar-i'); if(gb) gb.style.width='0%';
+    body.innerHTML=apGuideHtml();
+    try{ $('ap-scroll').scrollTop=0; }catch(e){}
+    return;
+  }
+  var list=apOf(t), rec=apRec(t.id), n=apDoneN(t);
+  setTxt('ap-ttl', t.title);
+  setTxt('ap-sub', list.length?'默写完它，这些题就是下一步':'还没配同类题');
+  setTxt('ap-cnt', list.length?(n+'/'+list.length):'');
+  var b=$('ap-pbar-i'); if(b) b.style.width=(list.length?Math.round(n*100/list.length):0)+'%';
+
+  var h='';
+  if(!list.length){
+    h='<div class="ap-tip">这个模板还没配同类题。配上之后，③默写一通过，结果卡里就会出现「练同类题」，这里是它的落地页。</div>'
+     +apGuideHtml();
+  }else{
+    h='<div class="ap-tip">骨架和 <b>'+esc(t.title)+'</b> 一样，只是换了个问法。做完勾一下——<b>只做记录，不影响掌握判定和复习节奏</b>。</div><div class="ap-list">';
+    list.forEach(function(it,i){ h+=apCard(t,it,i,rec[apKey(it,i)]); });
+    h+='</div><div class="ap-foot">'
+      +'<button class="wr-seg-b" onclick="WR.apBack()">返回</button>'
+      +'<button class="wr-seg-b" onclick="WR.view(\''+t.id+'\')"><span class="wr-seg-n">📖</span>再看模板</button>'
+      +'</div>';
+  }
+  body.innerHTML=h;
+  try{ $('ap-scroll').scrollTop=0; }catch(e){}
+}
+
+function apCard(t,it,i,done){
+  var own=it.lc?BYLC[it.lc]:null, self=own&&own.id===t.id;
+  return '<div class="ap-card"><div class="ap-top"><span class="ap-no">'+(i+1)+'</span>'
+    +'<div style="min-width:0;flex:1"><div class="ap-name">'
+    +(it.lc?'<span class="ap-lc">LC'+it.lc+'</span>':'')
+    +'<span>'+esc(it.name)+'</span>'
+    +(it.diff?'<span class="wr-diff '+esc(it.diff).toLowerCase()+'">'+esc(it.diff)+'</span>':'')
+    +'</div>'
+    +(it.why?'<div class="ap-why">'+esc(it.why)+'</div>':'')
+    +(it.hint?'<div class="ap-hint">'+esc(it.hint)+'</div>':'')
+    +'</div></div><div class="ap-acts">'
+    +'<a class="ap-btn link" href="'+esc(apUrl(it))+'" target="_blank" rel="noopener">LeetCode ↗</a>'
+    +(own&&!self?'<button class="ap-btn tpl" onclick="WR.apGoto('+i+')">有模板 · 去默写</button>':'')
+    +'<button class="ap-btn'+(done?' done':'')+'" onclick="WR.apToggle('+i+')">'
+    +(done?'✓ 已做':'标记已做')+'</button>'
+    +'</div></div>';
+}
+
+function apGuideHtml(){
+  var j='{\n'
+    +'  "id": "hash-two-sum",\n'
+    +'  "apply": [\n'
+    +'    { "lc": 560, "name": "和为 K 的子数组", "diff": "Medium",\n'
+    +'      "why": "把「值→下标」换成「前缀和→出现次数」，找 target 变成找 pre − k",\n'
+    +'      "hint": "先想暴力双层枚举，哪一层可以换成查表",\n'
+    +'      "url": "https://leetcode.cn/problems/subarray-sum-equals-k/" }\n'
+    +'  ]\n'
+    +'}';
+  return '<div class="ap-list"><div class="ap-card">'
+    +'<div class="ap-name"><span class="ap-lc">schema</span><span>给模板加一个 apply 数组</span></div>'
+    +'<div class="ap-p">③默写一通过，结果卡里就多一个「练同类题 · N」；模板卡片和「看模板」页也会多一个入口。点进去就是这一页。</div>'
+    +'<pre class="ap-code">'+esc(j)+'</pre>'
+    +'<div class="ap-li"><b>why</b> 写「模板的哪个变量 / 哪层循环 ↔ 题目的什么」，一句话就够</div>'
+    +'<div class="ap-li"><b>hint</b> 写变形点，可省；<b>url</b> 不填会自动跳到 leetcode.cn 按题名搜索</div>'
+    +'<div class="ap-li">题目 <b>lc</b> 在本题库里也有模板时，会自动出现「有模板 · 去默写」互链</div>'
+    +'<div class="ap-li">纯记录字段：勾不勾都不影响 isMaster 和 1/2/4/7/15/30 的复习节奏</div>'
+    +'</div><div class="ap-card">'
+    +'<div class="ap-name"><span class="ap-lc">min</span><span>最小可用写法</span></div>'
+    +'<pre class="ap-code">'+esc('"apply": [ {"lc": 560, "name": "和为 K 的子数组"} ]')+'</pre>'
+    +'<div class="ap-p">只有 name 也能跑；diff / why / hint / url 全部可选。改完重新导入题库即可（同 id 覆盖）。</div>'
+    +'</div></div>';
+}
+
 /* ---------- 回车跳到下一个输入框 ---------- */
 document.addEventListener('keydown',function(e){
   if(!RUN||RUN.done||!e.target||e.target.tagName!=='INPUT'||e.key!=='Enter') return;
@@ -2131,19 +2361,20 @@ window.WR={
   render:refreshList, start:start, view:view, back:back, retry:retry, nextStage:nextStage,
   pick:pick, choose:choose, submit:submit, key:key, begin:begin,
   review:review, resume:resume, exp:exp, imp:imp, reset:reset, toggleStmt:toggleStmt,
-  expTpl:expTpl, impTpl:impTpl, delBank:delBank, fixWrong:fixWrong
+  expTpl:expTpl, impTpl:impTpl, delBank:delBank, fixWrong:fixWrong,
+  apply:apply, apBack:apBack, apToggle:apToggle, apGoto:apGoto, apGuide:apGuide
 };
 /* 深链：#wr=<模板id> 直接进该模板，#wr=review 进今日复习，#tpl=<id> 看模板 */
 function boot(){
   refreshList();
   if(location.hash==='#write'){ if(window.go) go('write'); return; }
-  var m=/^#(wr|tpl)=(.+)$/.exec(location.hash||'');
+  var m=/^#(wr|tpl|apply)=(.+)$/.exec(location.hash||'');
   if(!m) return;
   var id=decodeURIComponent(m[2]);
   if(id==='review'){ if(window.go) go('write'); review(); return; }
   if(!MAP[id]) return;
   if(window.go) go('write');
-  if(m[1]==='tpl') view(id); else start(id);
+  if(m[1]==='tpl') view(id); else if(m[1]==='apply') apply(id); else start(id);
 }
 try{ boot(); }catch(e){}
 })();

@@ -114,7 +114,33 @@
     "例：[2,7,11,15], target=9 → [0,1]",
     "要求：同一元素不能重复用；保证恰好一个答案；时间 O(n)，空间 O(n)"
    ],
-   "generic": "两数之差、四数相加 II（两两分组存和）、和为 K 的子数组（前缀和查表）"
+   "generic": "两数之差、四数相加 II（两两分组存和）、和为 K 的子数组（前缀和查表）",
+   "apply": [
+    {
+     "lc": 560,
+     "name": "和为 K 的子数组",
+     "diff": "Medium",
+     "why": "把「值 → 下标」换成「前缀和 → 出现次数」，找 target 变成找 pre − k",
+     "hint": "暴力是枚举左右端点；想想哪一层能换成查表",
+     "url": "https://leetcode.cn/problems/subarray-sum-equals-k/"
+    },
+    {
+     "lc": 454,
+     "name": "四数相加 II",
+     "diff": "Medium",
+     "why": "两两分组：把 A+B 的所有和存进哈希表，再去 C+D 里找相反数——查表的键从「一个数」升级成「一对数的和」",
+     "hint": "四层循环怎么降到两层",
+     "url": "https://leetcode.cn/problems/4sum-ii/"
+    },
+    {
+     "lc": 167,
+     "name": "两数之和 II - 输入有序数组",
+     "diff": "Medium",
+     "why": "同一个「找搭档」，但数组有序 → 不用建表，左右指针各收一步，空间从 O(n) 降到 O(1)",
+     "hint": "有序是白给的条件，先问自己能不能不建表",
+     "url": "https://leetcode.cn/problems/two-sum-ii-input-array-is-sorted/"
+    }
+   ]
   },
   {
    "id": "hash-group",
