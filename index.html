@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261027-1435">
+<meta name="build" content="20261027-1452">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -390,15 +390,19 @@ body.dark .ap-btn.tpl{background:rgba(124,92,255,.22)}
 .wk-mode button.on{color:var(--brand);border-color:rgba(79,110,247,.45);background:rgba(79,110,247,.08)}
 .dk-hd{position:relative;z-index:6;display:flex;justify-content:space-between;align-items:center;padding:0 10px 8px;font-size:11px;color:var(--sub)}
 .dk-hd b{color:var(--ink)}
-.dk-stage{position:relative;isolation:isolate;height:clamp(340px,calc(100dvh - 236px),700px);margin:0 6px}
+.dk-stage{position:relative;isolation:isolate;height:clamp(340px,calc(100dvh - 160px),740px);margin:0 6px}
 .dk-card{position:absolute;inset:12px 10px 0;display:flex;flex-direction:column;box-sizing:border-box;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:15px 14px 13px;box-shadow:0 14px 30px rgba(12,18,38,.12);transform-origin:50% 145%;transform:translateX(calc(var(--d) * 18px)) translateY(calc(var(--d) * -7px)) rotate(calc(var(--d) * 3.6deg)) scale(calc(1 - var(--d) * .015));transition:transform .32s cubic-bezier(.2,.9,.3,1),opacity .3s;will-change:transform;overflow:hidden}
 body.dark .dk-card{box-shadow:0 14px 30px rgba(0,0,0,.5)}
 .dk-card:not(.top){opacity:.97}
-.dk-card:not(.top) .dk-c-body,.dk-card:not(.top) .dk-c-acts{visibility:hidden}
-.dk-card.top{animation:dkIn .26s ease-out;touch-action:pan-y;cursor:grab}
+/* 静止时叠在后面的卡只留卡片壳（不露文字碎片），一按下去就全露出来：
+   拖动时顶卡被拖开，底下那张必须是有内容的，否则看到的就是一片白 */
+.dk-card:not(.top):not(.fly-l):not(.fly-r) .dk-c-body,
+.dk-card:not(.top):not(.fly-l):not(.fly-r) .dk-c-acts{visibility:hidden}
+.dk-stage.drag .dk-card:not(.top) .dk-c-body,.dk-stage.drag .dk-card:not(.top) .dk-c-acts{visibility:visible}
+.dk-card.top{animation:dkIn .2s ease-out;touch-action:pan-y;cursor:grab}
 .dk-card.top:active{cursor:grabbing}
-.dk-card.fly-l{transform:translateX(-125%) rotate(-16deg)!important;opacity:0;transition:transform .22s ease-out,opacity .22s}
-.dk-card.fly-r{transform:translateX(125%) rotate(16deg)!important;opacity:0;transition:transform .22s ease-out,opacity .22s}
+.dk-card.fly-l{transform:translateX(-125%) rotate(-16deg)!important;opacity:0;transition:transform .22s ease-out,opacity .22s;z-index:40!important}
+.dk-card.fly-r{transform:translateX(125%) rotate(16deg)!important;opacity:0;transition:transform .22s ease-out,opacity .22s;z-index:40!important}
 @keyframes dkIn{from{opacity:.35;transform:scale(.955)}to{opacity:1;transform:none}}
 .dk-c-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;-webkit-overflow-scrolling:touch}
 .dk-c-hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -418,9 +422,6 @@ body.dark .dk-card{box-shadow:0 14px 30px rgba(0,0,0,.5)}
 .dk-hd-r{display:flex;align-items:center;gap:8px}
 .dk-note{font-size:9.5px;color:var(--sub);line-height:1.55;padding:0 4px 2px 19px;border-left:1.5px solid rgba(79,110,247,.2);margin-left:1px;opacity:.95}
 #w-deck.no-cm .dk-note{display:none}
-.dk-ft{position:relative;z-index:5;display:flex;gap:8px;margin-top:12px;padding:0 8px}
-.dk-ft button{flex:1;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
-.dk-ft button:active{transform:scale(.98)}
 .dk-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12.5px;border:1px dashed var(--line);border-radius:20px}
 </style>
 </head>
@@ -685,11 +686,6 @@ body.dark .dk-card{box-shadow:0 14px 30px rgba(0,0,0,.5)}
   <div id="w-deck">
     <div class="dk-hd"><b id="dk-cat">—</b><span class="dk-hd-r"><span id="dk-n">0 / 0</span><button class="wr-cm" id="dk-cm" onclick="WR.deckCm()">注释 开</button></span></div>
     <div class="dk-stage" id="dk-stage"></div>
-    <div class="dk-ft">
-      <button onclick="WR.deckGo(-1)">‹ 上一个</button>
-      <button onclick="WR.deckMode('list')">列表</button>
-      <button onclick="WR.deckGo(1)">下一个 ›</button>
-    </div>
   </div>
 
   <div class="card" id="w-tip" style="padding:12px 14px">
@@ -1675,7 +1671,7 @@ function load(){
       /* 注释开关：默认开，只有明确关过才是 0 */
       s.cm=(r.cm===0)?0:1;
       s.cmTold=r.cmTold?1:0;
-      s.deck=(r.deck&&typeof r.deck==='object')?{i:Math.max(0,r.deck.i|0),mode:(r.deck.mode==='list'?'list':'deck'),told:r.deck.told?1:0}:{i:0,mode:'deck',told:0};
+      s.deck=(r.deck&&typeof r.deck==='object')?{i:Math.max(0,r.deck.i|0),mode:(r.deck.mode==='list'?'list':'deck')}:{i:0,mode:'deck'};
     }
   }catch(e){}
   return s;
@@ -1796,7 +1792,7 @@ function refreshList(){
 }
 
 /* ---------- 模板卡牌堆：一叠纸牌，左滑下一张、右滑上一张 ---------- */
-function deckSave(){ ST.deck={i:DK.i,mode:DK.mode,told:(ST.deck&&ST.deck.told)||0}; save(); }
+function deckSave(){ ST.deck={i:DK.i,mode:DK.mode}; save(); }
 function deckApply(){
   var on=(DK.mode==='deck');
   var d=$('w-deck'), tip=$('w-tip'), cats=$('w-cats'), man=$('w-manage'), sts=$('w-stats');
@@ -1814,20 +1810,39 @@ function deckMode(m){
   deckSave(); deckRender();
   window.scrollTo(0,0);
 }
-var DKT=null;
+var DKT=0;                             /* 1=正在翻牌，忽略连点/连滑，避免丢张 */
 function deckGo(dir){
   var n=TPL.length; if(!n) return;
-  if(DKT) return;                       /* 正在翻牌，忽略连点，避免连滑丢张 */
+  if(DKT) return;
   var ni=DK.i+dir;
-  if(ni<0){ toast('已经是第一个模板'); deckBounce(); return; }
-  if(ni>=n){ toast('已经是最后一个模板'); deckBounce(); return; }
-  var st=$('dk-stage'), card=st&&st.querySelector('.dk-card.top');
-  if(card) card.classList.add(dir>0?'fly-l':'fly-r');
-  DKT=setTimeout(function(){ DKT=null; DK.i=ni; deckSave(); deckRender(); },170);
+  if(ni<0||ni>=n){ deckBounce(); return; }   /* 到头了只回弹，不弹字 */
+  var st=$('dk-stage'); if(!st) return;
+  var top=st.querySelector('.dk-card.top');
+  var nxt=st.querySelector('.dk-card[data-i="'+ni+'"]');
+  if(!top||!nxt){ DK.i=ni; deckSave(); deckRender(); return; }  /* 兜底：没有预渲染就整体重画 */
+  DKT=1;
+  /* 旧顶卡飞出去；飞行期间压在最上层，否则会被新顶卡盖住、看着像没动 */
+  top.classList.remove('top');
+  top.classList.add(dir>0?'fly-l':'fly-r');
+  /* 新顶卡早就带着内容渲染好了，这里只让它滑到中间，不需要重建 DOM */
+  nxt.classList.add('top');
+  nxt.style.animation='none';
+  DK.i=ni; deckSave();
+  deckLayout();
+  deckHead();
+  setTimeout(function(){
+    DKT=0;
+    if(top.parentNode) top.parentNode.removeChild(top);
+    deckFill();                        /* 补上翻走那侧缺的一张，保持前后各两张 */
+  },230);
 }
 function deckBounce(){
   var st=$('dk-stage'), card=st&&st.querySelector('.dk-card.top');
-  if(card){ card.style.transition='transform .26s cubic-bezier(.2,.9,.3,1)'; card.style.transform=''; }
+  if(!card) return;
+  card.style.animation='none';
+  card.style.transition='transform .26s cubic-bezier(.2,.9,.3,1)';
+  card.style.transform='';
+  setTimeout(function(){ card.style.transition=''; },280);
 }
 /* 卡面上的代码预览：只读、最多 12 行，让卡片有内容可看 */
 function codePeek(t){
@@ -1839,7 +1854,7 @@ function codePeek(t){
   if(lines.length>max) h+='<div class="dk-more">… 共 '+lines.length+' 行</div>';
   return '<div class="dk-code">'+h+'</div>';
 }
-function deckCard(t,d){
+function deckCard(t,idx,d){
   var p=P(t.id), pr=t.problems[0], apn=apOf(t).length, apd=apn?apDoneN(t):0;
   var segs='', done=0, badge='', cls='';
   for(var n=1;n<=NROUND;n++){ if(p.pass[n]) done++; segs+='<i class="'+(p.pass[n]?'on':'')+'"></i>'; }
@@ -1861,7 +1876,7 @@ function deckCard(t,d){
   var apLine=apn?('<div class="dk-c-ap" onclick="WR.apply(\''+t.id+'\')">同类题 '+apn+' 道'+(apd?' · 已做 '+apd:'')+' ›</div>')
     :((p.pass[2]||isMaster(p))?'<div class="dk-c-ap empty" onclick="WR.apply(\''+t.id+'\')">＋ 配同类题（待补）›</div>':'');
   /* z-index 必须按「离顶卡的距离」递减：只写 --d 的话后面的卡会盖住顶卡（手势全被吃掉） */
-  return '<article class="dk-card'+(d===0?' top':'')+'" style="--d:'+d+';z-index:'+(30-Math.abs(d))+'">'
+  return '<article class="dk-card'+(d===0?' top':'')+'" data-i="'+idx+'" style="--d:'+d+';z-index:'+(30-Math.abs(d))+'">'
     +'<div class="dk-c-body">'
     +'<div class="dk-c-hd"><span class="dk-c-cat">'+esc(t.cat||'未分类')+'</span>'
     +'<span class="wr-badge '+cls+'">'+badge+'</span></div>'
@@ -1875,6 +1890,39 @@ function deckCard(t,d){
     +'<div class="dk-c-acts">'+acts+'</div>'
     +'</article>';
 }
+/* 顶栏分类与计数 */
+function deckHead(){
+  var n=TPL.length; if(!n) return;
+  var t=TPL[DK.i]||{};
+  setTxt('dk-cat',t.cat||'未分类');
+  var mas=0; TPL.forEach(function(x){ if(isMaster(P(x.id))) mas++; });
+  setTxt('dk-n',(DK.i+1)+' / '+n+' · 已掌握 '+mas);
+}
+/* 只改 --d / z-index，不重建节点：翻牌时卡片是滑过去的，不是重新画出来的 */
+function deckLayout(){
+  var stage=$('dk-stage'); if(!stage) return;
+  var cards=stage.querySelectorAll('.dk-card');
+  for(var i=0;i<cards.length;i++){
+    var c=cards[i], k=+c.getAttribute('data-i'), d=k-DK.i;
+    if(!(Math.abs(d)<=2)){ if(c.parentNode) c.parentNode.removeChild(c); continue; }
+    c.style.setProperty('--d',d);
+    c.style.zIndex=30-Math.abs(d);
+    if(d===0) c.classList.add('top'); else c.classList.remove('top');
+  }
+}
+/* 补齐当前卡前后各两张，保证任何时候都预渲染好了上下各一张 */
+function deckFill(){
+  var stage=$('dk-stage'); if(!stage) return;
+  var n=TPL.length, have={};
+  var cards=stage.querySelectorAll('.dk-card');
+  for(var i=0;i<cards.length;i++) have[+cards[i].getAttribute('data-i')]=1;
+  var h='';
+  for(var k=Math.max(0,DK.i-2);k<=Math.min(n-1,DK.i+2);k++){
+    if(!have[k]) h+=deckCard(TPL[k],k,k-DK.i);
+  }
+  if(h) stage.insertAdjacentHTML('beforeend',h);
+  deckLayout();
+}
 function deckRender(){
   deckApply();
   paintDeckCm();
@@ -1886,31 +1934,29 @@ function deckRender(){
   }
   if(DK.i<0) DK.i=0;
   if(DK.i>n-1) DK.i=n-1;
-  var t=TPL[DK.i];
-  setTxt('dk-cat',t.cat||'未分类');
-  var mas=0; TPL.forEach(function(x){ if(isMaster(P(x.id))) mas++; });
-  setTxt('dk-n',(DK.i+1)+' / '+n+' · 已掌握 '+mas);
   var h='';
-  for(var k=Math.max(0,DK.i-1);k<=Math.min(n-1,DK.i+2);k++) h+=deckCard(TPL[k],k-DK.i);
+  for(var k=Math.max(0,DK.i-2);k<=Math.min(n-1,DK.i+2);k++) h+=deckCard(TPL[k],k,k-DK.i);
   stage.innerHTML=h;
-  deckBind();
-  if(!ST.deck.told){
-    ST.deck.told=1; deckSave();
-    setTimeout(function(){ toast('左滑下一个模板，右滑上一个'); },450);
-  }
+  deckHead();
+  deckBind(stage);
 }
-function deckBind(){
-  var stage=$('dk-stage'); if(!stage) return;
-  var card=stage.querySelector('.dk-card.top'); if(!card) return;
-  var sx=0,sy=0,dx=0,drag=false,moved=false;
-  card.addEventListener('pointerdown',function(e){
+/* 手势绑在舞台上（一次性），每次从事件里找当前顶卡，翻牌后不用重新绑 */
+function deckBind(stage){
+  if(!stage||stage.__dkBound) return;
+  stage.__dkBound=1;
+  var card=null,sx=0,sy=0,dx=0,drag=false,moved=false;
+  stage.addEventListener('pointerdown',function(e){
+    if(DKT) return;
     if(e.target&&e.target.closest&&e.target.closest('button')) return;
-    drag=true; moved=false; sx=e.clientX; sy=e.clientY; dx=0;
+    var c=e.target&&e.target.closest?e.target.closest('.dk-card'):null;
+    if(!c||!c.classList.contains('top')) return;
+    card=c; drag=true; moved=false; sx=e.clientX; sy=e.clientY; dx=0;
+    stage.classList.add('drag');
     card.style.animation='none'; card.style.transition='none';
-    try{ card.setPointerCapture(e.pointerId); }catch(err){}
+    try{ stage.setPointerCapture(e.pointerId); }catch(err){}
   });
-  card.addEventListener('pointermove',function(e){
-    if(!drag) return;
+  stage.addEventListener('pointermove',function(e){
+    if(!drag||!card) return;
     dx=e.clientX-sx;
     var dy=e.clientY-sy;
     if(!moved&&Math.abs(dx)<7) return;
@@ -1919,16 +1965,23 @@ function deckBind(){
     card.style.transform='translateX('+dx+'px) rotate('+(dx/26)+'deg)';
     if(e.cancelable) e.preventDefault();
   });
-  card.addEventListener('pointerup',function(){
-    if(!drag) return; drag=false;
-    card.style.transition='';
-    if(dx<=-70) deckGo(1);
-    else if(dx>=70) deckGo(-1);
-    else card.style.transform='';
+  stage.addEventListener('pointerup',function(){
+    if(!drag||!card) return;
+    drag=false;
+    var c=card; card=null;
+    c.style.transition='';
+    var to=(moved&&dx<=-70)?1:((moved&&dx>=70)?-1:0);
+    if(!to) c.style.transform='';
+    if(to) deckGo(to);
+    /* 等飞牌/回弹动画走完再收回「露内容」状态，避免中途闪一下白 */
+    setTimeout(function(){ stage.classList.remove('drag'); },330);
   });
-  card.addEventListener('pointercancel',function(){
-    if(!drag) return; drag=false;
-    card.style.transition=''; card.style.transform=''; card.style.animation='';
+  stage.addEventListener('pointercancel',function(){
+    if(!drag||!card) return;
+    drag=false;
+    var c=card; card=null;
+    c.style.transition=''; c.style.transform=''; c.style.animation='';
+    stage.classList.remove('drag');
   });
 }
 
@@ -2355,7 +2408,7 @@ function imp(file){
 }
 function reset(){
   if(!confirm('清空全部默写进度？（八股刷题进度不受影响）')) return;
-  ST={v:1,tpl:{},day:{},ap:{},deck:{i:0,mode:'deck',told:0},cm:1,cmTold:0}; save(); refreshList(); toast('已清空默写进度');
+  ST={v:1,tpl:{},day:{},ap:{},deck:{i:0,mode:'deck'},cm:1,cmTold:0}; save(); refreshList(); toast('已清空默写进度');
 }
 function begin(){ var id=RUN.id; RUN=null; start(id,0,firstOpen(P(id))); }
 
