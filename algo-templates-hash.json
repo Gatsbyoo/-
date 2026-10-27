@@ -21,10 +21,11 @@
     "public:",
     "    vector<int> twoSum(vector<int>& nums, int target) {",
     "        unordered_map<int, int> seen;",
-    "        for (int i = 0; i < (int)nums.size(); ++i) {",
-    "            int want = target - nums[i];",
-    "            if (seen.count(want)) return {seen[want], i};",
-    "            seen[nums[i]] = i;",
+    "        for (int i = 0; i < nums.size(); i++) {",
+    "            int x = nums[i];",
+    "            if (seen.count(target - x))",
+    "                return {seen[target - x], i};",
+    "            seen[x] = i;",
     "        }",
     "        return {};",
     "    }",
@@ -41,69 +42,47 @@
    "blanks": [
     {
      "l": 3,
-     "text": "unordered_map<int, int>",
+     "text": "unordered_map<int, int> seen;",
      "opts": [
-      "unordered_map<int, int>",
-      "map<int, int>",
-      "set<int>",
-      "vector<int>"
+      "vector<pair<int, int>> seen;",
+      "unordered_map<int, int> seen;",
+      "unordered_set<int> seen;",
+      "int seen = 0;"
      ],
-     "why": "要 O(1) 查值还要存下标：map 查询是 O(log n)，set 存不了下标，vector 查一次是 O(n)"
-    },
-    {
-     "l": 4,
-     "text": "i < (int)nums.size()",
-     "opts": [
-      "i < (int)nums.size()",
-      "i <= (int)nums.size()",
-      "i < (int)nums.size() - 1",
-      "i < sizeof(nums)"
-     ],
-     "why": "size() 返回无符号的 size_t，和 int i 比较会出符号警告，所以显式 (int) 转；别用 sizeof(nums)（那是 vector 对象本身的大小，不是元素个数）"
-    },
-    {
-     "l": 5,
-     "text": "target - nums[i]",
-     "opts": [
-      "target - nums[i]",
-      "target + nums[i]",
-      "nums[i] - target",
-      "target - want"
-     ],
-     "why": "搭档 = target − 当前值；写成 nums[i] - target 符号就反了"
+     "why": "要存「值 → 下标」才能返回下标；用 set 只能判存在，用 list 查一次退化成 O(n)"
     },
     {
      "l": 6,
-     "text": "seen.count(want)",
+     "text": "if (seen.count(target - x))",
      "opts": [
-      "seen.count(want)",
-      "seen.count(nums[i])",
-      "seen[want] == 0",
-      "want == 0"
+      "if (seen.count(x))",
+      "if (!seen.count(target - x))",
+      "if (seen.count(target + x))",
+      "if (seen.count(target - x))"
      ],
-     "why": "查的是「搭档」在不在表里，不是查自己——查自己会让 [3,3], target=6 这种用例把自己当搭档"
-    },
-    {
-     "l": 6,
-     "text": "{seen[want], i}",
-     "opts": [
-      "{seen[want], i}",
-      "{i, seen[want]}",
-      "{want, i}",
-      "{seen[nums[i]], i}"
-     ],
-     "why": "返回两个下标：先出现的搭档下标 + 当前下标；不是值 want"
+     "why": "查的是搭档 target−x；查自己会让 [3,3], target=6 把自己当搭档"
     },
     {
      "l": 7,
-     "text": "seen[nums[i]] = i",
+     "text": "return {seen[target - x], i};",
      "opts": [
-      "seen[nums[i]] = i",
-      "seen[i] = nums[i]",
-      "seen[want] = i",
-      "seen[nums[i]]++"
+      "return {i, seen[target - x]};",
+      "return {seen[x], i};",
+      "return {target - x, i};",
+      "return {seen[target - x], i};"
      ],
-     "why": "存的是「值 → 下标」；写成 seen[i] = nums[i] 键值就反了"
+     "why": "搭档的下标在前、当前下标在后；顺序反了题目判错"
+    },
+    {
+     "l": 8,
+     "text": "seen[x] = i;",
+     "opts": [
+      "seen[x] = i;",
+      "seen[i] = x;",
+      "seen[x] = target - x;",
+      "seen[target - x] = i;"
+     ],
+     "why": "先查后存：这一行必须在 if 之后，否则 target = 2x 时会把自己当成搭档返回 [0,0]"
     }
    ],
    "brief": "一次遍历里用哈希表把「找搭档」从 O(n) 扫描降成 O(1) 查表——「内层只在查一个确定值」的通用原型",
@@ -121,8 +100,32 @@
      "name": "最长连续序列",
      "diff": "Medium",
      "why": "把「值 → 下标」换成「值 → 集合」，反过来查 x−1 在不在：不在就是一段连续序列的起点",
-     "hint": "每个数都数一遍是 O(n²)，想想怎么只从起点数",
-     "url": "https://leetcode.cn/problems/longest-consecutive-sequence/"
+     "hint": "何时该从 x 开始往右数，而不是每个数都数",
+     "code": [
+      "class Solution {",
+      "public:",
+      "    int longestConsecutive(vector<int>& nums) {",
+      "        unordered_set<int> s(nums.begin(), nums.end());",
+      "        int best = 0;",
+      "        for (int x : s) {",
+      "            if (s.count(x - 1)) continue;",
+      "            int y = x;",
+      "            while (s.count(y + 1)) y++;",
+      "            best = max(best, y - x + 1);",
+      "        }",
+      "        return best;",
+      "    }",
+      "};"
+     ],
+     "pts": [
+      "表从「值→下标」换成「值→集合」，只判存在",
+      "只从「没有前驱 x−1」的点起数，每个数最多被数一次"
+     ],
+     "url": "https://leetcode.cn/problems/longest-consecutive-sequence/",
+     "k": [
+      7,
+      9
+     ]
     },
     {
      "lc": 560,
@@ -130,7 +133,31 @@
      "diff": "Medium",
      "why": "表里存的从「一个数」升级成「前缀和」，查的东西变成 prefix − k，一遍就统计完所有连续区间",
      "hint": "暴力是枚举左右端点，想想哪一层能换成查表",
-     "url": "https://leetcode.cn/problems/subarray-sum-equals-k/"
+     "code": [
+      "class Solution {",
+      "public:",
+      "    int subarraySum(vector<int>& nums, int k) {",
+      "        unordered_map<int, int> cnt;",
+      "        cnt[0] = 1;",
+      "        int pre = 0, ans = 0;",
+      "        for (int x : nums) {",
+      "            pre += x;",
+      "            ans += cnt[pre - k];",
+      "            cnt[pre]++;",
+      "        }",
+      "        return ans;",
+      "    }",
+      "};"
+     ],
+     "pts": [
+      "存的键从「一个数」升级成「前缀和」，值变成出现次数",
+      "cnt[0]=1 是空前缀；没有它，从头开始的区间全漏"
+     ],
+     "url": "https://leetcode.cn/problems/subarray-sum-equals-k/",
+     "k": [
+      5,
+      9
+     ]
     }
    ]
   },

@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261027-1146">
+<meta name="build" content="20261027-1435">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -216,8 +216,8 @@ th{color:var(--sub);font-size:12px}
 .wr-prog3 i.on{background:var(--ok)}
 
 /* ---- 四格分段按钮 ---- */
-.wr-seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px}
-.wr-seg-b{height:40px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:2px;padding:0 2px;white-space:nowrap}
+.wr-seg{display:flex;gap:6px;margin-top:9px}
+.wr-seg-b{flex:1;min-width:0;height:40px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:2px;padding:0 2px;white-space:nowrap}
 .wr-seg-b.ghost{color:var(--sub);font-weight:600}
 .wr-seg-b.done{border-color:rgba(22,163,74,.45);background:rgba(22,163,74,.08);color:var(--ok)}
 .wr-seg-n{font-size:10px;opacity:.62;font-weight:800;margin-right:1px}
@@ -240,6 +240,8 @@ th{color:var(--sub);font-size:12px}
 .wr-hd-t{font-size:14px;font-weight:800;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wr-hd-s{font-size:11px;color:var(--sub);line-height:1.4;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wr-hd-r{flex:0 0 auto;font-size:11.5px;font-weight:800;color:var(--brand);background:rgba(79,110,247,.1);padding:4px 9px;border-radius:999px;font-variant-numeric:tabular-nums}
+.wr-cm{flex:0 0 auto;font-size:10.5px;font-weight:800;color:var(--sub);background:var(--bg);border:1px solid var(--line);padding:4px 8px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.wr-cm.on{color:var(--brand);background:rgba(79,110,247,.1);border-color:rgba(79,110,247,.3)}
 .wr-pbar{height:3px;background:var(--line)}
 .wr-pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .25s}
 .wr-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 26px}
@@ -260,27 +262,34 @@ th{color:var(--sub);font-size:12px}
 .wr-hint{font-size:11.5px;color:var(--sub);line-height:1.65;margin:0 0 9px;padding-left:2px}
 
 /* ---- 代码面板 ---- */
-.wr-code{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px;overflow-x:auto;overscroll-behavior-x:contain}
-.wr-line{display:flex;gap:5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:2.05;white-space:pre}
-.wr-ln{flex:0 0 15px;color:var(--sub);opacity:.42;text-align:right;font-size:9.5px;padding-top:4px;user-select:none;font-variant-numeric:tabular-nums}
-.wr-src{flex:1;min-width:0;white-space:pre}
-.wr-note{font-size:10.5px;color:var(--sub);padding:0 0 3px 20px;line-height:1.5;opacity:.9}
+.wr-code{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 4px;overflow-x:auto;overscroll-behavior-x:contain}
+.wr-line{display:flex;gap:4px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;line-height:2.1;white-space:pre-wrap;overflow-wrap:anywhere}
+.wr-ln{flex:0 0 14px;color:var(--sub);opacity:.42;text-align:right;font-size:9.5px;padding-top:4px;user-select:none;font-variant-numeric:tabular-nums}
+.wr-src{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.wr-src.full{display:flex;align-items:flex-start;gap:0}
+.wr-src.full .wr-ind{flex:0 0 auto;white-space:pre}
+.wr-src.full .wr-hole{flex:0 1 auto;min-width:0;margin-left:-8px;padding-left:8px}
+.wr-src.full textarea.wr-in{flex:1 1 auto;width:auto;min-width:0;margin-left:-6px}
+.wr-note{position:relative;font-size:10.5px;color:var(--sub);line-height:1.55;margin:-4px 6px 3px 19px;padding:0 6px 0 8px;border-left:1.5px solid rgba(79,110,247,.25)}
+#wr-body.no-cm .wr-note{display:none}
+/* 同类题代码块下的逐行注释：和 .ln 的 padding-left 26px 对齐 */
+.ap-note{display:block;font-size:9.5px;color:var(--sub);line-height:1.5;padding:0 4px 3px 30px;border-left:1.5px solid rgba(79,110,247,.2);margin-left:8px}
+#ap-body.no-cm .ap-note{display:none}
+/* 遮住关键行时，紧跟其后的注释也必须藏起来，否则等于把答案抄给你 */
+.ap-cd.mask .ln.k + .ap-note{visibility:hidden}
 .wr-hole{display:inline-block;min-width:46px;padding:0 7px;margin:0 1px;border-radius:7px;background:rgba(79,110,247,.1);color:var(--brand);font-weight:700;text-align:center;cursor:pointer;box-shadow:inset 0 -1.5px 0 rgba(79,110,247,.45);transition:background .15s}
 .wr-hole.act{background:rgba(79,110,247,.2);box-shadow:0 0 0 2px rgba(79,110,247,.28)}
 .wr-hole.sel{background:rgba(79,110,247,.16)}
 .wr-hole.ok{background:var(--ok-bg);color:var(--ok);box-shadow:inset 0 -1.5px 0 var(--ok)}
 .wr-hole.no{background:var(--bad-bg);color:var(--bad);box-shadow:inset 0 -1.5px 0 var(--bad)}
-input.wr-in{width:auto;min-width:52px;max-width:100%;padding:1px 6px;border:none;border-radius:7px;background:rgba(79,110,247,.08);color:var(--ink);font-family:inherit;font-size:12px;outline:none;box-shadow:inset 0 -1.5px 0 rgba(79,110,247,.45)}
+input.wr-in{width:auto;min-width:52px;max-width:100%;padding:1px 6px;border:none;border-radius:7px;background:rgba(79,110,247,.08);color:var(--ink);font-family:inherit;font-size:inherit;outline:none;box-shadow:inset 0 -1.5px 0 rgba(79,110,247,.45)}
+textarea.wr-in{display:block;width:100%;box-sizing:border-box;padding:1px 6px;border:none;border-radius:7px;background:rgba(79,110,247,.08);color:var(--ink);font-family:inherit;font-size:inherit;line-height:1.9;outline:none;resize:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:inset 0 -1.5px 0 rgba(79,110,247,.45)}
+textarea.wr-in:focus{background:rgba(79,110,247,.14);box-shadow:inset 0 -1.5px 0 var(--brand)}
+textarea.wr-in.ok{background:var(--ok-bg);box-shadow:inset 0 -1.5px 0 var(--ok)}
+textarea.wr-in.no{background:var(--bad-bg);box-shadow:inset 0 -1.5px 0 var(--bad)}
 input.wr-in:focus{background:rgba(79,110,247,.14);box-shadow:inset 0 -1.5px 0 var(--brand)}
 input.wr-in.ok{background:var(--ok-bg);box-shadow:inset 0 -1.5px 0 var(--ok)}
 input.wr-in.no{background:var(--bad-bg);box-shadow:inset 0 -1.5px 0 var(--bad)}
-input.wr-linein{width:100%;padding:3px 8px;border:none;border-radius:8px;background:var(--bg);color:var(--ink);font-family:inherit;font-size:12px;outline:none;box-shadow:inset 0 0 0 1px var(--line)}
-input.wr-linein:focus{box-shadow:inset 0 0 0 1.5px var(--brand);background:rgba(79,110,247,.06)}
-input.wr-linein.ok{background:var(--ok-bg);box-shadow:inset 0 0 0 1px var(--ok)}
-input.wr-linein.no{background:var(--bad-bg);box-shadow:inset 0 0 0 1px var(--bad)}
-.wr-locked{display:block;padding:3px 8px;border-radius:8px;background:var(--ok-bg);color:var(--ok);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.7;box-shadow:inset 0 0 0 1px rgba(22,163,74,.35);white-space:pre;overflow-x:auto}
-.wr-tip{font-size:11px;color:#b45309;padding:1px 0 2px}
-.wr-exp{font-size:11px;color:var(--ok);padding:3px 0 3px 20px;line-height:1.6;word-break:break-word}
 .wr-bad{font-size:11px;color:var(--bad);padding:1px 0 4px 20px;line-height:1.6;word-break:break-word}
 
 /* ---- 看模板页底部 ---- */
@@ -347,6 +356,21 @@ body.dark .wr-res-btns .main{background:var(--brand);color:#fff}
 .ap-btn.done{background:var(--ok-bg);color:var(--ok);border-color:transparent}
 .ap-done-t{font-size:11px;font-weight:800;color:var(--ok)}
 .ap-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;line-height:1.65;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;overflow-x:auto;margin:9px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink)}
+/* 同类题：代码块（关键行可遮） */
+.ap-pts{margin-top:9px;background:rgba(124,92,255,.07);border-radius:10px;padding:8px 10px}
+.ap-pt{font-size:12px;line-height:1.7;padding-left:14px;position:relative}
+.ap-pt:before{content:"·";position:absolute;left:2px;color:var(--brand2);font-weight:800}
+.ap-cd{margin-top:10px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ap-cd-hd{display:flex;gap:6px;align-items:center;padding:6px 8px;background:var(--card);border-bottom:1px solid var(--line)}
+.ap-cd-hd b{font-size:10px;font-weight:800;color:var(--sub);letter-spacing:.4px;margin-right:auto}
+.ap-cd-b{font-family:inherit;font-size:10.5px;font-weight:700;padding:4px 8px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;line-height:1.2}
+.ap-cd pre{margin:0;border:0;border-radius:0;max-height:none;counter-reset:ln;font-size:10.5px;line-height:1.72}
+.ln{display:block;white-space:pre-wrap;overflow-wrap:anywhere;counter-increment:ln;padding-left:26px;position:relative}
+.ln:before{content:counter(ln);position:absolute;left:0;width:18px;text-align:right;color:var(--sub);opacity:.5;font-size:9.5px}
+.ln.k{background:rgba(230,168,0,.16);box-shadow:inset 2px 0 0 #e6a800}
+.ap-cd.mask .ln.k{color:transparent;background:var(--line);box-shadow:none;cursor:pointer;position:relative}
+.ap-cd.mask .ln.k *{color:transparent!important}
+.ap-cd.mask .ln.k:after{content:"点开";position:absolute;left:26px;top:0;font-size:9.5px;color:var(--sub);letter-spacing:.5px}
 .ap-k{font-weight:800;color:var(--brand)}
 .ap-p{font-size:12.5px;line-height:1.75;margin-top:8px}
 .ap-li{font-size:12px;color:var(--sub);line-height:1.8;margin-top:6px;padding-left:12px;position:relative}
@@ -359,6 +383,45 @@ body.dark .wr-res-btns .main{background:var(--brand);color:#fff}
 .ap-foot{display:flex;gap:8px;padding:16px 14px 26px}
 .ap-foot .wr-seg-b{flex:1}
 body.dark .ap-btn.tpl{background:rgba(124,92,255,.22)}
+
+/* ================= 模板卡牌堆 ================= */
+.wk-mode{display:flex;gap:6px;margin:10px 0}
+.wk-mode button{flex:1;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--sub);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.wk-mode button.on{color:var(--brand);border-color:rgba(79,110,247,.45);background:rgba(79,110,247,.08)}
+.dk-hd{position:relative;z-index:6;display:flex;justify-content:space-between;align-items:center;padding:0 10px 8px;font-size:11px;color:var(--sub)}
+.dk-hd b{color:var(--ink)}
+.dk-stage{position:relative;isolation:isolate;height:clamp(340px,calc(100dvh - 236px),700px);margin:0 6px}
+.dk-card{position:absolute;inset:12px 10px 0;display:flex;flex-direction:column;box-sizing:border-box;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:15px 14px 13px;box-shadow:0 14px 30px rgba(12,18,38,.12);transform-origin:50% 145%;transform:translateX(calc(var(--d) * 18px)) translateY(calc(var(--d) * -7px)) rotate(calc(var(--d) * 3.6deg)) scale(calc(1 - var(--d) * .015));transition:transform .32s cubic-bezier(.2,.9,.3,1),opacity .3s;will-change:transform;overflow:hidden}
+body.dark .dk-card{box-shadow:0 14px 30px rgba(0,0,0,.5)}
+.dk-card:not(.top){opacity:.97}
+.dk-card:not(.top) .dk-c-body,.dk-card:not(.top) .dk-c-acts{visibility:hidden}
+.dk-card.top{animation:dkIn .26s ease-out;touch-action:pan-y;cursor:grab}
+.dk-card.top:active{cursor:grabbing}
+.dk-card.fly-l{transform:translateX(-125%) rotate(-16deg)!important;opacity:0;transition:transform .22s ease-out,opacity .22s}
+.dk-card.fly-r{transform:translateX(125%) rotate(16deg)!important;opacity:0;transition:transform .22s ease-out,opacity .22s}
+@keyframes dkIn{from{opacity:.35;transform:scale(.955)}to{opacity:1;transform:none}}
+.dk-c-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;-webkit-overflow-scrolling:touch}
+.dk-c-hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dk-c-cat{font-size:10.5px;font-weight:800;letter-spacing:.3px;color:var(--brand);background:rgba(79,110,247,.1);padding:3px 9px;border-radius:999px}
+.dk-title{font-size:19px;line-height:1.35;margin:11px 0 0;font-weight:800;color:var(--ink)}
+.dk-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:10.5px;color:var(--sub);margin-top:7px}
+.dk-brief{font-size:12.5px;line-height:1.8;margin:11px 0 0;color:var(--ink);opacity:.78}
+.dk-c-ap{margin-top:10px;font-size:11.5px;font-weight:800;color:var(--brand);cursor:pointer}
+.dk-c-ap.empty{color:var(--sub);font-weight:600}
+.dk-c-acts{display:flex;gap:6px;margin-top:11px;flex:0 0 auto}
+#w-deck{overflow:hidden;padding:2px 0 8px}
+.dk-code{flex:1 1 auto;min-height:104px;margin-top:12px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px 5px 6px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;line-height:1.95;overflow:auto}
+.dk-ln{display:flex;gap:5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.dk-ln i{flex:0 0 13px;text-align:right;font-style:normal;font-size:8.5px;color:var(--sub);opacity:.45;padding-top:1px}
+.dk-ln s{flex:1;min-width:0;text-decoration:none}
+.dk-more{margin-top:4px;font-size:9.5px;color:var(--sub);text-align:center;opacity:.8}
+.dk-hd-r{display:flex;align-items:center;gap:8px}
+.dk-note{font-size:9.5px;color:var(--sub);line-height:1.55;padding:0 4px 2px 19px;border-left:1.5px solid rgba(79,110,247,.2);margin-left:1px;opacity:.95}
+#w-deck.no-cm .dk-note{display:none}
+.dk-ft{position:relative;z-index:5;display:flex;gap:8px;margin-top:12px;padding:0 8px}
+.dk-ft button{flex:1;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.dk-ft button:active{transform:scale(.98)}
+.dk-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12.5px;border:1px dashed var(--line);border-radius:20px}
 </style>
 </head>
 <body>
@@ -600,7 +663,7 @@ body.dark .ap-btn.tpl{background:rgba(124,92,255,.22)}
 
 <!-- ================= 代码默写（算法模板） ================= -->
 <section class="page" id="p-write">
-  <div class="card" style="padding:13px">
+  <div class="card" id="w-stats" style="padding:13px">
     <div class="wr-stats">
       <div class="wr-stat acc"><b id="w-today">0</b><span>今日空数</span></div>
       <div class="wr-stat ok"><b id="w-master">0/0</b><span>已掌握</span></div>
@@ -614,12 +677,28 @@ body.dark .ap-btn.tpl{background:rgba(124,92,255,.22)}
     </div>
   </div>
 
-  <div class="card" style="padding:12px 14px">
-    <div class="small muted" style="line-height:1.75">三轮任选，想练哪轮点哪轮：<b>①选择</b> 认空 → <b>②填空</b> 写空 → <b>③默写</b> 整行默写。每轮一次全对才算过，三轮都过 = 掌握，之后按 1/2/4/7/15/30 天复习（只考 ③）。</div>
+  <div class="wk-mode" id="w-mode">
+    <button id="wk-m-deck" onclick="WR.deckMode('deck')">🃏 卡牌</button>
+    <button id="wk-m-list" onclick="WR.deckMode('list')">☰ 列表</button>
+  </div>
+
+  <div id="w-deck">
+    <div class="dk-hd"><b id="dk-cat">—</b><span class="dk-hd-r"><span id="dk-n">0 / 0</span><button class="wr-cm" id="dk-cm" onclick="WR.deckCm()">注释 开</button></span></div>
+    <div class="dk-stage" id="dk-stage"></div>
+    <div class="dk-ft">
+      <button onclick="WR.deckGo(-1)">‹ 上一个</button>
+      <button onclick="WR.deckMode('list')">列表</button>
+      <button onclick="WR.deckGo(1)">下一个 ›</button>
+    </div>
+  </div>
+
+  <div class="card" id="w-tip" style="padding:12px 14px">
+    <div class="small muted" style="line-height:1.75">两轮任选，想练哪轮点哪轮：<b>①选择</b> 认空 → <b>②填空默写</b> 把整行代码写出来。每轮一次全对才算过，两轮都过 = 掌握，之后按 1/2/4/7/15/30 天复习（只考 ②）。</div>
   </div>
 
   <div id="w-cats"></div>
 
+  <div id="w-manage">
   <div class="card">
     <h3 style="font-size:15px;margin-bottom:10px">模板题库</h3>
     <div class="wr-quick" style="margin-top:0">
@@ -641,6 +720,7 @@ body.dark .ap-btn.tpl{background:rgba(124,92,255,.22)}
     <input type="file" id="w-imp" accept="application/json,.json" style="display:none">
     <div style="margin-top:10px"><button class="btn gray" onclick="WR.reset()">清空默写进度</button></div>
     <div class="small muted" style="margin-top:8px;line-height:1.7">进度与题库分开保存，都不影响八股刷题的 318 题；换设备前请先导出。</div>
+  </div>
   </div>
 </section>
 
@@ -670,6 +750,7 @@ body.dark .ap-btn.tpl{background:rgba(124,92,255,.22)}
       <div class="wr-hd-s" id="wr-sub">—</div>
     </div>
     <div class="wr-hd-r" id="wr-cnt">0/0</div>
+    <button class="wr-cm on" id="wr-cm" onclick="WR.toggleCm()">注释 开</button>
   </div>
   <div class="wr-pbar"><i id="wr-pbar-i"></i></div>
   <div class="wr-scroll" id="wr-scroll"><div id="wr-body"></div></div>
@@ -708,6 +789,7 @@ body.dark .ap-btn.tpl{background:rgba(124,92,255,.22)}
       <div class="wr-hd-s" id="ap-sub">—</div>
     </div>
     <div class="wr-hd-r" id="ap-cnt">0/0</div>
+    <button class="wr-cm" id="ap-cm" onclick="WR.toggleApCm()">注释 开</button>
   </div>
   <div class="wr-pbar"><i id="ap-pbar-i"></i></div>
   <div class="wr-scroll" id="ap-scroll"><div id="ap-body"></div></div>
@@ -1571,17 +1653,18 @@ function rebuild(){
 var HINT={
   0:'看模板：代码全给，带底色的就是考点空。看懂了点下面「开始」进入第①轮。',
   1:'第①轮 · 选择题：点代码里的空位切换，底部选一个填进去。<b>一次全对</b>这一轮才算过（错了也能看正确答案，回去再点①重刷）。',
-  2:'第②轮 · 填空题：直接在空里打字（空格、分号不严格）。<b>一次全对</b>这一轮才算过。',
-  3:'第③轮 · 默写关键行：把被清空的整行写出来，缩进和空格不严格。写不出来点 💡 看提示。'
+  2:'第②轮 · 填空默写：直接在这几行空里把整行代码打出来，缩进和空格不严格，分号 <b>;</b> 要写。<b>一次全对</b>这一轮才算过。'
 };
 
 /* ---------- 状态 ---------- */
 var ST=load(), RUN=null, ACT=0;
+/* 卡牌堆状态：i=当前张，mode=deck/list（持久化到 ST.deck） */
+var DK={i:Math.max(0,(ST.deck&&ST.deck.i)|0),mode:(ST.deck&&ST.deck.mode==='list')?'list':'deck'};
 if(!ST.banks) ST.banks=[];
 rebuild();
 
 function load(){
-  var s={v:1,tpl:{},day:{},ap:{}};
+  var s={v:1,tpl:{},day:{},ap:{},deck:{i:0,mode:'deck'},cm:1,cmTold:0};
   try{
     var r=JSON.parse(localStorage.getItem(KEY)||'null');
     if(r&&typeof r==='object'){
@@ -1589,6 +1672,10 @@ function load(){
       s.banks=Array.isArray(r.banks)?r.banks:[];
       s.ap=(r.ap&&typeof r.ap==='object')?r.ap:{};
       s.stmtClosed=(r.stmtClosed&&typeof r.stmtClosed==='object')?r.stmtClosed:{};
+      /* 注释开关：默认开，只有明确关过才是 0 */
+      s.cm=(r.cm===0)?0:1;
+      s.cmTold=r.cmTold?1:0;
+      s.deck=(r.deck&&typeof r.deck==='object')?{i:Math.max(0,r.deck.i|0),mode:(r.deck.mode==='list'?'list':'deck'),told:r.deck.told?1:0}:{i:0,mode:'deck',told:0};
     }
   }catch(e){}
   return s;
@@ -1603,11 +1690,14 @@ function P(id){
   var p=ST.tpl[id];
   if(!p){ p={u:1,pass:{},lvl:0,due:0,last:0}; ST.tpl[id]=p; }
   p.pass=p.pass||{}; if(!p.u)p.u=1; p.lvl=p.lvl||0; p.due=p.due||0;
+  /* 老数据里 p.u 可能是 3（旧第三轮），统一折回第②轮 */
+  if(p.u>2) p.u=2;
   return p;
 }
-function isMaster(p){ return !!(p.pass[1]&&p.pass[2]&&p.pass[3]); }
-var ROM={1:'①选择',2:'②填空',3:'③默写'};
-function firstOpen(t){ if(!t) return 1; var p=P(t.id); for(var n=1;n<=3;n++) if(!p.pass[n]) return n; return 3; }
+function isMaster(p){ return !!(p.pass[1]&&p.pass[2]); }
+var ROM={1:'①选择',2:'②填空'};
+var NROUND=2;
+function firstOpen(t){ if(!t) return 1; var p=P(t.id); for(var n=1;n<=NROUND;n++) if(!p.pass[n]) return n; return NROUND; }
 function isDue(p){ return isMaster(p)&&p.due&&p.due<=Date.now(); }
 
 /* ---------- 工具 ---------- */
@@ -1630,14 +1720,10 @@ function norm(s){
   s=s.replace(/\s*([(){}\[\];,.<>=+\-*\/%!&|?:])\s*/g,'$1');
   return s.trim().toLowerCase();
 }
-function indentOf(line){ var m=/^[ ]*/.exec(line); return m?m[0]:''; }
 /* 手机上代码区宽度有限：显示时把 4 空格缩进折成 2 空格，省 1/3 宽度（判分不看缩进） */
-function disp(line){
-  var m=/^( +)/.exec(line);
-  if(!m) return line;
-  var n=Math.ceil(m[1].length/2);
-  return new Array(n+1).join(' ')+line.slice(m[1].length);
-}
+/* 只做原样显示：以前为了 Python 在手机上省宽度把缩进减半，
+   现在模板是 4 空格缩进的 C++，再压就会让绿块/输入框和上一行对不齐 */
+function disp(line){ return line; }
 
 /* ---------- 轻量 C++ 语法高亮（无外部依赖） ---------- */
 var TYSET={vector:1,string:1,unordered_map:1,unordered_set:1,map:1,set:1,int:1,void:1,bool:1,char:1,long:1,unsigned:1,size_t:1,auto:1};
@@ -1672,14 +1758,14 @@ function holesOfLine(t,li){
 function refreshList(){
   if(!$('w-cats')) return;
   var tot=TPL.length, mas=0, due=0, unlocked=0;
-  TPL.forEach(function(t){ var p=P(t.id); if(isMaster(p)){ mas++; if(isDue(p)) due++; } for(var n=1;n<=3;n++){ if(p.pass[n]) unlocked++; } });
+  TPL.forEach(function(t){ var p=P(t.id); if(isMaster(p)){ mas++; if(isDue(p)) due++; } for(var n=1;n<=NROUND;n++){ if(p.pass[n]) unlocked++; } });
   setTxt('w-today', dayRec().b);
   setTxt('w-master', mas+'/'+tot);
   setTxt('w-due', due); setTxt('w-due2', due);
   var sk=0, d=new Date();
   while(true){ var r=ST.day[keyOf(d)]; if(r&&r.b>0){ sk++; d.setDate(d.getDate()-1); } else break; }
   setTxt('w-streak', sk);
-  setTxt('w-prog', unlocked+'/'+(tot*3)+' 轮通过');
+  setTxt('w-prog', unlocked+'/'+(tot*NROUND)+' 轮通过');
   /* 同类题清单入口上的角标：已配了几个模板 */
   var apn=0;
   TPL.forEach(function(t){ if(apOf(t).length) apn++; });
@@ -1706,23 +1792,161 @@ function refreshList(){
   }
   $('w-cats').innerHTML=h;
   renderBanks();
+  deckRender();
+}
+
+/* ---------- 模板卡牌堆：一叠纸牌，左滑下一张、右滑上一张 ---------- */
+function deckSave(){ ST.deck={i:DK.i,mode:DK.mode,told:(ST.deck&&ST.deck.told)||0}; save(); }
+function deckApply(){
+  var on=(DK.mode==='deck');
+  var d=$('w-deck'), tip=$('w-tip'), cats=$('w-cats'), man=$('w-manage'), sts=$('w-stats');
+  if(d) d.style.display=on?'':'none';
+  if(sts) sts.style.display=on?'none':'';
+  if(tip) tip.style.display=on?'none':'';
+  if(cats) cats.style.display=on?'none':'';
+  if(man) man.style.display=on?'none':'';
+  var a=$('wk-m-deck'), b=$('wk-m-list');
+  if(a) a.classList.toggle('on',on);
+  if(b) b.classList.toggle('on',!on);
+}
+function deckMode(m){
+  DK.mode=(m==='list')?'list':'deck';
+  deckSave(); deckRender();
+  window.scrollTo(0,0);
+}
+var DKT=null;
+function deckGo(dir){
+  var n=TPL.length; if(!n) return;
+  if(DKT) return;                       /* 正在翻牌，忽略连点，避免连滑丢张 */
+  var ni=DK.i+dir;
+  if(ni<0){ toast('已经是第一个模板'); deckBounce(); return; }
+  if(ni>=n){ toast('已经是最后一个模板'); deckBounce(); return; }
+  var st=$('dk-stage'), card=st&&st.querySelector('.dk-card.top');
+  if(card) card.classList.add(dir>0?'fly-l':'fly-r');
+  DKT=setTimeout(function(){ DKT=null; DK.i=ni; deckSave(); deckRender(); },170);
+}
+function deckBounce(){
+  var st=$('dk-stage'), card=st&&st.querySelector('.dk-card.top');
+  if(card){ card.style.transition='transform .26s cubic-bezier(.2,.9,.3,1)'; card.style.transform=''; }
+}
+/* 卡面上的代码预览：只读、最多 12 行，让卡片有内容可看 */
+function codePeek(t){
+  var lines=t.code||[], max=12, h='';
+  for(var i=0;i<Math.min(max,lines.length);i++){
+    h+='<div class="dk-ln"><i>'+(i+1)+'</i><s>'+hl(lines[i])+'</s></div>';
+    if(t.notes&&t.notes[i]) h+='<div class="dk-note">// '+esc(t.notes[i])+'</div>';
+  }
+  if(lines.length>max) h+='<div class="dk-more">… 共 '+lines.length+' 行</div>';
+  return '<div class="dk-code">'+h+'</div>';
+}
+function deckCard(t,d){
+  var p=P(t.id), pr=t.problems[0], apn=apOf(t).length, apd=apn?apDoneN(t):0;
+  var segs='', done=0, badge='', cls='';
+  for(var n=1;n<=NROUND;n++){ if(p.pass[n]) done++; segs+='<i class="'+(p.pass[n]?'on':'')+'"></i>'; }
+  if(isMaster(p)){
+    var left=Math.ceil((p.due-Date.now())/DAY);
+    if(isDue(p)){ badge='待复习'; cls='warn'; }
+    else { badge=(left>0?left+' 天后':'已掌握'); cls='ok'; }
+  }else{ badge=done+'/'+NROUND; }
+  var np=(t.problems||[]).length;
+  var meta=(pr?'<span class="wr-lc">LC'+pr.lc+(np>1?' 等 '+np+' 道':'')+'</span>'
+      +(pr.diff?'<span class="wr-diff '+String(pr.diff).toLowerCase()+'">'+esc(pr.diff)+'</span>':'')
+      :'<span class="wr-lc">'+esc(t.cat||'')+'</span>')
+    +'<span class="wr-dot">·</span><span>'+t.blanks.length+' 空 · '+keyLines(t).length+' 行</span>';
+  var acts='<button class="wr-seg-b ghost" onclick="WR.view(\''+t.id+'\')"><span class="wr-seg-n">📖</span>看模板</button>';
+  for(var n=1;n<=NROUND;n++){
+    acts+='<button class="wr-seg-b'+(p.pass[n]?' done':'')+'" onclick="WR.start(\''+t.id+'\',0,'+n+')">'
+      +'<span class="wr-seg-n">'+n+'</span>'+(n===1?'选择':'填空默写')+(p.pass[n]?'<span class="wr-seg-t">✓</span>':'')+'</button>';
+  }
+  var apLine=apn?('<div class="dk-c-ap" onclick="WR.apply(\''+t.id+'\')">同类题 '+apn+' 道'+(apd?' · 已做 '+apd:'')+' ›</div>')
+    :((p.pass[2]||isMaster(p))?'<div class="dk-c-ap empty" onclick="WR.apply(\''+t.id+'\')">＋ 配同类题（待补）›</div>':'');
+  /* z-index 必须按「离顶卡的距离」递减：只写 --d 的话后面的卡会盖住顶卡（手势全被吃掉） */
+  return '<article class="dk-card'+(d===0?' top':'')+'" style="--d:'+d+';z-index:'+(30-Math.abs(d))+'">'
+    +'<div class="dk-c-body">'
+    +'<div class="dk-c-hd"><span class="dk-c-cat">'+esc(t.cat||'未分类')+'</span>'
+    +'<span class="wr-badge '+cls+'">'+badge+'</span></div>'
+    +'<h2 class="dk-title">'+esc(t.title)+'</h2>'
+    +'<div class="dk-meta">'+meta+'</div>'
+    +'<p class="dk-brief">'+esc(t.brief||'')+'</p>'
+    +'<div class="wr-prog3" style="margin-top:11px">'+segs+'</div>'
+    +codePeek(t)
+    +apLine
+    +'</div>'
+    +'<div class="dk-c-acts">'+acts+'</div>'
+    +'</article>';
+}
+function deckRender(){
+  deckApply();
+  paintDeckCm();
+  var stage=$('dk-stage'); if(!stage) return;
+  var n=TPL.length;
+  if(!n){
+    stage.innerHTML='<div class="dk-empty">还没有模板题库，切到列表模式导入</div>';
+    setTxt('dk-cat','—'); setTxt('dk-n','0 / 0'); return;
+  }
+  if(DK.i<0) DK.i=0;
+  if(DK.i>n-1) DK.i=n-1;
+  var t=TPL[DK.i];
+  setTxt('dk-cat',t.cat||'未分类');
+  var mas=0; TPL.forEach(function(x){ if(isMaster(P(x.id))) mas++; });
+  setTxt('dk-n',(DK.i+1)+' / '+n+' · 已掌握 '+mas);
+  var h='';
+  for(var k=Math.max(0,DK.i-1);k<=Math.min(n-1,DK.i+2);k++) h+=deckCard(TPL[k],k-DK.i);
+  stage.innerHTML=h;
+  deckBind();
+  if(!ST.deck.told){
+    ST.deck.told=1; deckSave();
+    setTimeout(function(){ toast('左滑下一个模板，右滑上一个'); },450);
+  }
+}
+function deckBind(){
+  var stage=$('dk-stage'); if(!stage) return;
+  var card=stage.querySelector('.dk-card.top'); if(!card) return;
+  var sx=0,sy=0,dx=0,drag=false,moved=false;
+  card.addEventListener('pointerdown',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('button')) return;
+    drag=true; moved=false; sx=e.clientX; sy=e.clientY; dx=0;
+    card.style.animation='none'; card.style.transition='none';
+    try{ card.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  card.addEventListener('pointermove',function(e){
+    if(!drag) return;
+    dx=e.clientX-sx;
+    var dy=e.clientY-sy;
+    if(!moved&&Math.abs(dx)<7) return;
+    if(!moved&&Math.abs(dy)>Math.abs(dx)) return;
+    moved=true;
+    card.style.transform='translateX('+dx+'px) rotate('+(dx/26)+'deg)';
+    if(e.cancelable) e.preventDefault();
+  });
+  card.addEventListener('pointerup',function(){
+    if(!drag) return; drag=false;
+    card.style.transition='';
+    if(dx<=-70) deckGo(1);
+    else if(dx>=70) deckGo(-1);
+    else card.style.transform='';
+  });
+  card.addEventListener('pointercancel',function(){
+    if(!drag) return; drag=false;
+    card.style.transition=''; card.style.transform=''; card.style.animation='';
+  });
 }
 
 function tplCard(t){
   var p=P(t.id), pr=t.problems[0], segs='', done=0;
-  for(var n=1;n<=3;n++){ if(p.pass[n]) done++; segs+='<i class="'+(p.pass[n]?'on':'')+'"></i>'; }
+  for(var n=1;n<=NROUND;n++){ if(p.pass[n]) done++; segs+='<i class="'+(p.pass[n]?'on':'')+'"></i>'; }
   var apn=apOf(t).length, apd=apn?apDoneN(t):0;
-  /* 入口不因为「还没配内容」而消失：③默写过了的模板，即使 apply 是空的也留一个待补入口 */
+  /* 入口不因为「还没配内容」而消失：②填空默写过了的模板，即使 apply 是空的也留一个待补入口 */
   var apLine=apn?('<div class="wr-ap-link" onclick="WR.apply(\''+t.id+'\')">同类题 '+apn+' 道'
     +(apd?' · 已做 '+apd:'')+' ›</div>')
-    :((p.pass[3]||isMaster(p))?'<div class="wr-ap-link empty" onclick="WR.apply(\''+t.id+'\')">'
+    :((p.pass[2]||isMaster(p))?'<div class="wr-ap-link empty" onclick="WR.apply(\''+t.id+'\')">'
       +'＋ 配同类题（待补）›</div>':'');
   var badge, cls;
   if(isMaster(p)){
     var left=Math.ceil((p.due-Date.now())/DAY);
     if(isDue(p)){ badge='待复习'; cls='warn'; }
     else { badge=(left>0?left+' 天后':'已掌握'); cls='ok'; }
-  }else{ badge=done+'/3'; cls=''; }
+  }else{ badge=done+'/'+NROUND; cls=''; }
   var np=(t.problems||[]).length;
   var meta=(pr?'<span class="wr-lc">LC'+pr.lc+(np>1?' 等 '+np+' 道':'')+'</span>'
       +(pr.diff?'<span class="wr-diff '+String(pr.diff).toLowerCase()+'">'+esc(pr.diff)+'</span>':'')
@@ -1743,27 +1967,64 @@ function tplCard(t){
     +'<div class="wr-prog3">'+segs+'</div>'
     +'<div class="wr-seg">'
     +'<button class="wr-seg-b ghost" onclick="WR.view(\''+t.id+'\')"><span class="wr-seg-n">📖</span>模板</button>'
-    +btn(1,'选择')+btn(2,'填空')+btn(3,'默写')
+    +btn(1,'选择')+btn(2,'填空默写')
     +'</div></div>';
+}
+
+/* ---------- 注释开关 ---------- */
+/* 规则：看模板 / 第①轮 跟着用户偏好（默认显示）；
+   第②轮填空默写 每次进来默认关（怕直接照抄注释），手动打开只影响本次，不改偏好 */
+function cmDefault(stage){ return stage===2 ? 0 : (ST.cm===0?0:1); }
+function paintCm(){
+  var b=$('wr-body'), btn=$('wr-cm');
+  var on=!!(RUN&&RUN.cm);
+  if(b) b.classList.toggle('no-cm',!on);
+  if(btn){ btn.classList.toggle('on',on); btn.textContent=on?'注释 开':'注释 关'; }
+}
+function toggleCm(){
+  if(!RUN) return;
+  RUN.cm=RUN.cm?0:1;
+  if(RUN.stage!==2){ ST.cm=RUN.cm; save(); }
+  paintCm();
+}
+/* 同类题页没有「轮次」概念，直接改用户偏好 */
+function toggleApCm(){ ST.cm=(ST.cm===0)?1:0; save(); paintApCm(); }
+function paintApCm(){
+  var b=$('ap-body'), btn=$('ap-cm'), on=(ST.cm!==0);
+  if(b) b.classList.toggle('no-cm',!on);
+  if(btn){ btn.classList.toggle('on',on); btn.textContent=on?'注释 开':'注释 关'; }
+}
+function setApBody(html){ var b=$('ap-body'); if(b) b.innerHTML=html; paintApCm(); }
+/* 卡牌页同理，跟同一份偏好 */
+function deckCm(){ ST.cm=(ST.cm===0)?1:0; save(); paintDeckCm(); }
+function paintDeckCm(){
+  var dk=$('w-deck'), btn=$('dk-cm'), on=(ST.cm!==0);
+  if(dk) dk.classList.toggle('no-cm',!on);
+  if(btn){ btn.classList.toggle('on',on); btn.textContent=on?'注释 开':'注释 关'; }
 }
 
 /* ---------- 打开一轮 ---------- */
 function start(id, review, stage){
   var t=MAP[id]; if(!t) return;
   var p=P(id);
-  var st=stage?+stage:(review?3:(p.u||1));
-  if(!(st>=1&&st<=3)) st=1;
+  var st=stage?+stage:(review?NROUND:(p.u||1));
+  if(!(st>=1&&st<=NROUND)) st=NROUND;   /* 老数据的 stage=3 折到最后一轮，别掉回选择题 */
   var stage=st;
-  RUN={id:id,stage:stage,review:!!review,t0:Date.now(),done:false,ans:{},res:null,fix:null,good:0,total:0};
+  RUN={id:id,stage:stage,review:!!review,t0:Date.now(),done:false,ans:{},res:null,fix:null,good:0,total:0,cm:cmDefault(stage)};
   ST.last={id:id,stage:stage}; save();
-  ACT=stage===3?keyLines(t)[0]:0;
+  ACT=stage===1?0:0;
   $('wr-run').classList.add('on');
   paint();
   window.scrollTo(0,0);
+  /* 只在第一次进第②轮时提醒一次，别每次烦人 */
+  if(stage===2&&!RUN.cm&&!ST.cmTold){
+    ST.cmTold=1; save();
+    setTimeout(function(){ if(RUN&&RUN.cm===0) toast('填空默认关注释，右上角「注释」可随时打开'); },700);
+  }
 }
 function view(id){
   var t=MAP[id]; if(!t) return;
-  RUN={id:id,stage:0,review:false,t0:Date.now(),done:true,ans:{},res:null,good:0,total:0};
+  RUN={id:id,stage:0,review:false,t0:Date.now(),done:true,ans:{},res:null,good:0,total:0,cm:cmDefault(0)};
   ACT=-1;
   $('wr-run').classList.add('on');
   paint();
@@ -1787,9 +2048,9 @@ function fixWrong(){
     for(var i2=0;i2<bl.length;i2++){ if(!locked[i2]){ ACT=i2; break; } }
   }
   paint();
-  toast('已锁上答对的，只改这 '+n+' '+(RUN.stage===3?'行':'处'));
+  toast('已锁上答对的，只改这 '+n+' 处');
   setTimeout(function(){
-    var el=document.querySelector('#wr-body input.wr-linein, #wr-body input.wr-in');
+    var el=document.querySelector('#wr-body .wr-in');
     if(el){ try{ el.focus(); el.setSelectionRange(el.value.length,el.value.length); }catch(e){} }
   },40);
 }
@@ -1799,47 +2060,31 @@ function nextStage(){ if(!RUN) return; var id=RUN.id; RUN=null; start(id,0,first
 function paint(){
   var t=MAP[RUN.id], st=RUN.stage;
   $('wr-ttl').textContent=t.title;
-  var sub=RUN.review?'复习 · ③默写':(st===0?'看模板 · 第0轮':'第'+st+'轮');
+  var sub=RUN.review?'复习 · ②填空':(st===0?'看模板 · 第0轮':'第'+st+'轮');
   if(t.problems[0]) sub+=' · LC'+t.problems[0].lc+' '+t.problems[0].name;
-  if(RUN.fix) sub+=' · 只改错'+(st===3?'行':'处');
+  if(RUN.fix) sub+=' · 只改错';
   $('wr-sub').textContent=sub;
 
   var sc=$('wr-scroll'), top=sc?sc.scrollTop:0;
-  var ks=keyLines(t), h=stmtHtml(t)+'<div class="wr-hint">'+HINT[st]+'</div><div class="wr-code">';
+  var h=stmtHtml(t)+'<div class="wr-hint">'+HINT[st]+'</div><div class="wr-code">';
   t.code.forEach(function(line,li){
     var hs=holesOfLine(t,li), src='', dl=disp(line);
-    if(st===3&&ks.indexOf(li)>=0){
-      if(RUN.fix&&RUN.fix[li]){
-        src='<span class="wr-locked">'+esc(dl)+'</span>';
-      }else{
-        var v=(RUN.done||RUN.fix)?(RUN.ans[li]||''):indentOf(dl);
-        var cl='wr-linein'+(RUN.res?(RUN.res[li]?' ok':' no'):'');
-        src='<input class="'+cl+'" id="in-'+li+'" value="'+esc(v)+'" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="整行默写…">'
-           +'<div class="wr-tip" id="tip-'+li+'"></div>';
-      }
-    }else if(hs.length){
-      src=renderHolesLine(t,dl,hs,st);
-    }else{
-      src=hl(dl);
-    }
-    h+='<div class="wr-line"><span class="wr-ln">'+(li+1)+'</span><span class="wr-src">'+src+'</span></div>';
-    if(st!==3&&t.notes&&t.notes[li]) h+='<div class="wr-note">// '+esc(t.notes[li])+'</div>';
-    if(RUN.res){
-      if(st===3&&ks.indexOf(li)>=0&&!RUN.res[li]){
-        h+='<div class="wr-exp">正确：'+esc(t.code[li].trim())+'</div>';
-      }else if(st!==3&&hs.length){
-        hs.forEach(function(x){
-          if(!RUN.res[x.i]) h+='<div class="wr-bad">✗ 空'+(x.i+1)+' 应为 <b>'+esc(x.b.text)+'</b> — '+esc(x.b.why)+'</div>';
-        });
-      }
+    if(hs.length) src=renderHolesLine(t,dl,hs,st);
+    else src=hl(dl);
+    var fullLine=(hs.length===1&&dl.trim()===hs[0].b.text);
+    h+='<div class="wr-line"><span class="wr-ln">'+(li+1)+'</span><span class="wr-src'+(fullLine?' full':'')+'">'+src+'</span></div>';
+    if(t.notes&&t.notes[li]) h+='<div class="wr-note">// '+esc(t.notes[li])+'</div>';
+    if(RUN.res&&hs.length){
+      hs.forEach(function(x){
+        if(!RUN.res[x.i]) h+='<div class="wr-bad">✗ 空'+(x.i+1)+' 应为 <b>'+esc(x.b.text)+'</b> — '+esc(x.b.why)+'</div>';
+      });
     }
   });
   h+='</div>';
   if(st===0){
     h+='<div class="wr-cta"><p>这一轮不用动手：看懂骨架和每个高亮空，①选择就考这些空。</p><div class="wr-seg">'
       +'<button class="wr-seg-b" onclick="WR.start(\''+RUN.id+'\',0,1)"><span class="wr-seg-n">1</span>选择</button>'
-      +'<button class="wr-seg-b" onclick="WR.start(\''+RUN.id+'\',0,2)"><span class="wr-seg-n">2</span>填空</button>'
-      +'<button class="wr-seg-b" onclick="WR.start(\''+RUN.id+'\',0,3)"><span class="wr-seg-n">3</span>默写</button>'
+      +'<button class="wr-seg-b" onclick="WR.start(\''+RUN.id+'\',0,2)"><span class="wr-seg-n">2</span>填空默写</button>'
       +'</div>'
       +(function(){
         var n=apOf(t).length;
@@ -1849,15 +2094,17 @@ function paint(){
       +'</div>';
   }
   $('wr-body').innerHTML=h;
+  Array.prototype.forEach.call(document.querySelectorAll('#wr-body textarea.wr-in'),fitIn);
   if(sc) sc.scrollTop=top;
 
   var fb=$('wr-fb'), sub2=$('wr-submit'), keys=$('wr-keys');
   fb.className='wr-fb'; fb.innerHTML='';
   sub2.textContent=RUN.review?'提交检验':'提交';
   sub2.style.display=(st>0&&!RUN.done)?'block':'none';
-  keys.style.display=(st===2||st===3)?'flex':'none';
+  keys.style.display=(st===2)?'flex':'none';
   if(st===1) renderPicker();
   pbar();
+  paintCm();
 }
 
 /* 顶部细进度条 + 计数 */
@@ -1866,7 +2113,6 @@ function pbar(){
   var t=MAP[RUN.id], st=RUN.stage, done=0, tot=0;
   if(st===1){ tot=t.blanks.length; t.blanks.forEach(function(b,i){ if(RUN.fix){ if(RUN.fix[i]) done++; } else if(RUN.ans[i]!==undefined) done++; }); }
   else if(st===2){ tot=t.blanks.length; t.blanks.forEach(function(b,i){ if(RUN.fix){ if(RUN.fix[i]) done++; return; } var el=$('in-'+i); if(el&&el.value.trim()) done++; }); }
-  else if(st===3){ var ks=keyLines(t); tot=ks.length; ks.forEach(function(li){ if(RUN.fix){ if(RUN.fix[li]) done++; return; } var el=$('in-'+li); if(el&&el.value.trim()) done++; }); }
   var bar=$('wr-pbar-i'); if(bar) bar.style.width=(tot?Math.round(done*100/tot):0)+'%';
   var cnt=$('wr-cnt'); if(cnt) cnt.textContent=done+'/'+tot;
 }
@@ -1915,9 +2161,17 @@ function renderHolesLine(t,line,hs,st){
   hs.forEach(function(x){
     var b=x.b, at=line.indexOf(b.text,pos);
     if(at<0) at=line.indexOf(b.text);
-    if(at<0) at=pos;
-    out+=hl(line.slice(pos,at));
-    pos=at+b.text.length;
+    /* 真找不到就跳过这个空位：宁可少一个空，也不能插到行首、把整行原文再输出一遍 */
+    if(at<0) return;
+    /* 整行都是空：缩进原样输出（绿块、输入框都从缩进之后开始，别把缩进空格染成绿底） */
+    var full=(hs.length===1&&line.trim()===b.text);
+    if(full){
+      out+='<span class="wr-ind">'+esc(line.slice(0,at))+'</span>';
+      pos=line.length;                  /* 尾段已整行吃掉，pos 必须推到行尾，否则原文会再输出一遍 */
+    }else{
+      out+=hl(line.slice(pos,at));
+      pos=at+b.text.length;
+    }
     if((st===1||st===2)&&RUN.fix&&RUN.fix[x.i]){
       out+='<span class="wr-hole ok">'+esc(b.text)+'</span>';
     }else if(st===0){
@@ -1930,13 +2184,18 @@ function renderHolesLine(t,line,hs,st){
     }else{
       var v=(RUN.done||RUN.fix)?(RUN.ans[x.i]||''):'';
       var cl='wr-in'+(RUN.res?(RUN.res[x.i]?' ok':' no'):'');
-      out+='<input class="'+cl+'" id="in-'+x.i+'" value="'+esc(v)+'" size="'+Math.max(6,Math.min(26,b.text.length))+'" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="…">';
+      if(full){
+        out+='<textarea class="'+cl+'" id="in-'+x.i+'" rows="1" spellcheck="false" autocapitalize="off" autocomplete="off" oninput="WR.fitIn(this)" onkeydown="if(event.key===\'Enter\')event.preventDefault()" placeholder="…">'+esc(v)+'</textarea>';
+      }else{
+        out+='<input class="'+cl+'" id="in-'+x.i+'" value="'+esc(v)+'" size="'+Math.max(8,Math.min(88,b.text.length+2))+'" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="…">';
+      }
     }
   });
   out+=hl(line.slice(pos));
   return out;
 }
 
+function fitIn(el){ if(!el) return; el.style.height='auto'; el.style.height=(el.scrollHeight||0)+'px'; }
 function pick(i){ if(!RUN||RUN.stage!==1||RUN.done) return; ACT=i; paint(); }
 function choose(i,val){
   if(!RUN||RUN.stage!==1||RUN.done) return;
@@ -1982,15 +2241,6 @@ function submit(){
       if(!ok&&b.alts) ok=b.alts.some(function(a){ return norm(a)===norm(v); });
       res[i]=ok; if(ok) good++;
     });
-  }else{
-    keyLines(t).forEach(function(li){
-      var v;
-      if(RUN.fix&&RUN.fix[li]) v=RUN.ans[li]||'';
-      else { var el=$('in-'+li); v=el?el.value:''; RUN.ans[li]=v; }
-      total++;
-      var ok=norm(v)===norm(t.code[li]);
-      res[li]=ok; if(ok) good++;
-    });
   }
   RUN.done=true; RUN.res=res; RUN.good=good; RUN.total=total;
   var d=dayRec(); d.b+=good; d.sec+=Math.round((Date.now()-RUN.t0)/1000); save();
@@ -2010,13 +2260,13 @@ function finish(pass){
       btns='<button class="sub" onclick="WR.back()">回列表</button>';
     }else if(all&&!hadMaster){
       p.lvl=1; p.due=Date.now()+GAP[1]*DAY;
-      msg='三轮都过了，已掌握！明天进入 ③默写 复习';
+      msg='两轮都过了，已掌握！明天进入 ②填空默写 复习';
       btns='<button class="sub" onclick="WR.back()">回列表</button>';
     }else if(all){
       msg=ROM[st]+' 通过（'+RUN.good+'/'+RUN.total+'），保持掌握状态';
       btns='<button class="sub" onclick="WR.back()">回列表</button>';
     }else{
-      var left=[]; [1,2,3].forEach(function(n){ if(!p.pass[n]) left.push(ROM[n]); });
+      var left=[]; [1,2].forEach(function(n){ if(!p.pass[n]) left.push(ROM[n]); });
       msg=ROM[st]+' 通过（'+RUN.good+'/'+RUN.total+'），还差 '+left.join('、');
       btns='<button class="sub" onclick="WR.back()">回列表</button>';
     }
@@ -2025,17 +2275,17 @@ function finish(pass){
       var nx=firstOpen(t);
       extra+='<button class="main" onclick="WR.start(\''+id+'\',0,'+nx+')">顺手练'+ROM[nx]+'</button>';
     }
-    /* ③默写一过（或刚好凑满三轮掌握）就给下一步；还没配内容也留入口，不许"默写完就没下文" */
-    if(st===3||(all&&!hadMaster)){
+    /* ②填空默写一过（或刚好凑满两轮掌握）就给下一步；还没配内容也留入口，不许"默写完就没下文" */
+    if(st===2||(all&&!hadMaster)){
       extra+='<button class="'+(apn&&(all||RUN.review)?'main':'sub')+'" onclick="WR.apply(\''+id+'\')">'
         +(apn?'练同类题 · '+apn:'同类题 · 待配')+'</button>';
     }
     btns=extra+btns;
   }else{
-    var wrongN=RUN.total-RUN.good, unit=(st===3?'行':'处');
+    var wrongN=RUN.total-RUN.good, unit='处';
     if(RUN.review){
-      p.pass[3]=0; p.lvl=0; p.due=Date.now()+DAY;
-      msg='复习没过（'+RUN.good+'/'+RUN.total+'），③默写掉回未通过，明天再考';
+      p.pass[2]=0; p.lvl=0; p.due=Date.now()+DAY;
+      msg='复习没过（'+RUN.good+'/'+RUN.total+'），②填空默写掉回未通过，明天再考';
     }else{
       msg='有 '+wrongN+' '+unit+'没写对（'+RUN.good+'/'+RUN.total+'），这一轮不算过';
     }
@@ -2056,7 +2306,7 @@ function finish(pass){
 var KEYCH=['{','}','(',')',';','<','>','=','[',']','+','-','*','&','|',':','"','_'];
 function key(ch){
   var el=document.activeElement;
-  if(!el||el.tagName!=='INPUT'){ toast('先点一下要填的输入框'); return; }
+  if(!el||(el.tagName!=='INPUT'&&el.tagName!=='TEXTAREA')){ toast('先点一下要填的输入框'); return; }
   var s=el.selectionStart||0, e=el.selectionEnd||0, v=el.value;
   el.value=v.slice(0,s)+ch+v.slice(e);
   var pos=s+ch.length;
@@ -2080,7 +2330,7 @@ function resume(){
   if(open.length){ start(open[0].id,0,firstOpen(open[0])); return; }
   var due=TPL.filter(function(t){ return isDue(P(t.id)); });
   if(due.length){ start(due[0].id,1); return; }
-  if(TPL.length) start(TPL[0].id,0,3);
+  if(TPL.length) start(TPL[0].id,0,NROUND);
 }
 function exp(){
   var blob=new Blob([JSON.stringify(ST,null,1)],{type:'application/json'});
@@ -2105,7 +2355,7 @@ function imp(file){
 }
 function reset(){
   if(!confirm('清空全部默写进度？（八股刷题进度不受影响）')) return;
-  ST={v:1,tpl:{},day:{},ap:{}}; save(); refreshList(); toast('已清空默写进度');
+  ST={v:1,tpl:{},day:{},ap:{},deck:{i:0,mode:'deck',told:0},cm:1,cmTold:0}; save(); refreshList(); toast('已清空默写进度');
 }
 function begin(){ var id=RUN.id; RUN=null; start(id,0,firstOpen(P(id))); }
 
@@ -2209,7 +2459,11 @@ function apOf(t){
       diff:String(x.diff||''),
       why:String(x.why||''),
       hint:String(x.hint||''),
-      url:String(x.url||'')
+      url:String(x.url||''),
+      code:Array.isArray(x.code)?x.code.map(function(s){return String(s);}):[],
+      pts:Array.isArray(x.pts)?x.pts.map(function(s){return String(s);}):[],
+      notes:(x.notes&&typeof x.notes==='object')?x.notes:{},
+      k:Array.isArray(x.k)?x.k.map(Number).filter(function(n){return n>0;}):[]
     });
   });
   return out;
@@ -2294,7 +2548,7 @@ function paintApply(){
     var pi=$('ap-pbar-i'); if(pi) pi.style.width=(all?Math.round(withAp.length*100/all):0)+'%';
     var hi='';
     if(!withAp.length){
-      hi='<div class="ap-tip">还没有任何模板配同类题。<b>每个模板默写完 ③</b>，卡片上都会有一个「＋ 配同类题」入口，点进去就是写法说明。</div>'
+      hi='<div class="ap-tip">还没有任何模板配同类题。<b>每个模板过了 ②</b>，卡片上都会有一个「＋ 配同类题」入口，点进去就是写法说明。</div>'
         +apGuideHtml();
     }else{
       hi='<div class="ap-tip">挑一个模板进去看它还能解决哪些题。已做 <b>'+got+'</b>/'+tot+' 道；勾选只做记录，不影响掌握判定和复习节奏。</div><div class="ap-list">';
@@ -2303,7 +2557,7 @@ function paintApply(){
         hi+='<div class="ap-card" style="padding:11px 13px;cursor:pointer" onclick="WR.apply(\''+x.id+'\')">'
           +'<div class="ap-name"><span>'+esc(x.title)+'</span>'
           +'<span class="ap-lc" style="margin-left:auto;color:'+(d>=n?'var(--ok)':'var(--brand)')+'">'+d+'/'+n+'</span></div>'
-          +'<div class="small muted" style="margin-top:5px;font-size:11.5px">'+esc(x.cat)+(p.pass[3]?' · ③已过':' · 还没默写')+'</div>'
+          +'<div class="small muted" style="margin-top:5px;font-size:11.5px">'+esc(x.cat)+(p.pass[2]?' · ②已过':' · 还没默写')+'</div>'
           +'</div>';
       });
       hi+='</div>';
@@ -2318,7 +2572,7 @@ function paintApply(){
         hi+='<div class="ap-foot"><button class="wr-seg-b" onclick="WR.apGuide()">同类题怎么配 ›</button></div>';
       }
     }
-    body.innerHTML=hi;
+    setApBody(hi);
     try{ $('ap-scroll').scrollTop=0; }catch(e){}
     return;
   }
@@ -2328,7 +2582,7 @@ function paintApply(){
     setTxt('ap-sub','给模板加一个 apply 数组');
     setTxt('ap-cnt','');
     var gb=$('ap-pbar-i'); if(gb) gb.style.width='0%';
-    body.innerHTML=apGuideHtml();
+    setApBody(apGuideHtml());
     try{ $('ap-scroll').scrollTop=0; }catch(e){}
     return;
   }
@@ -2340,7 +2594,7 @@ function paintApply(){
 
   var h='';
   if(!list.length){
-    h='<div class="ap-tip">骨架和 <b>'+esc(t.title)+'</b> 一样，只是换了个问法。这个模板还没配同类题——配上之后，这里就是它的落地页，③默写一通过也会多一个「练同类题」。</div>'
+    h='<div class="ap-tip">骨架和 <b>'+esc(t.title)+'</b> 一样，只是换了个问法。这个模板还没配同类题——配上之后，这里就是它的落地页，②填空默写一通过也会多一个「练同类题」。</div>'
      +apGuideHtml(t);
   }else{
     h='<div class="ap-tip">骨架和 <b>'+esc(t.title)+'</b> 一样，只是换了个问法。做完勾一下——<b>只做记录，不影响掌握判定和复习节奏</b>。</div><div class="ap-list">';
@@ -2350,13 +2604,13 @@ function paintApply(){
       +'<button class="wr-seg-b" onclick="WR.view(\''+t.id+'\')"><span class="wr-seg-n">📖</span>再看模板</button>'
       +'</div>';
   }
-  body.innerHTML=h;
+  setApBody(h);
   try{ $('ap-scroll').scrollTop=0; }catch(e){}
 }
 
 function apCard(t,it,i,done){
   var own=it.lc?BYLC[it.lc]:null, self=own&&own.id===t.id;
-  return '<div class="ap-card"><div class="ap-top"><span class="ap-no">'+(i+1)+'</span>'
+  var h='<div class="ap-card"><div class="ap-top"><span class="ap-no">'+(i+1)+'</span>'
     +'<div style="min-width:0;flex:1"><div class="ap-name">'
     +(it.lc?'<span class="ap-lc">LC'+it.lc+'</span>':'')
     +'<span>'+esc(it.name)+'</span>'
@@ -2364,12 +2618,60 @@ function apCard(t,it,i,done){
     +'</div>'
     +(it.why?'<div class="ap-why">'+esc(it.why)+'</div>':'')
     +(it.hint?'<div class="ap-hint">'+esc(it.hint)+'</div>':'')
-    +'</div></div><div class="ap-acts">'
+    +'</div></div>';
+  if(it.pts.length)
+    h+='<div class="ap-pts">'+it.pts.map(function(s){ return '<div class="ap-pt">'+esc(s)+'</div>'; }).join('')+'</div>';
+  if(it.code.length) h+=apCode(it,i);
+  h+='<div class="ap-acts">'
     +'<a class="ap-btn link" href="'+esc(apUrl(it))+'" target="_blank" rel="noopener">LeetCode ↗</a>'
     +(own&&!self?'<button class="ap-btn tpl" onclick="WR.apGoto('+i+')">有模板 · 去默写</button>':'')
     +'<button class="ap-btn'+(done?' done':'')+'" onclick="WR.apToggle('+i+')">'
     +(done?'✓ 已做':'标记已做')+'</button>'
     +'</div></div>';
+  return h;
+}
+
+/* 代码块：关键行高亮，可整块遮住自测（遮住后点该行单独揭开） */
+function apCode(it,i){
+  var kk=it.k||[];
+  var lines=it.code.map(function(l,n){
+    var isK=kk.indexOf(n+1)>=0;
+    var s='<span class="ln'+(isK?' k':'')+'"'
+      +(isK?' onclick="this.classList.remove(\'k\')"':'')+'>'+hl(l)+'</span>';
+    if(it.notes&&it.notes[n]) s+='<span class="ap-note">// '+esc(it.notes[n])+'</span>';
+    return s;
+  }).join('');
+  return '<div class="ap-cd" id="ap-cd-'+i+'">'
+    +'<div class="ap-cd-hd"><b>C++ · '+it.code.length+' 行'
+    +(kk.length?' · 关键行 '+kk.length:'')+'</b>'
+    +(kk.length?'<button class="ap-cd-b" onclick="WR.apMask('+i+')">遮关键行</button>':'')
+    +'<button class="ap-cd-b" onclick="WR.apCopyCode('+i+')">复制</button></div>'
+    +'<pre class="ap-code">'+lines+'</pre></div>';
+}
+function apMask(i){
+  var cd=$('ap-cd-'+i); if(!cd) return;
+  var on=cd.classList.toggle('mask');
+  if(on)[].forEach.call(cd.querySelectorAll('.ln.s'),function(x){ x.classList.remove('s'); });
+  var b=cd.querySelector('.ap-cd-b');
+  if(b) b.textContent=on?'显示关键行':'遮关键行';
+  if(on) toast('先自己想这几行，点一下可以单独看');
+}
+function apCopyCode(i){
+  var t=(AP&&AP.id)?MAP[AP.id]:null;
+  var it=t?apOf(t)[i]:null;
+  if(!it||!it.code.length) return;
+  copyText(it.code.join('\n'),function(ok){ toast(ok?'C++ 代码已复制':'复制失败，长按选中复制'); });
+}
+function copyText(txt,fn){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){fn(1);},function(){fn(0);});
+  }else{
+    var ta=document.createElement('textarea');
+    ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); fn(ok);
+  }
 }
 
 function apGuideHtml(t){
@@ -2381,23 +2683,29 @@ function apGuideHtml(t){
     +'    { "lc": 560, "name": "和为 K 的子数组", "diff": "Medium",\n'
     +'      "why": "把「值→下标」换成「前缀和→出现次数」，找 target 变成找 pre − k",\n'
     +'      "hint": "先想暴力双层枚举，哪一层可以换成查表",\n'
+    +'      "code": ["class Solution {", "public:", "    int subarraySum(...) {", "        ...", "};"],\n'
+    +'      "pts": ["cnt[0] = 1 是空前缀，漏了就少算从 0 开始的区间", "查的是 pre − k 出现过几次"],\n'
+    +'      "k": [5, 9],\n'
     +'      "url": "https://leetcode.cn/problems/subarray-sum-equals-k/" }\n'
     +'  ]\n'
     +'}';
   return '<div class="ap-list"><div class="ap-card">'
     +'<div class="ap-name"><span class="ap-lc">schema</span><span>给这个模板加一个 apply 数组</span></div>'
-    +'<div class="ap-p">③默写一通过，结果卡里就多一个「练同类题 · N」；模板卡片和「看模板」页也会多一个入口。点进去就是这一页。'
+    +'<div class="ap-p">②填空默写一通过，结果卡里就多一个「练同类题 · N」；模板卡片和「看模板」页也会多一个入口。点进去就是这一页。'
     +(pr?'<br>当前模板：<b>'+esc(t.title)+'</b>（id <span class="kbd">'+esc(id)+'</span>'+(pr.lc?'，LC'+pr.lc:'')+'）':'')+'</div>'
     +'<pre class="ap-code">'+esc(j)+'</pre>'
     +'<div class="ap-foot" style="padding:10px 0 0"><button class="wr-seg-b" onclick="WR.apCopy(this)">复制这段 JSON</button></div>'
     +'<div class="ap-li"><b>why</b> 写「模板的哪个变量 / 哪层循环 ↔ 题目的什么」，一句话就够</div>'
     +'<div class="ap-li"><b>hint</b> 写变形点，可省；<b>url</b> 不填会自动跳到 leetcode.cn 按题名搜索</div>'
+    +'<div class="ap-li"><b>code</b> 写这道题的 C++ 完整代码，一行一个字符串；有了它，卡片里就是一个代码块</div>'
+    +'<div class="ap-li"><b>pts</b> 是记忆要点（2–3 条），写「这题相对模板改了什么」，别复述题意</div>'
+    +'<div class="ap-li"><b>k</b> 是「关键行」行号（从 1 起）：默认高亮，点「遮关键行」盖住自测，点行单独揭开</div>'
     +'<div class="ap-li">题目 <b>lc</b> 在本题库里也有模板时，会自动出现「有模板 · 去默写」互链</div>'
     +'<div class="ap-li">纯记录字段：勾不勾都不影响 isMaster 和 1/2/4/7/15/30 的复习节奏</div>'
     +'</div><div class="ap-card">'
     +'<div class="ap-name"><span class="ap-lc">min</span><span>最小可用写法</span></div>'
     +'<pre class="ap-code">'+esc('"apply": [ {"lc": 560, "name": "和为 K 的子数组"} ]')+'</pre>'
-    +'<div class="ap-p">只有 name 也能跑；diff / why / hint / url 全部可选。改完重新导入题库即可（同 id 覆盖）。</div>'
+    +'<div class="ap-p">只有 name 也能跑；diff / why / hint / code / pts / k / url 全部可选。改完重新导入题库即可（同 id 覆盖）。</div>'
     +'</div></div>';
 }
 /* 复制骨架，省得手敲 id */
@@ -2409,15 +2717,7 @@ function apCopy(btn){
     if(btn) btn.textContent=ok?'已复制':'复制失败，手动选一下';
     setTimeout(function(){ if(btn) btn.textContent='复制这段 JSON'; },1600);
   }
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(function(){done(1);},function(){done(0);});
-  }else{
-    var ta=document.createElement('textarea');
-    ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta); ta.select();
-    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
-    document.body.removeChild(ta); done(ok);
-  }
+  copyText(txt,done);
 }
 
 /* ---------- 回车跳到下一个输入框 ---------- */
@@ -2446,11 +2746,24 @@ var _win;
 
 window.WR={
   render:refreshList, start:start, view:view, back:back, retry:retry, nextStage:nextStage,
-  pick:pick, choose:choose, submit:submit, key:key, begin:begin,
+  pick:pick, choose:choose, submit:submit, key:key, begin:begin, fitIn:fitIn,
   review:review, resume:resume, exp:exp, imp:imp, reset:reset, toggleStmt:toggleStmt,
+  toggleCm:toggleCm, toggleApCm:toggleApCm, deckCm:deckCm,
   expTpl:expTpl, impTpl:impTpl, delBank:delBank, fixWrong:fixWrong,
-  apply:apply, apBack:apBack, apToggle:apToggle, apGoto:apGoto, apGuide:apGuide, apCopy:apCopy, apIndex:apIndex
+  apply:apply, apBack:apBack, apToggle:apToggle, apGoto:apGoto, apGuide:apGuide, apCopy:apCopy, apIndex:apIndex,
+  apMask:apMask, apCopyCode:apCopyCode,
+  deckMode:deckMode, deckGo:deckGo, deckRender:deckRender
 };
+/* 键盘左右键也能切卡牌 */
+document.addEventListener('keydown',function(e){
+  var pg=$('p-write');
+  if(!pg||!pg.classList.contains('on')) return;
+  if($('wr-run')&&$('wr-run').classList.contains('on')) return;
+  if($('ap-run')&&$('ap-run').classList.contains('on')) return;
+  if(DK.mode!=='deck') return;
+  if(e.key==='ArrowLeft'){ deckGo(-1); }
+  else if(e.key==='ArrowRight'){ deckGo(1); }
+});
 /* 深链：#wr=<模板id> 直接进该模板，#wr=review 进今日复习，#tpl=<id> 看模板 */
 function boot(){
   refreshList();
