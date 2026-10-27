@@ -1,0 +1,3735 @@
+{
+ "name": "LeetCode Hot100 · 模板库（38 个骨架）",
+ "version": 3,
+ "source": "19-复习版.md",
+ "templates": [
+  {
+   "id": "h100-hash-two-sum",
+   "cat": "01 哈希",
+   "title": "两数之和型 · 边遍历边查表",
+   "problems": [
+    {
+     "lc": 1,
+     "name": "两数之和",
+     "diff": "Easy"
+    }
+   ],
+   "essence": "一遍扫过去，把「找搭档」从再扫一遍降成查一次表",
+   "brief": "哈希表把内层循环换成 O(1) 查表——凡是「内层只是在查某个确定值」都能这么砍",
+   "stmt": [
+    "输入：nums 数组、target",
+    "输出：两个下标",
+    "例：[2,7,11,15], 9 → [0,1]",
+    "要求：边查边存，不能先把自己存进去"
+   ],
+   "generic": "两数之差、判断存在性、四数相加（两两分组存和）",
+   "code": [
+    "class Solution:",
+    "    def twoSum(self, nums: List[int], target: int) -> List[int]:",
+    "        seen = {}",
+    "        for i, x in enumerate(nums):",
+    "            if target - x in seen:",
+    "                return [seen[target - x], i]",
+    "            seen[x] = i",
+    "        return []"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "seen = {}",
+     "opts": [
+      "seen = set()",
+      "seen = {}",
+      "seen = []",
+      "seen = 0"
+     ],
+     "why": "要存「值 → 下标」才能返回下标；用 set 只能判存在，用 list 查一次退化成 O(n)"
+    },
+    {
+     "l": 4,
+     "text": "if target - x in seen:",
+     "opts": [
+      "if target + x in seen:",
+      "if target - x not in seen:",
+      "if x in seen:",
+      "if target - x in seen:"
+     ],
+     "why": "查的是搭档 target−x；查自己会让 [3,3], target=6 把自己当搭档"
+    },
+    {
+     "l": 5,
+     "text": "return [seen[target - x], i]",
+     "opts": [
+      "return [i, seen[target - x]]",
+      "return [seen[x], i]",
+      "return [target - x, i]",
+      "return [seen[target - x], i]"
+     ],
+     "why": "搭档的下标在前、当前下标在后；顺序反了题目判错"
+    },
+    {
+     "l": 6,
+     "text": "seen[x] = i",
+     "opts": [
+      "seen[x] = i",
+      "seen[target - x] = i",
+      "seen[x] = target - x",
+      "seen[i] = x"
+     ],
+     "why": "先查后存：这一行必须在 if 之后，否则 target = 2x 时会把自己当成搭档返回 [0,0]"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 128,
+     "name": "最长连续序列",
+     "diff": "Medium",
+     "why": "把「值 → 下标」换成「值 → 集合」，反过来查 x−1 在不在：不在就是一段连续序列的起点",
+     "hint": "何时该从 x 开始往右数，而不是每个数都数"
+    },
+    {
+     "lc": 560,
+     "name": "和为 K 的子数组",
+     "diff": "Medium",
+     "why": "表里存的从「一个数」升级成「前缀和」，查的东西变成 prefix − k，一遍就统计完所有连续区间",
+     "hint": "暴力是枚举左右端点，想想哪一层能换成查表"
+    }
+   ]
+  },
+  {
+   "id": "h100-hash-group-key",
+   "cat": "01 哈希",
+   "title": "规范化 key 分组",
+   "problems": [
+    {
+     "lc": 49,
+     "name": "字母异位词分组",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "给每个元素算一个「同组就相同」的标识，拿标识当 key 一次遍历分完",
+   "brief": "组的本质是「能算出同一个 key」；难点不在分组，在怎么把元素压成一个可哈希的标识",
+   "stmt": [
+    "输入：字符串数组",
+    "输出：分好组的二维数组",
+    "例：[\"eat\",\"tea\",\"tan\"] → [[\"eat\",\"tea\"],[\"tan\"]]",
+    "要求：key 必须可哈希，同组 key 必须相同"
+   ],
+   "generic": "异位词分组、按词频分组、按某种特征值归集",
+   "code": [
+    "from collections import defaultdict",
+    "class Solution:",
+    "    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:",
+    "        groups = defaultdict(list)",
+    "        for s in strs:",
+    "            key = \"\".join(sorted(s))",
+    "            groups[key].append(s)",
+    "        return list(groups.values())"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 3,
+     "text": "groups = defaultdict(list)",
+     "opts": [
+      "groups = {}",
+      "groups = defaultdict(int)",
+      "groups = defaultdict(list)",
+      "groups = []"
+     ],
+     "why": "value 是同组元素列表，默认值必须是空 list；用普通 {} 第一次 append 就 KeyError，用 int 会变成加法"
+    },
+    {
+     "l": 5,
+     "text": "key = \"\".join(sorted(s))",
+     "opts": [
+      "key = len(s)",
+      "key = \"\".join(set(s))",
+      "key = \"\".join(sorted(s))",
+      "key = s"
+     ],
+     "why": "异位词排序后完全相同，所以排序串可以当 key；用 set 会把 aab 和 ab 混成一组，用长度更不行"
+    },
+    {
+     "l": 6,
+     "text": "groups[key].append(s)",
+     "opts": [
+      "groups.append(s)",
+      "groups[key] = s",
+      "groups[key].append(s)",
+      "groups[s].append(key)"
+     ],
+     "why": "key 是标识、s 是成员，别写反；用 = 赋值会让每组只剩最后一个元素"
+    },
+    {
+     "l": 7,
+     "text": "return list(groups.values())",
+     "opts": [
+      "return list(groups.items())",
+      "return list(groups.keys())",
+      "return groups",
+      "return list(groups.values())"
+     ],
+     "why": "要的是分好组的元素集合，所以取 values；keys 只有标识，items 会带上 key"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 438,
+     "name": "找到字符串中所有字母异位词",
+     "diff": "Medium",
+     "why": "异位词判定换个用法：不分组，改成「窗口内的字符频次 key」和目标的 key 相等就记一次",
+     "hint": "定长窗口 + 频次比较，窗口每滑一步只改两个字符的计数"
+    }
+   ]
+  },
+  {
+   "id": "h100-hash-prefix-sum",
+   "cat": "01 哈希",
+   "title": "前缀和 + 哈希 · 连续子数组计数",
+   "problems": [
+    {
+     "lc": 560,
+     "name": "和为 K 的子数组",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "子数组和 = 两个前缀和之差，于是「求和为 k 的区间」变成「查某个前缀和之前出现过几次」",
+   "brief": "只要题目问「连续区间」且元素可能为负，滑窗立刻失效，前缀和 + 计数表才是正解",
+   "stmt": [
+    "输入：整数数组（可负）、k",
+    "输出：和为 k 的连续子数组个数",
+    "例：[1,1,1], 2 → 2",
+    "要求：O(n)，不能枚举左右端点"
+   ],
+   "generic": "子数组和为 k、路径和（树上的前缀和）、前缀积",
+   "code": [
+    "from collections import defaultdict",
+    "class Solution:",
+    "    def subarraySum(self, nums: List[int], k: int) -> int:",
+    "        count = defaultdict(int)",
+    "        count[0] = 1",
+    "        prefix = 0",
+    "        ans = 0",
+    "        for x in nums:",
+    "            prefix += x",
+    "            ans += count[prefix - k]",
+    "            count[prefix] += 1",
+    "        return ans"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 4,
+     "text": "count[0] = 1",
+     "opts": [
+      "count[1] = 1",
+      "这行可以省掉",
+      "count[0] = 1",
+      "count[0] = 0"
+     ],
+     "why": "空前缀代表「从下标 0 开始的区间」，不写这一行所有从头开始的子数组全部漏计"
+    },
+    {
+     "l": 8,
+     "text": "prefix += x",
+     "opts": [
+      "prefix = prefix * x + x",
+      "prefix = x",
+      "prefix += x",
+      "prefix -= x"
+     ],
+     "why": "前缀和是累加，不是重置；写成 prefix = x 就变成只看单个元素了"
+    },
+    {
+     "l": 9,
+     "text": "ans += count[prefix - k]",
+     "opts": [
+      "ans += count[k - prefix]",
+      "ans += count[prefix + k]",
+      "ans += count[prefix]",
+      "ans += count[prefix - k]"
+     ],
+     "why": "要凑出 prefix − k 这段区间，所以查的是 prefix − k 出现过几次；写成 +k 或 k−prefix 区间方向反了"
+    },
+    {
+     "l": 10,
+     "text": "count[prefix] += 1",
+     "opts": [
+      "count[prefix] = 1",
+      "count[x] += 1",
+      "count[prefix] += 1",
+      "把这一行挪到累加答案之前"
+     ],
+     "why": "先查后存：先统计再登记，否则当前前缀和会和自己配对，长度 0 的区间被算进去"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 437,
+     "name": "路径总和 III",
+     "diff": "Medium",
+     "why": "把前缀和搬到树上：从根往下带一个「到当前节点的前缀和」，查 map[prefix − target] 就是路径条数",
+     "hint": "树上的「路径」不经过根怎么算？想想退出时为什么要撤销"
+    },
+    {
+     "lc": 238,
+     "name": "除自身以外数组的乘积",
+     "diff": "Medium",
+     "why": "前缀和换成前缀积，从左、从右各扫一遍，两个方向的累积相乘就是「除自身以外」",
+     "hint": "不能用除法的话，左右两边的信息怎么各来一趟"
+    }
+   ]
+  },
+  {
+   "id": "h100-tp-partition",
+   "cat": "02 双指针",
+   "title": "快慢指针分区 · 快读慢写",
+   "problems": [
+    {
+     "lc": 283,
+     "name": "移动零",
+     "diff": "Easy"
+    }
+   ],
+   "essence": "快指针只负责读，慢指针只负责写，一趟把要留的元素按顺序压到前面",
+   "brief": "原地删 / 移 / 分区的通用骨架——读写下标一分离，就永远不会覆盖还没读过的元素",
+   "stmt": [
+    "输入：数组（原地修改）",
+    "输出：无返回值，直接改 nums",
+    "例：[0,1,0,3,12] → [1,3,12,0,0]",
+    "要求：O(1) 额外空间，非零元素保持相对顺序"
+   ],
+   "generic": "移动零、删除指定元素、数组去重、颜色分类（三路分区）",
+   "code": [
+    "class Solution:",
+    "    def moveZeroes(self, nums: List[int]) -> None:",
+    "        slow = 0",
+    "        for fast in range(len(nums)):",
+    "            if nums[fast] != 0:",
+    "                nums[slow], nums[fast] = nums[fast], nums[slow]",
+    "                slow += 1"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "slow = 0",
+     "opts": [
+      "slow = len(nums) - 1",
+      "slow = 0",
+      "slow = fast",
+      "slow = 1"
+     ],
+     "why": "慢指针是「下一个要写的位置」，从 0 开始；放末尾或跟着 fast 走都没法维护左侧已处理好的前缀"
+    },
+    {
+     "l": 4,
+     "text": "if nums[fast] != 0:",
+     "opts": [
+      "if fast != slow:",
+      "if nums[fast] == 0:",
+      "if nums[fast] != 0:",
+      "if nums[slow] != 0:"
+     ],
+     "why": "要挑出非零元素往前搬；判 == 0 就成了把零搬到前面"
+    },
+    {
+     "l": 5,
+     "text": "nums[slow], nums[fast] = nums[fast], nums[slow]",
+     "opts": [
+      "nums[slow], nums[fast] = nums[fast], nums[slow]",
+      "nums[slow], nums[fast] = nums[slow], nums[fast]",
+      "nums[fast] = nums[slow]",
+      "nums[slow] = nums[fast]"
+     ],
+     "why": "用交换而不是覆盖：直接赋值会把这个位置的 0 弄丢，末尾补不回来；最后一项等于什么都没做"
+    },
+    {
+     "l": 6,
+     "text": "slow += 1",
+     "opts": [
+      "slow = fast",
+      "fast += 1",
+      "slow += 1",
+      "slow += 2"
+     ],
+     "why": "写完一格前缀才扩大一格；忘了自增会让所有非零都挤在同一个位置"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 75,
+     "name": "颜色分类",
+     "diff": "Medium",
+     "why": "快慢分区升级成三路：p0 从左、p2 从右夹着写，中间自然就是 1 区；从右端换过来的值还没检查过，要退一步重判",
+     "hint": "为什么从右边换来的元素要再看一次"
+    }
+   ]
+  },
+  {
+   "id": "h100-tp-collide",
+   "cat": "02 双指针",
+   "title": "对撞指针 · 从两端往中间收",
+   "problems": [
+    {
+     "lc": 11,
+     "name": "盛最多水的容器",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "每次移动「已经到上限」的那一端，让每一步淘汰都不可惜",
+   "brief": "区间类题目先问「丢掉哪一半不会丢答案」，对撞指针就是这句话的实现",
+   "stmt": [
+    "输入：柱子高度数组",
+    "输出：最大盛水量",
+    "例：[1,8,6,2,5,4,8,3,7] → 49",
+    "要求：O(n)，不能枚举所有左右端点"
+   ],
+   "generic": "盛最多水的容器、三数之和、判断回文、两数之和 II（有序）",
+   "code": [
+    "class Solution:",
+    "    def maxArea(self, height: List[int]) -> int:",
+    "        left, right = 0, len(height) - 1",
+    "        best = 0",
+    "        while left < right:",
+    "            area = (right - left) * min(height[left], height[right])",
+    "            best = max(best, area)",
+    "            if height[left] < height[right]:",
+    "                left += 1",
+    "            else:",
+    "                right -= 1",
+    "        return best"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 4,
+     "text": "while left < right:",
+     "opts": [
+      "while left < right:",
+      "while height[left] < height[right]:",
+      "while left < right - 1:",
+      "while left <= right:"
+     ],
+     "why": "两个指针不能相遇，相遇就没有宽度了；用 <= 会多算一次宽度为 0 的区间"
+    },
+    {
+     "l": 5,
+     "text": "area = (right - left) * min(height[left], height[right])",
+     "opts": [
+      "area = (right - left) * min(height[left], height[right])",
+      "area = height[left] * height[right]",
+      "area = (right - left + 1) * min(height[left], height[right])",
+      "area = (right - left) * max(height[left], height[right])"
+     ],
+     "why": "面积 = 底（下标之差）× 高（两边较矮的那个）；用 max 就是把水面悬空了，底写 +1 会把格子数当长度"
+    },
+    {
+     "l": 7,
+     "text": "if height[left] < height[right]:",
+     "opts": [
+      "if height[left] > height[right]:",
+      "if height[left] < height[right]:",
+      "if height[left] == height[right]:",
+      "if left < right:"
+     ],
+     "why": "谁矮谁就是当前的高度上限，往里挪它才可能变高；挪高的那一边只会让高度不增、底变小"
+    },
+    {
+     "l": 8,
+     "text": "left += 1",
+     "opts": [
+      "left = right",
+      "left += 2",
+      "right -= 1",
+      "left += 1"
+     ],
+     "why": "矮的是左端就往右挪一格；写成 right -= 1 等于淘汰了本来更高的那边"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 15,
+     "name": "三数之和",
+     "diff": "Medium",
+     "why": "排序后枚举第一个数，剩下两个数就是「两数之和 II」，用对撞指针收；难点是跳过重复值",
+     "hint": "三数之和怎么从 O(n³) 降到 O(n²)"
+    },
+    {
+     "lc": 189,
+     "name": "轮转数组",
+     "diff": "Medium",
+     "why": "轮转数组 = 整体反转 + 两段各自反转；反转一个区间用的就是对撞交换",
+     "hint": "三次反转分别反转哪几段，为什么 k 要先模 n"
+    }
+   ]
+  },
+  {
+   "id": "h100-window-variable",
+   "cat": "03 滑动窗口",
+   "title": "变长窗口 · 右端进、左端让",
+   "problems": [
+    {
+     "lc": 3,
+     "name": "无重复字符的最长子串",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "右端一路吞，吞到不合法就让左端吐，直到重新合法——每个元素最多进出各一次",
+   "brief": "「连续 + 最长/最短」才轮得到窗口；和的大小会因负数反复横跳时，必须换前缀和",
+   "stmt": [
+    "输入：字符串 s",
+    "输出：最长无重复子串长度",
+    "例：abcabcbb → 3",
+    "要求：O(n)"
+   ],
+   "generic": "无重复最长子串、最短覆盖子串、最多 K 个不同字符、和 ≥ target 的最短子数组",
+   "code": [
+    "class Solution:",
+    "    def lengthOfLongestSubstring(self, s: str) -> int:",
+    "        last = {}",
+    "        left = 0",
+    "        best = 0",
+    "        for right, ch in enumerate(s):",
+    "            if ch in last and last[ch] >= left:",
+    "                left = last[ch] + 1",
+    "            last[ch] = right",
+    "            best = max(best, right - left + 1)",
+    "        return best"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 6,
+     "text": "if ch in last and last[ch] >= left:",
+     "opts": [
+      "if ch in last:",
+      "if ch in last and last[ch] >= left:",
+      "if ch not in last:",
+      "if ch in last and last[ch] < left:"
+     ],
+     "why": "只有「重复且上次出现的位置还在窗口内」才需要挪左端；少判 last[ch] >= left 会在合法窗口里白缩一次"
+    },
+    {
+     "l": 7,
+     "text": "left = last[ch] + 1",
+     "opts": [
+      "left = last[ch]",
+      "left = last[ch] + 1",
+      "left = right",
+      "left += 1"
+     ],
+     "why": "重复字符本身要留在窗口里，所以跳到它上次位置的后一格；写 last[ch] 会把它自己又包含进来"
+    },
+    {
+     "l": 8,
+     "text": "last[ch] = right",
+     "opts": [
+      "last[right] = ch",
+      "last[ch] = right",
+      "last[ch] += 1",
+      "last[ch] = left"
+     ],
+     "why": "表里记的是「这个字符最近一次出现在哪个下标」，键是字符、值是下标，写反就乱套"
+    },
+    {
+     "l": 9,
+     "text": "best = max(best, right - left + 1)",
+     "opts": [
+      "best += right - left + 1",
+      "best = max(best, right - left)",
+      "best = right - left + 1",
+      "best = max(best, right - left + 1)"
+     ],
+     "why": "窗口长度是 right−left+1；漏掉 +1 会整体少算一位，写成赋值而不是取 max 会丢掉之前更长的窗口"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 438,
+     "name": "找到字符串中所有字母异位词",
+     "diff": "Medium",
+     "why": "定长窗口：窗口大小固定成 m，每步右进一个、左出一个，只需比较频次表是否相等",
+     "hint": "定长和变长的收缩条件差在哪"
+    },
+    {
+     "lc": 76,
+     "name": "最小覆盖子串",
+     "diff": "Hard",
+     "why": "变长窗口的收缩条件是「还覆盖得住」：先撑到覆盖，再尽量放左端求最短",
+     "hint": "为什么最短覆盖要用 while 收缩，而不是一次一步"
+    }
+   ]
+  },
+  {
+   "id": "h100-prefix-suffix",
+   "cat": "04 普通数组",
+   "title": "前缀后缀两遍扫",
+   "problems": [
+    {
+     "lc": 238,
+     "name": "除自身以外数组的乘积",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "不许用除法，就从左、从右各扫一遍，把「左边所有」和「右边所有」分别攒出来再相乘",
+   "brief": "凡是问「除自己以外的全部」，先想两个方向的累积量；空间还能用滚动变量压成 O(1)",
+   "stmt": [
+    "输入：整数数组",
+    "输出：每个位置除自身外的乘积",
+    "例：[1,2,3,4] → [24,12,8,6]",
+    "要求：O(n)，不能用除法"
+   ],
+   "generic": "除自身以外数组的乘积、左右两侧最值、接雨水、前缀最大值",
+   "code": [
+    "class Solution:",
+    "    def productExceptSelf(self, nums: List[int]) -> List[int]:",
+    "        n = len(nums)",
+    "        res = [1] * n",
+    "        for i in range(1, n):",
+    "            res[i] = res[i - 1] * nums[i - 1]",
+    "        suffix = 1",
+    "        for i in range(n - 1, -1, -1):",
+    "            res[i] *= suffix",
+    "            suffix *= nums[i]",
+    "        return res"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 3,
+     "text": "res = [1] * n",
+     "opts": [
+      "res = [1] * n",
+      "res = [[]] * n",
+      "res = [0] * n",
+      "res = nums[:]"
+     ],
+     "why": "第一遍要往里乘，初值必须是 1；用 0 会把所有结果清零，用 nums[:] 等于把原值混进来"
+    },
+    {
+     "l": 5,
+     "text": "res[i] = res[i - 1] * nums[i - 1]",
+     "opts": [
+      "res[i] = res[i - 1] * nums[i - 1]",
+      "res[i] = res[i + 1] * nums[i]",
+      "res[i] = nums[i - 1] * nums[i]",
+      "res[i] = res[i - 1] * nums[i]"
+     ],
+     "why": "前缀积不含自己，所以乘的是 nums[i−1]；写成 nums[i] 就把自己算进去了"
+    },
+    {
+     "l": 7,
+     "text": "for i in range(n - 1, -1, -1):",
+     "opts": [
+      "for i in range(n - 1, -1, -1):",
+      "for i in range(n - 2, -1, -1):",
+      "for i in range(n - 1, 0, -1):",
+      "for i in range(n):"
+     ],
+     "why": "第二遍要从最后一个走回 0，stop 得写 −1；漏掉下标 0 会少乘一次右积"
+    },
+    {
+     "l": 9,
+     "text": "suffix *= nums[i]",
+     "opts": [
+      "suffix *= res[i]",
+      "suffix *= nums[i - 1]",
+      "suffix = nums[i]",
+      "suffix *= nums[i]"
+     ],
+     "why": "先把当前答案结算掉，再把 nums[i] 并进右积——顺序反了就把自己乘进去了"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 152,
+     "name": "乘积最大子数组",
+     "diff": "Medium",
+     "why": "乘积最大子数组：负负得正，所以同时攒最大和最小两个值——同样是「带着前面的结论往后走」",
+     "hint": "为什么乘积要额外记录最小值"
+    }
+   ]
+  },
+  {
+   "id": "h100-matrix-spiral",
+   "cat": "05 矩阵",
+   "title": "螺旋遍历 · 四边界收缩",
+   "problems": [
+    {
+     "lc": 54,
+     "name": "螺旋矩阵",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "上下左右四条边各走一次就收一格，边界交叉即结束",
+   "brief": "把「一圈」拆成四个 for，每条边走完立刻收边界；单行单列要单独判，否则会重复读",
+   "stmt": [
+    "输入：m×n 矩阵",
+    "输出：螺旋顺序的一维数组",
+    "例：[[1,2,3],[4,5,6],[7,8,9]] → 1…9",
+    "要求：每个元素恰好访问一次"
+   ],
+   "generic": "螺旋矩阵、螺旋矩阵 II、生成螺旋顺序、按层遍历矩阵",
+   "code": [
+    "class Solution:",
+    "    def spiralOrder(self, matrix: List[List[int]]) -> List[int]:",
+    "        res = []",
+    "        top, bottom = 0, len(matrix) - 1",
+    "        left, right = 0, len(matrix[0]) - 1",
+    "        while top <= bottom and left <= right:",
+    "            for j in range(left, right + 1):",
+    "                res.append(matrix[top][j])",
+    "            top += 1",
+    "            for i in range(top, bottom + 1):",
+    "                res.append(matrix[i][right])",
+    "            right -= 1",
+    "            if top <= bottom:",
+    "                for j in range(right, left - 1, -1):",
+    "                    res.append(matrix[bottom][j])",
+    "                bottom -= 1",
+    "            if left <= right:",
+    "                for i in range(bottom, top - 1, -1):",
+    "                    res.append(matrix[i][left])",
+    "                left += 1",
+    "        return res"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 5,
+     "text": "while top <= bottom and left <= right:",
+     "opts": [
+      "while top < bottom or left < right:",
+      "while top < bottom and left < right:",
+      "while top <= bottom and left <= right:",
+      "while top <= bottom or left <= right:"
+     ],
+     "why": "四条边界还能围成矩形就继续；用 < 会漏掉最后一行/列，用 or 会在一条边收完后继续转"
+    },
+    {
+     "l": 8,
+     "text": "top += 1",
+     "opts": [
+      "top += 1",
+      "bottom -= 1",
+      "left += 1",
+      "top -= 1"
+     ],
+     "why": "上边走完，上边界往下收一格；写成 bottom -= 1 会把还没走的下边提前吃掉"
+    },
+    {
+     "l": 11,
+     "text": "right -= 1",
+     "opts": [
+      "right += 1",
+      "bottom -= 1",
+      "left += 1",
+      "right -= 1"
+     ],
+     "why": "右边从上往下走完，右边界往左收一格；方向写反会越界"
+    },
+    {
+     "l": 12,
+     "text": "if top <= bottom:",
+     "opts": [
+      "if True:",
+      "if left <= right:",
+      "if top < bottom:",
+      "if top <= bottom:"
+     ],
+     "why": "走完上边和右边后可能已经没有剩余的行，这时再走下边会重复读同一行；这个判断不能省"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 48,
+     "name": "旋转图像",
+     "diff": "Medium",
+     "why": "旋转图像 = 先转置再左右翻转，本质是坐标映射 (i,j) → (j,n−1−i)，不需要四条边界",
+     "hint": "顺时针 90° 能不能一次到位"
+    },
+    {
+     "lc": 73,
+     "name": "矩阵置零",
+     "diff": "Medium",
+     "why": "矩阵置零用第一行第一列当备忘录，和螺旋一样是「借边界存信息」的边界技巧",
+     "hint": "O(1) 空间怎么记住哪行哪列要清零"
+    }
+   ]
+  },
+  {
+   "id": "h100-matrix-topright",
+   "cat": "05 矩阵",
+   "title": "有序矩阵 · 右上角排除法",
+   "problems": [
+    {
+     "lc": 240,
+     "name": "搜索二维矩阵 II",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "从右上角出发，当前值偏大就整列淘汰，偏小就整行淘汰，每步砍掉一行或一列",
+   "brief": "行列各自升序时，右上角（或左下角）是唯一「一边大一边小」的起点；走错起点就没法排除",
+   "stmt": [
+    "输入：行升序、列升序的矩阵 + target",
+    "输出：是否存在",
+    "例：matrix=[[1,4],[2,5]], 2 → true",
+    "要求：O(m+n)"
+   ],
+   "generic": "搜索二维矩阵 II、杨氏矩阵第 k 小、二维偏序计数",
+   "code": [
+    "class Solution:",
+    "    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:",
+    "        m, n = len(matrix), len(matrix[0])",
+    "        i, j = 0, n - 1",
+    "        while i < m and j >= 0:",
+    "            if matrix[i][j] == target:",
+    "                return True",
+    "            elif matrix[i][j] > target:",
+    "                j -= 1",
+    "            else:",
+    "                i += 1",
+    "        return False"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 3,
+     "text": "i, j = 0, n - 1",
+     "opts": [
+      "i, j = 0, n - 1",
+      "i, j = 0, 0",
+      "i, j = m - 1, 0",
+      "i, j = m - 1, n - 1"
+     ],
+     "why": "右上角这个位置：往左变小、往下变大，两个方向刚好相反，才能一次排除一行或一列"
+    },
+    {
+     "l": 4,
+     "text": "while i < m and j >= 0:",
+     "opts": [
+      "while i < m or j >= 0:",
+      "while i >= 0 and j >= 0:",
+      "while i < m and j < n:",
+      "while i < m and j >= 0:"
+     ],
+     "why": "从右上往左下走，i 只能增大、j 只能减小，所以条件是 i<m 且 j>=0"
+    },
+    {
+     "l": 8,
+     "text": "j -= 1",
+     "opts": [
+      "j -= 1",
+      "i -= 1",
+      "i += 1",
+      "j += 1"
+     ],
+     "why": "当前值偏大，说明这一列下面只会更大，整列淘汰，往左收一列"
+    },
+    {
+     "l": 10,
+     "text": "i += 1",
+     "opts": [
+      "i += 1",
+      "i -= 1",
+      "j += 1",
+      "j -= 1"
+     ],
+     "why": "当前值偏小，说明这一行左边只会更小，整行淘汰，往下走一行；写成 i -= 1 立刻越界"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 74,
+     "name": "搜索二维矩阵",
+     "diff": "Medium",
+     "why": "整体升序的矩阵可以直接把二维拉平成一维做二分；注意前提是「整体」有序，不是行列各自有序",
+     "hint": "怎么把 (i,j) 映射成 i*n+j"
+    }
+   ]
+  },
+  {
+   "id": "h100-list-reverse",
+   "cat": "06 链表",
+   "title": "反转链表 · 三指针",
+   "problems": [
+    {
+     "lc": 206,
+     "name": "反转链表",
+     "diff": "Easy"
+    }
+   ],
+   "essence": "先存后继再断链，prev / cur / nxt 三个变量轮着往前挪",
+   "brief": "链表题的第一步几乎都是「先保存 next」——一改指针就再也找不到后半段",
+   "stmt": [
+    "输入：链表头",
+    "输出：反转后的头",
+    "例：1→2→3 → 3→2→1",
+    "要求：O(n) 时间、O(1) 空间"
+   ],
+   "generic": "反转链表、反转区间、回文链表（反转后半）、K 个一组翻转",
+   "code": [
+    "class Solution:",
+    "    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:",
+    "        prev, cur = None, head",
+    "        while cur:",
+    "            nxt = cur.next",
+    "            cur.next = prev",
+    "            prev = cur",
+    "            cur = nxt",
+    "        return prev"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "prev, cur = None, head",
+     "opts": [
+      "prev, cur = head, None",
+      "prev, cur = head, head",
+      "prev, cur = None, head.next",
+      "prev, cur = None, head"
+     ],
+     "why": "prev 是「已经反好的部分」的头，一开始是空；cur 从头开始走。写反了第一轮就断链"
+    },
+    {
+     "l": 4,
+     "text": "nxt = cur.next",
+     "opts": [
+      "nxt = prev",
+      "nxt = cur",
+      "nxt = cur.next.next",
+      "nxt = cur.next"
+     ],
+     "why": "改指针之前先记住后半段，否则 cur.next 一改成 prev 就丢了后面的链表"
+    },
+    {
+     "l": 5,
+     "text": "cur.next = prev",
+     "opts": [
+      "cur.next = nxt",
+      "cur = prev",
+      "cur.next = prev",
+      "prev.next = cur"
+     ],
+     "why": "把当前节点指回前驱，这才是反转；写成 prev.next = cur 等于把已经反好的部分又接回去"
+    },
+    {
+     "l": 8,
+     "text": "return prev",
+     "opts": [
+      "return cur",
+      "return head",
+      "return prev",
+      "return nxt"
+     ],
+     "why": "循环结束时 cur 是 None，prev 才是新头；返回 head 会得到原来的第一个节点（它现在是尾巴）"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 234,
+     "name": "回文链表",
+     "diff": "Easy",
+     "why": "快慢指针找中点 + 反转后半段 + 逐个比对，两个模板拼起来就是回文链表",
+     "hint": "奇数长度时中间那个节点怎么处理"
+    },
+    {
+     "lc": 138,
+     "name": "随机链表的复制",
+     "diff": "Medium",
+     "why": "深拷贝的难点是 random 指针乱指：先建「原节点 → 新节点」的字典，第二遍再补 next / random",
+     "hint": "为什么不能边遍历边连 random"
+    }
+   ]
+  },
+  {
+   "id": "h100-list-fast-slow",
+   "cat": "06 链表",
+   "title": "快慢指针 · 判环找中点",
+   "problems": [
+    {
+     "lc": 141,
+     "name": "环形链表",
+     "diff": "Easy"
+    },
+    {
+     "lc": 142,
+     "name": "环形链表 II",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "快指针走两步、慢指针走一步，有环必相遇，无环快指针先到头",
+   "brief": "判环、找中点、找倒数第 k 个，都是「两个速度不同的指针」在同一个循环里推进",
+   "stmt": [
+    "输入：链表头",
+    "输出：是否有环",
+    "例：3→2→0→-4→(回 2) → true",
+    "要求：O(1) 空间"
+   ],
+   "generic": "环形链表、环形链表 II（找入口）、链表中点、删除倒数第 N 个",
+   "code": [
+    "class Solution:",
+    "    def hasCycle(self, head: Optional[ListNode]) -> bool:",
+    "        slow = fast = head",
+    "        while fast and fast.next:",
+    "            slow = slow.next",
+    "            fast = fast.next.next",
+    "            if slow is fast:",
+    "                return True",
+    "        return False"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "slow = fast = head",
+     "opts": [
+      "slow = head, fast = head.next",
+      "slow = fast = head",
+      "slow, fast = head, head.next",
+      "slow = fast = head.next"
+     ],
+     "why": "两个指针都从头出发；fast 先走一步会让步长差从 1 变成 2，环上不一定相遇"
+    },
+    {
+     "l": 3,
+     "text": "while fast and fast.next:",
+     "opts": [
+      "while fast or fast.next:",
+      "while fast.next:",
+      "while fast and fast.next:",
+      "while slow and fast:"
+     ],
+     "why": "fast 要一次走两步，必须保证 fast 和 fast.next 都不为空；只判 fast 会在偶数长度时崩"
+    },
+    {
+     "l": 5,
+     "text": "fast = fast.next.next",
+     "opts": [
+      "fast = fast.next",
+      "fast = fast.next.next",
+      "fast = fast.next.next.next",
+      "fast = slow.next"
+     ],
+     "why": "快指针步长必须是 2；跟慢指针同步就永远追不上"
+    },
+    {
+     "l": 6,
+     "text": "if slow is fast:",
+     "opts": [
+      "if slow is head:",
+      "if slow.val == fast.val:",
+      "if slow is fast:",
+      "if slow.next is fast:"
+     ],
+     "why": "判的是「同一个节点」，用 is 比身份；比 val 会在值相同的不同节点上误判有环"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 19,
+     "name": "删除链表的倒数第 N 个结点",
+     "diff": "Medium",
+     "why": "快指针先走 n 步，再一起走；快指针到头时慢指针正好停在待删节点的前一个。配 dummy 可以少判空",
+     "hint": "为什么先走 n 步而不是 n−1 步"
+    },
+    {
+     "lc": 160,
+     "name": "相交链表",
+     "diff": "Easy",
+     "why": "两个指针各走「自己这段 + 对方那段」，总路程相等，必然在交点相遇；不相交就同时变 None",
+     "hint": "为什么换头走一次就能对齐"
+    }
+   ]
+  },
+  {
+   "id": "h100-list-dummy",
+   "cat": "06 链表",
+   "title": "虚拟头结点 dummy",
+   "problems": [
+    {
+     "lc": 21,
+     "name": "合并两个有序链表",
+     "diff": "Easy"
+    },
+    {
+     "lc": 2,
+     "name": "两数相加",
+     "diff": "Medium"
+    },
+    {
+     "lc": 19,
+     "name": "删除链表的倒数第 N 个结点",
+     "diff": "Medium"
+    },
+    {
+     "lc": 24,
+     "name": "两两交换链表中的节点",
+     "diff": "Medium"
+    },
+    {
+     "lc": 146,
+     "name": "LRU 缓存",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "头结点可能被换掉时，先挂一个假头，最后统一返回 dummy.next",
+   "brief": "只要「第一个节点可能变」就上 dummy：省掉所有「是不是第一个」的 if",
+   "stmt": [
+    "输入：两个升序链表",
+    "输出：合并后的链表",
+    "例：1→2→4, 1→3→4 → 1→1→2→3→4→4",
+    "要求：原地拼接，不新建节点"
+   ],
+   "generic": "合并两个有序链表、两数相加、删除倒数第 N 个、两两交换、合并 K 个链表",
+   "code": [
+    "class Solution:",
+    "    def mergeTwoLists(",
+    "        self,",
+    "        list1: Optional[ListNode],",
+    "        list2: Optional[ListNode],",
+    "    ) -> Optional[ListNode]:",
+    "        dummy = ListNode(0)",
+    "        cur = dummy",
+    "        while list1 and list2:",
+    "            if list1.val <= list2.val:",
+    "                cur.next = list1",
+    "                list1 = list1.next",
+    "            else:",
+    "                cur.next = list2",
+    "                list2 = list2.next",
+    "            cur = cur.next",
+    "        cur.next = list1 or list2",
+    "        return dummy.next"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 6,
+     "text": "dummy = ListNode(0)",
+     "opts": [
+      "dummy = ListNode(head.val)",
+      "dummy = ListNode(0)",
+      "dummy = None",
+      "dummy = head"
+     ],
+     "why": "假头的值无所谓，要的是「站在真正的头前面」这个位置；用 head 会污染原链表"
+    },
+    {
+     "l": 9,
+     "text": "if list1.val <= list2.val:",
+     "opts": [
+      "if list1 and list2:",
+      "if list1.val < list2.val:",
+      "if list1.val <= list2.val:",
+      "if list1.val >= list2.val:"
+     ],
+     "why": "取较小的接在后面；用 > 会把大的先接上，结果不再有序"
+    },
+    {
+     "l": 16,
+     "text": "cur.next = list1 or list2",
+     "opts": [
+      "cur.next = None",
+      "cur.next = list1 or list2",
+      "cur.next = list1 and list2",
+      "return list1 or list2"
+     ],
+     "why": "一条链走完后，剩下那条直接整段接上（不用再逐个节点搬）；用 and 会拿到 None 把尾巴丢了"
+    },
+    {
+     "l": 17,
+     "text": "return dummy.next",
+     "opts": [
+      "return head",
+      "return dummy.next",
+      "return cur",
+      "return dummy"
+     ],
+     "why": "要跳过假头；返回 dummy 会让结果多一个值为 0 的节点"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 148,
+     "name": "排序链表",
+     "diff": "Medium",
+     "why": "排序链表就是「反复 mergeTwoLists」：自底向上按 1、2、4、8 段两两合并，dummy 是每一段的门把手",
+     "hint": "为什么链表归并能做到 O(1) 额外空间"
+    }
+   ]
+  },
+  {
+   "id": "h100-tree-recursion",
+   "cat": "07 二叉树",
+   "title": "递归三要素",
+   "problems": [
+    {
+     "lc": 104,
+     "name": "二叉树的最大深度",
+     "diff": "Easy"
+    },
+    {
+     "lc": 226,
+     "name": "翻转二叉树",
+     "diff": "Easy"
+    },
+    {
+     "lc": 101,
+     "name": "对称二叉树",
+     "diff": "Easy"
+    },
+    {
+     "lc": 543,
+     "name": "二叉树的直径",
+     "diff": "Easy"
+    },
+    {
+     "lc": 108,
+     "name": "将有序数组转换为二叉搜索树",
+     "diff": "Easy"
+    }
+   ],
+   "essence": "想清楚「给父节点返回什么」「自己这层做什么」「空节点返回什么」，树题就是这三句话",
+   "brief": "绝大多数二叉树题都能套：先写 base case，再把左右子树的返回值合起来",
+   "stmt": [
+    "输入：根节点",
+    "输出：最大深度",
+    "例：[3,9,20,null,null,15,7] → 3",
+    "要求：O(n)"
+   ],
+   "generic": "最大深度、翻转、对称、直径、有序数组转 BST、验证 BST、第 K 小、最近公共祖先",
+   "code": [
+    "class Solution:",
+    "    def maxDepth(self, root: Optional[TreeNode]) -> int:",
+    "        if not root:",
+    "            return 0",
+    "        left = self.maxDepth(root.left)",
+    "        right = self.maxDepth(root.right)",
+    "        return max(left, right) + 1"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "if not root:",
+     "opts": [
+      "if root:",
+      "if not root:",
+      "if not root.left:",
+      "if not root.left and not root.right:"
+     ],
+     "why": "空节点是递归的出口，必须最先判；只判叶子会把单孩子的节点当成空返回"
+    },
+    {
+     "l": 3,
+     "text": "return 0",
+     "opts": [
+      "return -1",
+      "return None",
+      "return 0",
+      "return 1"
+     ],
+     "why": "空子树深度是 0，父节点再 +1；返回 1 会让空树也算一层"
+    },
+    {
+     "l": 4,
+     "text": "left = self.maxDepth(root.left)",
+     "opts": [
+      "left = root.left",
+      "left = self.maxDepth(root.right)",
+      "left = self.maxDepth(root)",
+      "left = self.maxDepth(root.left)"
+     ],
+     "why": "递归的是子树，不是自己（会无限递归）；左右别写反，虽然这里对称但思路要清"
+    },
+    {
+     "l": 6,
+     "text": "return max(left, right) + 1",
+     "opts": [
+      "return min(left, right) + 1",
+      "return max(left, right) + 1",
+      "return left + right + 1",
+      "return max(left, right)"
+     ],
+     "why": "深度取左右较大的那个再加自己这一层；漏 +1 少算根，用 min 或相加都不是深度"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 98,
+     "name": "验证二叉搜索树",
+     "diff": "Medium",
+     "why": "验证 BST 不能只比父子，要把「上下界」往下传——递归三要素里多带一个状态参数",
+     "hint": "为什么只比较父子会错"
+    },
+    {
+     "lc": 236,
+     "name": "二叉树的最近公共祖先",
+     "diff": "Medium",
+     "why": "最近公共祖先：左右各找到一个就返回自己，只有一边找到就把那一边抛上去",
+     "hint": "返回值代表「这边有没有找到」还是「找到的节点」"
+    },
+    {
+     "lc": 114,
+     "name": "二叉树展开为链表",
+     "diff": "Medium",
+     "why": "展开成链表：先展开左右子树，再把左子树挪到右边、接上原右子树，最后返回尾节点",
+     "hint": "为什么这里要返回尾节点"
+    },
+    {
+     "lc": 105,
+     "name": "从前序与中序遍历序列构造二叉树",
+     "diff": "Medium",
+     "why": "前序定根、中序定位，切两段递归；参数用下标区间比切片省内存",
+     "hint": "中序里根的位置怎么查"
+    },
+    {
+     "lc": 94,
+     "name": "二叉树的中序遍历",
+     "diff": "Easy",
+     "why": "中序遍历：左 → 自己 → 右；迭代版用显式栈一路压左孩子",
+     "hint": "迭代写法为什么要一路压左孩子"
+    },
+    {
+     "lc": 230,
+     "name": "二叉搜索树中第 K 小的元素",
+     "diff": "Medium",
+     "why": "BST 中第 K 小就是中序遍历的第 K 个：一边中序一边计数，数到 K 立刻停",
+     "hint": "为什么中序能保证有序"
+    }
+   ]
+  },
+  {
+   "id": "h100-tree-bfs",
+   "cat": "07 二叉树",
+   "title": "BFS 层序 · 先记层大小再弹",
+   "problems": [
+    {
+     "lc": 102,
+     "name": "二叉树的层序遍历",
+     "diff": "Medium"
+    },
+    {
+     "lc": 199,
+     "name": "二叉树的右视图",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "进循环先记下 len(q)，这一批就是同一层，弹完再收一层",
+   "brief": "层序、右视图、每层最大值都靠「按层循环」这一行；不记层大小就退化成一锅粥",
+   "stmt": [
+    "输入：根节点",
+    "输出：按层分组的节点值",
+    "例：[3,9,20,null,null,15,7] → [[3],[9,20],[15,7]]",
+    "要求：O(n)"
+   ],
+   "generic": "层序遍历、右视图、每层平均值、二叉树最大宽度、多源 BFS 扩散",
+   "code": [
+    "from collections import deque",
+    "class Solution:",
+    "    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:",
+    "        if not root:",
+    "            return []",
+    "        res, q = [], deque([root])",
+    "        while q:",
+    "            level = []",
+    "            for _ in range(len(q)):",
+    "                node = q.popleft()",
+    "                level.append(node.val)",
+    "                if node.left:",
+    "                    q.append(node.left)",
+    "                if node.right:",
+    "                    q.append(node.right)",
+    "            res.append(level)",
+    "        return res"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 5,
+     "text": "res, q = [], deque([root])",
+     "opts": [
+      "res, q = [], deque()",
+      "res, q = [], deque([root])",
+      "res, q = [root], deque([root])",
+      "res, q = [], [root]"
+     ],
+     "why": "队列里先放根；用裸 list 配 pop(0) 是 O(n) 会退化，漏放根则一行都收不到"
+    },
+    {
+     "l": 8,
+     "text": "for _ in range(len(q)):",
+     "opts": [
+      "for _ in range(len(q)):",
+      "for _ in range(len(res)):",
+      "for _ in range(q):",
+      "while q:"
+     ],
+     "why": "先把这一层的个数记下来，循环里新入队的属于下一层；不记长度就会把两层混在一起"
+    },
+    {
+     "l": 9,
+     "text": "node = q.popleft()",
+     "opts": [
+      "node = q[0]",
+      "node = q.popleft()",
+      "node = q.pop()",
+      "node = q.pop(0)"
+     ],
+     "why": "BFS 要先进先出，deque 的 popleft 是 O(1)；pop() 是取尾，变成 DFS 了"
+    },
+    {
+     "l": 15,
+     "text": "res.append(level)",
+     "opts": [
+      "res.extend(level)",
+      "res.append(level)",
+      "res = level",
+      "res.append(node.val)"
+     ],
+     "why": "一层收完再整体塞进结果；用 = 会覆盖掉之前的层，extend 会把二维拍平成一维"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 994,
+     "name": "腐烂的橘子",
+     "diff": "Medium",
+     "why": "多源 BFS：腐烂橘子一次性全部入队，再一层一层外扩，扩散的层数就是分钟数",
+     "hint": "为什么先把所有源点入队，而不是一个一个来"
+    },
+    {
+     "lc": 104,
+     "name": "二叉树的最大深度",
+     "diff": "Easy",
+     "why": "最大深度也能 BFS：层数就是深度，不用递归",
+     "hint": "BFS 和 DFS 求深度差在哪"
+    }
+   ]
+  },
+  {
+   "id": "h100-graph-grid-dfs",
+   "cat": "08 图论",
+   "title": "网格 DFS · 洪水填充",
+   "problems": [
+    {
+     "lc": 200,
+     "name": "岛屿数量",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "每个格子向四个方向递归，走过的直接改成水——不用撤销，也不用额外 visited",
+   "brief": "网格就是图：越界 + 已访问是两条 return，「访问过」直接原地改值最省事",
+   "stmt": [
+    "输入：'1' 陆地 / '0' 水的网格",
+    "输出：岛屿数量",
+    "例：四面环海的一块 → 1",
+    "要求：O(mn)"
+   ],
+   "generic": "岛屿数量、岛屿最大面积、被围绕的区域、单词搜索（要多一步撤销）",
+   "code": [
+    "class Solution:",
+    "    def numIslands(self, grid: List[List[str]]) -> int:",
+    "        m, n = len(grid), len(grid[0])",
+    "        def dfs(i, j):",
+    "            if i < 0 or i >= m or j < 0 or j >= n:",
+    "                return",
+    "            if grid[i][j] != '1':",
+    "                return",
+    "            grid[i][j] = '0'",
+    "            dfs(i + 1, j)",
+    "            dfs(i - 1, j)",
+    "            dfs(i, j + 1)",
+    "            dfs(i, j - 1)",
+    "        count = 0",
+    "        for i in range(m):",
+    "            for j in range(n):",
+    "                if grid[i][j] == '1':",
+    "                    count += 1",
+    "                    dfs(i, j)",
+    "        return count"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 3,
+     "text": "def dfs(i, j):",
+     "opts": [
+      "def dfs(i):",
+      "def dfs(i, j, seen):",
+      "def dfs(i, j):",
+      "def dfs(grid, i, j):"
+     ],
+     "why": "只需要行列两个参数；visited 用原地改值代替，所以不用再传一张表"
+    },
+    {
+     "l": 4,
+     "text": "if i < 0 or i >= m or j < 0 or j >= n:",
+     "opts": [
+      "if i < 0 or i >= m:",
+      "if i < 0 or j < 0:",
+      "if i >= m or j >= n:",
+      "if i < 0 or i >= m or j < 0 or j >= n:"
+     ],
+     "why": "四个方向都要判，少判一边就会越界；行列的上界分别是 m、n"
+    },
+    {
+     "l": 8,
+     "text": "grid[i][j] = '0'",
+     "opts": [
+      "grid[i][j] = '1'",
+      "grid[i][j] = '0'",
+      "grid[i][j] = 0",
+      "visited[i][j] = True"
+     ],
+     "why": "把陆地淹掉就是「已访问」标记；改成 '1' 等于没标记，会无限递归"
+    },
+    {
+     "l": 11,
+     "text": "dfs(i, j + 1)",
+     "opts": [
+      "dfs(i + 1, j - 1)",
+      "dfs(i, j + 1)",
+      "dfs(j, i)",
+      "dfs(i + 1, j + 1)"
+     ],
+     "why": "四个方向是上下左右；斜着走会把两块对角相连的陆地算成一块"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 79,
+     "name": "单词搜索",
+     "diff": "Medium",
+     "why": "网格 DFS 加回溯：走过的格子要标记后再撤销，因为不同路径允许重复踩同一个格子",
+     "hint": "为什么岛屿数量不用撤销、单词搜索必须撤销"
+    }
+   ]
+  },
+  {
+   "id": "h100-graph-grid-bfs",
+   "cat": "08 图论",
+   "title": "网格 BFS · 多源扩散",
+   "problems": [
+    {
+     "lc": 994,
+     "name": "腐烂的橘子",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "所有源点一次性入队，然后一层一层往外扩，层数就是时间",
+   "brief": "「同时从多个点开始扩散」只能 BFS；DFS 求不出最短时间",
+   "stmt": [
+    "输入：0 空 / 1 新鲜 / 2 腐烂",
+    "输出：全部腐烂的最少分钟",
+    "例：[[2,1,1],[1,1,0],[0,1,1]] → 4",
+    "要求：有橘子烂不掉返回 -1"
+   ],
+   "generic": "腐烂的橘子、01 矩阵、地图最短距离、多源最短路",
+   "code": [
+    "from collections import deque",
+    "class Solution:",
+    "    def orangesRotting(self, grid: List[List[int]]) -> int:",
+    "        m, n = len(grid), len(grid[0])",
+    "        q = deque()",
+    "        fresh = 0",
+    "        for i in range(m):",
+    "            for j in range(n):",
+    "                if grid[i][j] == 2:",
+    "                    q.append((i, j))",
+    "                elif grid[i][j] == 1:",
+    "                    fresh += 1",
+    "        if fresh == 0:",
+    "            return 0",
+    "        minutes = 0",
+    "        while q and fresh:",
+    "            minutes += 1",
+    "            for _ in range(len(q)):",
+    "                x, y = q.popleft()",
+    "                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):",
+    "                    nx, ny = x + dx, y + dy",
+    "                    if 0 <= nx < m and 0 <= ny < n and grid[nx][ny] == 1:",
+    "                        grid[nx][ny] = 2",
+    "                        fresh -= 1",
+    "                        q.append((nx, ny))",
+    "        return minutes if fresh == 0 else -1"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 4,
+     "text": "q = deque()",
+     "opts": [
+      "q = deque(grid)",
+      "q = []",
+      "q = deque()",
+      "q = set()"
+     ],
+     "why": "装的是坐标，用 deque 才有 O(1) 的队头弹出；裸 list 的 pop(0) 会退化"
+    },
+    {
+     "l": 9,
+     "text": "q.append((i, j))",
+     "opts": [
+      "q.append(grid[i][j])",
+      "q.append((i, j))",
+      "q.append(i, j)",
+      "q.append([i, j])"
+     ],
+     "why": "append 只收一个参数，坐标要打包成 tuple；存值不存坐标就没法再扩散"
+    },
+    {
+     "l": 17,
+     "text": "for _ in range(len(q)):",
+     "opts": [
+      "for _ in range(minutes):",
+      "for _ in range(len(grid)):",
+      "while q:",
+      "for _ in range(len(q)):"
+     ],
+     "why": "先记这一层的个数，循环内新入队的属于下一层；不记长度分钟数就会算错"
+    },
+    {
+     "l": 22,
+     "text": "grid[nx][ny] = 2",
+     "opts": [
+      "grid[nx][ny] = 0",
+      "grid[nx][ny] = 2; fresh += 1",
+      "grid[nx][ny] = 2",
+      "grid[nx][ny] = 1"
+     ],
+     "why": "入队时就标记成腐烂，否则同一个橘子会被重复入队，分钟数暴涨"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 200,
+     "name": "岛屿数量",
+     "diff": "Medium",
+     "why": "岛屿数量也能 BFS：从一块陆地开始把整块刷掉，计数不变",
+     "hint": "DFS 和 BFS 在这里的差别只是扩散顺序"
+    }
+   ]
+  },
+  {
+   "id": "h100-graph-topo",
+   "cat": "08 图论",
+   "title": "拓扑排序 · Kahn 入度法",
+   "problems": [
+    {
+     "lc": 207,
+     "name": "课程表",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "入度为 0 的先出队，出队时把它指向的节点入度减一，减到 0 就入队",
+   "brief": "「先修关系 / 依赖顺序」只有一个解法：统计入度，看最后能不能把所有点都处理完",
+   "stmt": [
+    "输入：课程数、先修对 [a,b] 表示 b 先于 a",
+    "输出：能否学完",
+    "例：2, [[1,0]] → true",
+    "要求：O(V+E)"
+   ],
+   "generic": "课程表 I/II、任务调度、判断有向图有无环、编译依赖",
+   "code": [
+    "from collections import deque",
+    "class Solution:",
+    "    def canFinish(",
+    "        self,",
+    "        numCourses: int,",
+    "        prerequisites: List[List[int]],",
+    "    ) -> bool:",
+    "        graph = [[] for _ in range(numCourses)]",
+    "        indeg = [0] * numCourses",
+    "        for a, b in prerequisites:",
+    "            graph[b].append(a)",
+    "            indeg[a] += 1",
+    "        q = deque(i for i in range(numCourses) if indeg[i] == 0)",
+    "        learned = 0",
+    "        while q:",
+    "            cur = q.popleft()",
+    "            learned += 1",
+    "            for nxt in graph[cur]:",
+    "                indeg[nxt] -= 1",
+    "                if indeg[nxt] == 0:",
+    "                    q.append(nxt)",
+    "        return learned == numCourses"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 7,
+     "text": "graph = [[] for _ in range(numCourses)]",
+     "opts": [
+      "graph = [[]] * numCourses",
+      "graph = [[] for _ in range(len(prerequisites))]",
+      "graph = {}",
+      "graph = [[] for _ in range(numCourses)]"
+     ],
+     "why": "邻接表要按课程数开，且必须用推导式——[[ ]] * n 会让所有行共用同一个列表"
+    },
+    {
+     "l": 11,
+     "text": "indeg[a] += 1",
+     "opts": [
+      "indeg[a] -= 1",
+      "indeg[a] += 1",
+      "indeg[b] += 1",
+      "graph[a].append(b)"
+     ],
+     "why": "先修对 [a,b] 表示 b→a，被指向的 a 入度加一；加到 b 上等于把依赖方向搞反"
+    },
+    {
+     "l": 12,
+     "text": "q = deque(i for i in range(numCourses) if indeg[i] == 0)",
+     "opts": [
+      "q = deque(i for i in range(numCourses) if indeg[i] == 0)",
+      "q = deque(i for i in range(numCourses) if indeg[i] > 0)",
+      "q = deque([0])",
+      "q = deque(range(numCourses))"
+     ],
+     "why": "入口是「没有任何前置」的课，也就是入度为 0 的点；全放进去就失去了拓扑顺序"
+    },
+    {
+     "l": 19,
+     "text": "if indeg[nxt] == 0:",
+     "opts": [
+      "if indeg[nxt] > 0:",
+      "if nxt == 0:",
+      "if indeg[cur] == 0:",
+      "if indeg[nxt] == 0:"
+     ],
+     "why": "前置全修完（入度归零）才轮到它入队；判 > 0 会把还不能学的课提前放进来"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 208,
+     "name": "实现 Trie 前缀树",
+     "diff": "Medium",
+     "why": "Trie 的插入和查询也是「按边一层层走」，和拓扑的图遍历同源：节点 + 邻居表",
+     "hint": "Trie 的边是什么"
+    }
+   ]
+  },
+  {
+   "id": "h100-trie",
+   "cat": "08 图论",
+   "title": "Trie 前缀树",
+   "problems": [
+    {
+     "lc": 208,
+     "name": "实现 Trie 前缀树",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "每个节点是一张「字符 → 子节点」的表，再加一个结束标记",
+   "brief": "查前缀 O(L)，代价是每个字符一个节点；查前缀和查单词只差一个 is_end",
+   "stmt": [
+    "输入：若干单词",
+    "输出：insert / search / startsWith 三个接口",
+    "例：insert(apple) 后 search(app) → false",
+    "要求：每次操作 O(L)"
+   ],
+   "generic": "实现 Trie、单词搜索 II、前缀匹配、敏感词过滤",
+   "code": [
+    "class Trie:",
+    "    def __init__(self):",
+    "        self.children = {}",
+    "        self.is_end = False",
+    "    def insert(self, word: str) -> None:",
+    "        node = self",
+    "        for ch in word:",
+    "            if ch not in node.children:",
+    "                node.children[ch] = Trie()",
+    "            node = node.children[ch]",
+    "        node.is_end = True",
+    "    def search(self, word: str) -> bool:",
+    "        node = self._find(word)",
+    "        return node is not None and node.is_end",
+    "    def startsWith(self, prefix: str) -> bool:",
+    "        return self._find(prefix) is not None",
+    "    def _find(self, s: str):",
+    "        node = self",
+    "        for ch in s:",
+    "            if ch not in node.children:",
+    "                return None",
+    "            node = node.children[ch]",
+    "        return node"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "self.children = {}",
+     "opts": [
+      "self.children = {}",
+      "self.children = None",
+      "self.children = []",
+      "self.children = set()"
+     ],
+     "why": "要按字符查子节点，用 dict 才能 O(1)；用 list 得线性找，用 None 连插入都做不了"
+    },
+    {
+     "l": 3,
+     "text": "self.is_end = False",
+     "opts": [
+      "self.is_end = False",
+      "self.children = True",
+      "self.is_end = True",
+      "self.is_end = 0"
+     ],
+     "why": "新节点默认不是单词结尾，插入到最后一个字符时才置 True"
+    },
+    {
+     "l": 8,
+     "text": "node.children[ch] = Trie()",
+     "opts": [
+      "node.children[ch] = None",
+      "node.children[ch] = {}",
+      "node.children[ch] = Trie()",
+      "node = Trie()"
+     ],
+     "why": "缺这个字符就新建一个子节点并挂上去；只写 node = Trie() 挂不上，后面全丢"
+    },
+    {
+     "l": 10,
+     "text": "node.is_end = True",
+     "opts": [
+      "self.is_end = True",
+      "node.is_end = True",
+      "node.val = True",
+      "node.is_end = False"
+     ],
+     "why": "走到单词末尾才打标记；标在 self 上等于所有单词都算同一个结尾"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 79,
+     "name": "单词搜索",
+     "diff": "Medium",
+     "why": "单词搜索用 Trie 剪枝：把待查单词建成 Trie，网格 DFS 顺着树走，走不通立刻回退",
+     "hint": "为什么 Trie 能剪掉大量分支"
+    }
+   ]
+  },
+  {
+   "id": "h100-backtrack",
+   "cat": "09 回溯",
+   "title": "回溯骨架 · 进门放石子、出门捡石子",
+   "problems": [
+    {
+     "lc": 46,
+     "name": "全排列",
+     "diff": "Medium"
+    },
+    {
+     "lc": 78,
+     "name": "子集",
+     "diff": "Medium"
+    },
+    {
+     "lc": 17,
+     "name": "电话号码的字母组合",
+     "diff": "Medium"
+    },
+    {
+     "lc": 39,
+     "name": "组合总和",
+     "diff": "Medium"
+    },
+    {
+     "lc": 22,
+     "name": "括号生成",
+     "diff": "Medium"
+    },
+    {
+     "lc": 131,
+     "name": "分割回文串",
+     "diff": "Medium"
+    },
+    {
+     "lc": 79,
+     "name": "单词搜索",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "做选择、递归、撤销三行严格对称，少了 pop 现场就脏",
+   "brief": "排列用 used、组合用 start、子集每个节点都收——三种形态只差「下一层能选什么」",
+   "stmt": [
+    "输入：不含重复数字的数组",
+    "输出：全排列",
+    "例：[1,2,3] → 6 个排列",
+    "要求：path 必须拷贝后再收"
+   ],
+   "generic": "全排列、子集、组合总和、括号生成、分割回文串、单词搜索、N 皇后",
+   "code": [
+    "class Solution:",
+    "    def permute(self, nums: List[int]) -> List[List[int]]:",
+    "        res = []",
+    "        path = []",
+    "        used = [False] * len(nums)",
+    "        def backtrack():",
+    "            if len(path) == len(nums):",
+    "                res.append(path[:])",
+    "                return",
+    "            for i in range(len(nums)):",
+    "                if used[i]:",
+    "                    continue",
+    "                used[i] = True",
+    "                path.append(nums[i])",
+    "                backtrack()",
+    "                path.pop()",
+    "                used[i] = False",
+    "        backtrack()",
+    "        return res"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 7,
+     "text": "res.append(path[:])",
+     "opts": [
+      "res = path[:]",
+      "res.append(nums[:])",
+      "res.append(path[:])",
+      "res.append(path)"
+     ],
+     "why": "全程只有一个 path 对象，必须拷贝；直接 append 会让 res 里全是同一个空列表"
+    },
+    {
+     "l": 10,
+     "text": "if used[i]:",
+     "opts": [
+      "if i in path:",
+      "if used[i]:",
+      "if used[i] == False:",
+      "if used[nums[i]]:"
+     ],
+     "why": "排列不能重复用同一个位置的元素，靠 used 跳过；判 i in path 是拿值比，遇到重复值就错"
+    },
+    {
+     "l": 12,
+     "text": "used[i] = True",
+     "opts": [
+      "used[i] = False",
+      "used[i] = i",
+      "used[i] = True",
+      "path.append(i)"
+     ],
+     "why": "放石子：先标记再递归；漏标会让同一个元素在同一支里被反复选"
+    },
+    {
+     "l": 15,
+     "text": "path.pop()",
+     "opts": [
+      "path.remove(nums[i])",
+      "res.pop()",
+      "i -= 1",
+      "path.pop()"
+     ],
+     "why": "捡石子：递归回来必须把 path 复原，否则后面的分支全带上这一层的元素"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 51,
+     "name": "N 皇后",
+     "diff": "Hard",
+     "why": "N 皇后：一行一行放，用列 / 主对角 / 副对角三张集合做剪枝，和排列的 used 是同一件事",
+     "hint": "怎么 O(1) 判断对角线冲突"
+    }
+   ]
+  },
+  {
+   "id": "h100-bs-lower-bound",
+   "cat": "10 二分查找",
+   "title": "lower_bound · 第一个不小于 target 的位置",
+   "problems": [
+    {
+     "lc": 35,
+     "name": "搜索插入位置",
+     "diff": "Easy"
+    },
+    {
+     "lc": 34,
+     "name": "在排序数组中查找元素的第一个和最后一个位置",
+     "diff": "Medium"
+    },
+    {
+     "lc": 74,
+     "name": "搜索二维矩阵",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "区间左闭右闭，while left <= right，最后 left 就是第一个不小于 target 的下标",
+   "brief": "二分只在「区间开闭、mid 取整、边界收缩、返回值」四件事上翻车，先把这四个说清",
+   "stmt": [
+    "输入：升序数组 + target",
+    "输出：target 应插入的位置",
+    "例：[1,3,5,6], 5 → 2",
+    "要求：O(log n)"
+   ],
+   "generic": "搜索插入位置、查找区间左右端点、旋转数组找最小值、有序矩阵拉平二分",
+   "code": [
+    "class Solution:",
+    "    def searchInsert(self, nums: List[int], target: int) -> int:",
+    "        left, right = 0, len(nums) - 1",
+    "        while left <= right:",
+    "            mid = (left + right) // 2",
+    "            if nums[mid] < target:",
+    "                left = mid + 1",
+    "            else:",
+    "                right = mid - 1",
+    "        return left"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 3,
+     "text": "while left <= right:",
+     "opts": [
+      "while left <= right:",
+      "while left <= right - 1:",
+      "while left < right:",
+      "while nums[left] < nums[right]:"
+     ],
+     "why": "左闭右闭区间，两个端点都还没被排除，所以能取等；用 < 会漏掉单元素区间"
+    },
+    {
+     "l": 4,
+     "text": "mid = (left + right) // 2",
+     "opts": [
+      "mid = (left + right) / 2",
+      "mid = (left + right + 1) // 2",
+      "mid = (right - left) // 2",
+      "mid = (left + right) // 2"
+     ],
+     "why": "整除取整往左靠；用 / 得到 float 当不了下标，取右中位会让区间无法收缩"
+    },
+    {
+     "l": 6,
+     "text": "left = mid + 1",
+     "opts": [
+      "right = mid + 1",
+      "left = mid",
+      "left += 1",
+      "left = mid + 1"
+     ],
+     "why": "mid 已判定偏小，可以放心排除；写成 left = mid 会死循环"
+    },
+    {
+     "l": 9,
+     "text": "return left",
+     "opts": [
+      "return left",
+      "return mid",
+      "return left - 1",
+      "return right"
+     ],
+     "why": "循环结束时 left 恰好是第一个不小于 target 的位置（也可能等于 n）"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 4,
+     "name": "寻找两个正序数组的中位数",
+     "diff": "Hard",
+     "why": "两个有序数组找中位数：在较短的数组上二分切一刀，比较四个边界值定左右",
+     "hint": "为什么一定要在短数组上二分"
+    }
+   ]
+  },
+  {
+   "id": "h100-bs-rotated",
+   "cat": "10 二分查找",
+   "title": "旋转数组二分 · 先认哪半边有序",
+   "problems": [
+    {
+     "lc": 33,
+     "name": "搜索旋转排序数组",
+     "diff": "Medium"
+    },
+    {
+     "lc": 153,
+     "name": "寻找旋转排序数组中的最小值",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "每次都能判出「左半有序」还是「右半有序」，再看 target 在不在那一半里",
+   "brief": "旋转数组不是单调的，但「总有一半是单调的」——二分靠这一点继续砍",
+   "stmt": [
+    "输入：旋转过的升序数组（无重复）+ target",
+    "输出：下标或 -1",
+    "例：[4,5,6,7,0,1,2], 0 → 4",
+    "要求：O(log n)"
+   ],
+   "generic": "搜索旋转排序数组、寻找旋转数组最小值、有重复的旋转数组",
+   "code": [
+    "class Solution:",
+    "    def search(self, nums: List[int], target: int) -> int:",
+    "        left, right = 0, len(nums) - 1",
+    "        while left <= right:",
+    "            mid = (left + right) // 2",
+    "            if nums[mid] == target:",
+    "                return mid",
+    "            if nums[left] <= nums[mid]:",
+    "                if nums[left] <= target < nums[mid]:",
+    "                    right = mid - 1",
+    "                else:",
+    "                    left = mid + 1",
+    "            else:",
+    "                if nums[mid] < target <= nums[right]:",
+    "                    left = mid + 1",
+    "                else:",
+    "                    right = mid - 1",
+    "        return -1"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 5,
+     "text": "if nums[mid] == target:",
+     "opts": [
+      "if nums[right] == target:",
+      "if nums[left] == target:",
+      "if nums[mid] == target:",
+      "if nums[mid] > target:"
+     ],
+     "why": "中点命中就返回；先判命中可以省掉后面所有分支"
+    },
+    {
+     "l": 7,
+     "text": "if nums[left] <= nums[mid]:",
+     "opts": [
+      "if nums[left] >= nums[mid]:",
+      "if nums[left] <= nums[mid]:",
+      "if nums[left] < nums[mid]:",
+      "if nums[mid] <= nums[right]:"
+     ],
+     "why": "左端不大于中点说明左半段是有序的（取等是为了单元素那段也算有序）"
+    },
+    {
+     "l": 8,
+     "text": "if nums[left] <= target < nums[mid]:",
+     "opts": [
+      "if nums[left] <= target < nums[mid]:",
+      "if nums[mid] < target <= nums[right]:",
+      "if nums[left] <= target <= nums[mid]:",
+      "if target <= nums[mid]:"
+     ],
+     "why": "在有序的左半段里，target 落在 [left, mid) 才往左收；取等会跟已命中的情况重叠"
+    },
+    {
+     "l": 17,
+     "text": "return -1",
+     "opts": [
+      "return -1",
+      "return mid",
+      "return left",
+      "return 0"
+     ],
+     "why": "循环走完还没命中就是不存在；返回 left 会给出一个错误的合法下标"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 35,
+     "name": "搜索插入位置",
+     "diff": "Easy",
+     "why": "旋转数组里定位插入点：先找最小值的位置作为分界，再在对应有序段做 lower_bound",
+     "hint": "两段有序怎么拼成一次二分"
+    }
+   ]
+  },
+  {
+   "id": "h100-stack-basic",
+   "cat": "11 栈",
+   "title": "普通栈 · 开存关取",
+   "problems": [
+    {
+     "lc": 20,
+     "name": "有效的括号",
+     "diff": "Easy"
+    },
+    {
+     "lc": 155,
+     "name": "最小栈",
+     "diff": "Medium"
+    },
+    {
+     "lc": 394,
+     "name": "字符串解码",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "遇到「开」就压栈，遇到「关」就弹栈比对，最后栈空才算配对成功",
+   "brief": "括号、嵌套解析、撤销操作都是「最近一次还没处理的东西」——这就是栈的定义",
+   "stmt": [
+    "输入：只含 ()[]{} 的字符串",
+    "输出：是否合法",
+    "例：()[]{} → true，([)] → false",
+    "要求：O(n)"
+   ],
+   "generic": "有效括号、最小栈、字符串解码、逆波兰表达式",
+   "code": [
+    "class Solution:",
+    "    def isValid(self, s: str) -> bool:",
+    "        pairs = {')': '(', ']': '[', '}': '{'}",
+    "        stack = []",
+    "        for ch in s:",
+    "            if ch in pairs:",
+    "                if not stack or stack.pop() != pairs[ch]:",
+    "                    return False",
+    "            else:",
+    "                stack.append(ch)",
+    "        return not stack"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "pairs = {')': '(', ']': '[', '}': '{'}",
+     "opts": [
+      "pairs = {'(': ')', '[': ']', '{': '}'}",
+      "pairs = ['(', '[', '{']",
+      "pairs = {')': ')', ']': ']', '}': '}'}",
+      "pairs = {')': '(', ']': '[', '}': '{'}"
+     ],
+     "why": "字典写成「右括号 → 对应的左括号」，这样拿到右括号就能直接查该弹谁"
+    },
+    {
+     "l": 6,
+     "text": "if not stack or stack.pop() != pairs[ch]:",
+     "opts": [
+      "if stack and stack.pop() != pairs[ch]:",
+      "if not stack or stack.pop() != pairs[ch]:",
+      "if stack[-1] != pairs[ch]:",
+      "if not stack and stack.pop() != pairs[ch]:"
+     ],
+     "why": "先判空再弹，否则遇到以右括号开头的串会下标越界；用 and 则在空栈时直接跳过，漏判"
+    },
+    {
+     "l": 9,
+     "text": "stack.append(ch)",
+     "opts": [
+      "stack.append(pairs[ch])",
+      "stack.insert(0, ch)",
+      "stack.pop()",
+      "stack.append(ch)"
+     ],
+     "why": "左括号原样压栈，右括号才需要查表；压错东西后面永远比不相等"
+    },
+    {
+     "l": 10,
+     "text": "return not stack",
+     "opts": [
+      "return True",
+      "return not stack",
+      "return stack == []",
+      "return len(stack) == 1"
+     ],
+     "why": "最后栈必须为空才全部配对；直接 return True 会放过 (( 这种半开的串"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 32,
+     "name": "最长有效括号",
+     "diff": "Hard",
+     "why": "最长有效括号：栈里存下标，遇到 ')' 弹出后用「当前下标 − 新栈顶」更新长度，栈底放一个 −1 当哨兵",
+     "hint": "为什么栈里存下标而不是括号"
+    }
+   ]
+  },
+  {
+   "id": "h100-stack-monotonic",
+   "cat": "11 栈",
+   "title": "单调栈 · 找下一个更大值",
+   "problems": [
+    {
+     "lc": 739,
+     "name": "每日温度",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "栈里存下标、值保持递减，遇到更大的就把栈顶弹出来结算",
+   "brief": "「下一个更大/更小」只能靠单调栈，弹栈那一刻就是答案确定的时刻",
+   "stmt": [
+    "输入：每日温度数组",
+    "输出：还要等几天才升温",
+    "例：[73,74,75,71,69,72] → [1,1,4,2,1,0]",
+    "要求：O(n)"
+   ],
+   "generic": "每日温度、下一个更大元素、柱状图最大矩形、接雨水",
+   "code": [
+    "class Solution:",
+    "    def dailyTemperatures(self, temperatures: List[int]) -> List[int]:",
+    "        n = len(temperatures)",
+    "        res = [0] * n",
+    "        stack = []",
+    "        for i, t in enumerate(temperatures):",
+    "            while stack and t > temperatures[stack[-1]]:",
+    "                j = stack.pop()",
+    "                res[j] = i - j",
+    "            stack.append(i)",
+    "        return res"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 6,
+     "text": "while stack and t > temperatures[stack[-1]]:",
+     "opts": [
+      "if stack and t > temperatures[stack[-1]]:",
+      "while stack and t > temperatures[stack[-1]]:",
+      "while stack and t < temperatures[stack[-1]]:",
+      "while stack and t >= temperatures[stack[-1]]:"
+     ],
+     "why": "栈里存的是「还没等到更暖」的下标，今天更暖就把它们一次性结算；用 if 只能解决一个"
+    },
+    {
+     "l": 7,
+     "text": "j = stack.pop()",
+     "opts": [
+      "j = stack.pop()",
+      "j = i",
+      "j = stack[0]",
+      "j = stack.pop(0)"
+     ],
+     "why": "弹出的是那个「等到今天」的旧下标，用它算距离；用 i 会让距离恒为 0"
+    },
+    {
+     "l": 8,
+     "text": "res[j] = i - j",
+     "opts": [
+      "res[i] = i - j",
+      "res[j] = i - j",
+      "res[j] = j - i",
+      "res[j] += 1"
+     ],
+     "why": "天数差 = 今天下标 − 旧下标；结果要写回旧下标 j 的位置"
+    },
+    {
+     "l": 9,
+     "text": "stack.append(i)",
+     "opts": [
+      "stack.append(i)",
+      "stack.append(t)",
+      "stack.insert(0, i)",
+      "stack.pop()"
+     ],
+     "why": "栈里存下标而不是温度，才能算天数差；存温度就丢了下标信息"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 84,
+     "name": "柱状图中最大的矩形",
+     "diff": "Hard",
+     "why": "柱状图最大矩形：单调栈找左右第一个更矮的柱子，两头加高度 0 的哨兵省掉边界判断",
+     "hint": "为什么加哨兵就不用手写边界"
+    }
+   ]
+  },
+  {
+   "id": "h100-heap-topk",
+   "cat": "12 堆",
+   "title": "Top-K · 守门员模型",
+   "problems": [
+    {
+     "lc": 215,
+     "name": "数组中的第 K 个最大元素",
+     "diff": "Medium"
+    },
+    {
+     "lc": 347,
+     "name": "前 K 个高频元素",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "维护一个大小只有 k 的堆，新元素比堆顶好就顶掉堆顶",
+   "brief": "求第 K 大 / 前 K 个高频，永远是小顶堆守门，堆里只留最好的 k 个候选",
+   "stmt": [
+    "输入：数组 + k",
+    "输出：第 k 大的元素",
+    "例：[3,2,1,5,6,4], k=2 → 5",
+    "要求：O(n log k)"
+   ],
+   "generic": "数组中的第 K 个最大元素、前 K 个高频元素、合并 K 个有序链表、数据流中位数",
+   "code": [
+    "import heapq",
+    "class Solution:",
+    "    def findKthLargest(self, nums: List[int], k: int) -> int:",
+    "        heap = []",
+    "        for x in nums:",
+    "            heapq.heappush(heap, x)",
+    "            if len(heap) > k:",
+    "                heapq.heappop(heap)",
+    "        return heap[0]"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 3,
+     "text": "heap = []",
+     "opts": [
+      "heap = [0] * k",
+      "heap = [nums[0]]",
+      "heap = nums[:]",
+      "heap = []"
+     ],
+     "why": "小顶堆从空开始一个个塞；一开始就装 k 个会把「守门」的逻辑绕进去"
+    },
+    {
+     "l": 5,
+     "text": "heapq.heappush(heap, x)",
+     "opts": [
+      "heapq.heappush(heap, x)",
+      "heap.append(x)",
+      "heapq.heappush(heap, -x)",
+      "heapq.heappop(heap)"
+     ],
+     "why": "Python 的 heapq 是小顶堆，第 K 大要留最大的 k 个，所以直接塞原值、让最小的浮在堆顶"
+    },
+    {
+     "l": 6,
+     "text": "if len(heap) > k:",
+     "opts": [
+      "if len(heap) > n - k:",
+      "if len(heap) >= k:",
+      "if len(heap) > k:",
+      "if heap:"
+     ],
+     "why": "超过 k 个就把堆顶（当前最小的那个）踢掉，堆里永远是最大的 k 个"
+    },
+    {
+     "l": 8,
+     "text": "return heap[0]",
+     "opts": [
+      "return heapq.heappop(heap)",
+      "return heap[-1]",
+      "return min(heap)",
+      "return heap[0]"
+     ],
+     "why": "小顶堆的堆顶就是这 k 个里最小的一个，也就是整体第 k 大"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 23,
+     "name": "合并 K 个升序链表",
+     "diff": "Hard",
+     "why": "合并 K 个链表：堆里放每个链表当前的头节点，每次弹最小的接上，再从那条链表补一个",
+     "hint": "为什么堆的大小是 K 而不是总节点数"
+    },
+    {
+     "lc": 295,
+     "name": "数据流的中位数",
+     "diff": "Hard",
+     "why": "数据流中位数：一个大顶堆存小的那半、一个小顶堆存大的那半，保持数量差 ≤ 1",
+     "hint": "怎么保持两个堆平衡"
+    }
+   ]
+  },
+  {
+   "id": "h100-greedy-min-price",
+   "cat": "13 贪心",
+   "title": "前缀最小值贪心 · 一路记住最便宜的",
+   "problems": [
+    {
+     "lc": 121,
+     "name": "买卖股票的最佳时机",
+     "diff": "Easy"
+    }
+   ],
+   "essence": "从左往右扫，随时记下「到目前为止的最低价」，今天卖出的最大收益就是今天价 − 最低价",
+   "brief": "只允许买卖一次、且卖在买之后——这就是「前缀最优」，一个变量就够",
+   "stmt": [
+    "输入：每日股价",
+    "输出：最大收益",
+    "例：[7,1,5,3,6,4] → 5",
+    "要求：O(n)，一次遍历"
+   ],
+   "generic": "买卖股票的最佳时机、最大子数组和（Kadane）、乘积最大子数组",
+   "code": [
+    "class Solution:",
+    "    def maxProfit(self, prices: List[int]) -> int:",
+    "        min_price = float('inf')",
+    "        ans = 0",
+    "        for p in prices:",
+    "            min_price = min(min_price, p)",
+    "            ans = max(ans, p - min_price)",
+    "        return ans"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "min_price = float('inf')",
+     "opts": [
+      "min_price = -float('inf')",
+      "min_price = 0",
+      "min_price = float('inf')",
+      "min_price = prices[0]"
+     ],
+     "why": "最低价初值取无穷大，任何价格都能更新它；取 prices[0] 也可以，但取 0 会让所有价格都「更高」"
+    },
+    {
+     "l": 5,
+     "text": "min_price = min(min_price, p)",
+     "opts": [
+      "min_price = max(min_price, p)",
+      "min_price = min(min_price, prices[0])",
+      "min_price = min(min_price, p)",
+      "min_price = p"
+     ],
+     "why": "先更新最低价，再算收益——顺序反了会允许同一天买卖"
+    },
+    {
+     "l": 6,
+     "text": "ans = max(ans, p - min_price)",
+     "opts": [
+      "ans = p - min_price",
+      "ans = max(ans, min_price - p)",
+      "ans = max(ans, p - min_price)",
+      "ans += p - min_price"
+     ],
+     "why": "收益是「今天价 − 之前的最低价」；写成 min_price − p 方向就反了，写成赋值会丢掉之前更大的收益"
+    },
+    {
+     "l": 7,
+     "text": "return ans",
+     "opts": [
+      "return 0",
+      "return ans",
+      "return min_price",
+      "return prices[-1] - min_price"
+     ],
+     "why": "返回的是过程中的最大收益，不是最后一天的收益"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 152,
+     "name": "乘积最大子数组",
+     "diff": "Medium",
+     "why": "乘积最大子数组：同样是一路扫一路攒最优，但负数要同时维护最小（负负得正）",
+     "hint": "为什么加法不用维护最小值"
+    }
+   ]
+  },
+  {
+   "id": "h100-greedy-far",
+   "cat": "13 贪心",
+   "title": "覆盖范围贪心 · 最远能到哪",
+   "problems": [
+    {
+     "lc": 55,
+     "name": "跳跃游戏",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "一路维护「目前能跳到的最远位置」，一旦走到超过它的下标就说明断了",
+   "brief": "跳跃游戏只需要回答能不能到，所以只维护最远可达，不用管怎么跳",
+   "stmt": [
+    "输入：每格能跳的最大步数",
+    "输出：能否到最后一个位置",
+    "例：[2,3,1,1,4] → true",
+    "要求：O(n)"
+   ],
+   "generic": "跳跃游戏、跳跃游戏 II（分层）、视频拼接、加油站",
+   "code": [
+    "class Solution:",
+    "    def canJump(self, nums: List[int]) -> bool:",
+    "        far = 0",
+    "        for i in range(len(nums)):",
+    "            if i > far:",
+    "                return False",
+    "            far = max(far, i + nums[i])",
+    "            if far >= len(nums) - 1:",
+    "                return True",
+    "        return True"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "far = 0",
+     "opts": [
+      "far = len(nums) - 1",
+      "far = 0",
+      "far = -1",
+      "far = nums[0]"
+     ],
+     "why": "最远可达从一开始是 0（站在起点）；直接给 nums[0] 会跳过起点的判断"
+    },
+    {
+     "l": 4,
+     "text": "if i > far:",
+     "opts": [
+      "if i > far:",
+      "if far >= len(nums):",
+      "if i >= far:",
+      "if i < far:"
+     ],
+     "why": "当前下标已经超过可达范围，说明这格根本走不到，直接失败；写 >= 会把刚好走到的那格也判失败"
+    },
+    {
+     "l": 6,
+     "text": "far = max(far, i + nums[i])",
+     "opts": [
+      "far += nums[i]",
+      "far = i + nums[i]",
+      "far = max(far, i)",
+      "far = max(far, i + nums[i])"
+     ],
+     "why": "能到的位置 = 当前下标 + 这一格能跳的步数，取历史最大；直接赋值会丢掉之前更远的点"
+    },
+    {
+     "l": 7,
+     "text": "if far >= len(nums) - 1:",
+     "opts": [
+      "if i == len(nums) - 1:",
+      "if far >= len(nums):",
+      "if far > 0:",
+      "if far >= len(nums) - 1:"
+     ],
+     "why": "已经够到最后一格就可以提前返回；用 >= len(nums) 会永远不成立"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 45,
+     "name": "跳跃游戏 II",
+     "diff": "Medium",
+     "why": "只问最少几步就要分层：当前层能到的范围走完了才 +1 步，同时更新下一层的最远",
+     "hint": "为什么在 i == cur_end 时才加步数"
+    },
+    {
+     "lc": 763,
+     "name": "划分字母区间",
+     "diff": "Medium",
+     "why": "划分字母区间也是「维护一个不断扩大的右边界」，扩不动了就切一刀",
+     "hint": "为什么切点必须是某个字符的最后出现位置"
+    }
+   ]
+  },
+  {
+   "id": "h100-greedy-level",
+   "cat": "13 贪心",
+   "title": "分层贪心 · 按步数扩圈",
+   "problems": [
+    {
+     "lc": 45,
+     "name": "跳跃游戏 II",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "当前这一跳能覆盖的整段走完，才允许步数 +1，同时刷新下一跳的最远边界",
+   "brief": "求最少步数就必须分层：一次跳跃覆盖的是一整段区间，不是一个点",
+   "stmt": [
+    "输入：每格能跳的最大步数（保证可达）",
+    "输出：最少跳跃次数",
+    "例：[2,3,1,1,4] → 2",
+    "要求：O(n)"
+   ],
+   "generic": "跳跃游戏 II、视频拼接、最少区间覆盖",
+   "code": [
+    "class Solution:",
+    "    def jump(self, nums: List[int]) -> int:",
+    "        steps = 0",
+    "        cur_end = 0",
+    "        far = 0",
+    "        for i in range(len(nums) - 1):",
+    "            far = max(far, i + nums[i])",
+    "            if i == cur_end:",
+    "                steps += 1",
+    "                cur_end = far",
+    "        return steps"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 5,
+     "text": "for i in range(len(nums) - 1):",
+     "opts": [
+      "for i in range(len(nums) - 2):",
+      "for i in range(len(nums)):",
+      "for i in range(len(nums) - 1):",
+      "for i in range(1, len(nums)):"
+     ],
+     "why": "最后一个位置不用再起跳，所以只看前 n−1 个；走到最后一个会多算一步"
+    },
+    {
+     "l": 7,
+     "text": "if i == cur_end:",
+     "opts": [
+      "if i == far:",
+      "if i > cur_end:",
+      "if i == cur_end:",
+      "if i >= far:"
+     ],
+     "why": "这一跳能覆盖的范围走完了，才必须再跳一次；用 far 判会把下一次的范围也算进来"
+    },
+    {
+     "l": 8,
+     "text": "steps += 1",
+     "opts": [
+      "steps = 1",
+      "cur_end += 1",
+      "steps += 1",
+      "steps += nums[i]"
+     ],
+     "why": "走完一整层才加一步；放在循环外或写成赋值都会让计数错乱"
+    },
+    {
+     "l": 9,
+     "text": "cur_end = far",
+     "opts": [
+      "cur_end = far",
+      "cur_end = i + nums[i]",
+      "far = cur_end",
+      "cur_end = i"
+     ],
+     "why": "新一层的边界是这层里能跳到的最远处；写成 i 会让每格都算新层"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 55,
+     "name": "跳跃游戏",
+     "diff": "Medium",
+     "why": "只问能不能到就不用分层，维护最远可达即可；分层是为「最少步数」服务的",
+     "hint": "能不能到 vs 最少几步差在哪"
+    }
+   ]
+  },
+  {
+   "id": "h100-greedy-interval-right",
+   "cat": "13 贪心",
+   "title": "区间右边界贪心 · 扩不动就切",
+   "problems": [
+    {
+     "lc": 763,
+     "name": "划分字母区间",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "边走边把右边界扩到「这段里所有字符的最后出现位置」，扩不动了就切一段",
+   "brief": "区间类贪心几乎都是「先排序或先预处理右边界，再一路扩」",
+   "stmt": [
+    "输入：字符串",
+    "输出：每段的长度",
+    "例：ababcbacadefegdehijhklij → [9,7,8]",
+    "要求：O(n)"
+   ],
+   "generic": "划分字母区间、合并区间、无重叠区间、用最少箭引爆气球",
+   "code": [
+    "class Solution:",
+    "    def partitionLabels(self, s: str) -> List[int]:",
+    "        last = {c: i for i, c in enumerate(s)}",
+    "        res = []",
+    "        start = end = 0",
+    "        for i, c in enumerate(s):",
+    "            end = max(end, last[c])",
+    "            if i == end:",
+    "                res.append(end - start + 1)",
+    "                start = i + 1",
+    "        return res"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "last = {c: i for i, c in enumerate(s)}",
+     "opts": [
+      "last = {c: i for i, c in enumerate(s)}",
+      "last = set(s)",
+      "last = {i: c for i, c in enumerate(s)}",
+      "last = sorted(s)"
+     ],
+     "why": "要查「这个字符最后出现在哪」，键是字符、值是下标；反过来就查不到了"
+    },
+    {
+     "l": 6,
+     "text": "end = max(end, last[c])",
+     "opts": [
+      "end += last[c]",
+      "end = max(end, last[c])",
+      "end = max(end, i)",
+      "end = last[c]"
+     ],
+     "why": "右边界只能往外扩，取当前已知的最远；直接赋值会缩回去，导致切早了"
+    },
+    {
+     "l": 7,
+     "text": "if i == end:",
+     "opts": [
+      "if i > start:",
+      "if i >= end:",
+      "if i == end:",
+      "if i == len(s) - 1:"
+     ],
+     "why": "走到当前段的右边界才说明段内所有字符都不会再出现，可以切"
+    },
+    {
+     "l": 9,
+     "text": "start = i + 1",
+     "opts": [
+      "start = i + 1",
+      "start += 1",
+      "start = i",
+      "start = end"
+     ],
+     "why": "下一段从 i+1 开始；写成 i 会让下一段把刚切掉的字符再算一次"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 56,
+     "name": "合并区间",
+     "diff": "Medium",
+     "why": "合并区间：按左端点排序后一路扩右端，和这里的「扩到不能再扩就切」是同一个动作",
+     "hint": "为什么区间合并要按左端点排序"
+    }
+   ]
+  },
+  {
+   "id": "h100-dp-linear",
+   "cat": "14 动态规划",
+   "title": "线性 DP · 只留前一两项",
+   "problems": [
+    {
+     "lc": 70,
+     "name": "爬楼梯",
+     "diff": "Easy"
+    },
+    {
+     "lc": 198,
+     "name": "打家劫舍",
+     "diff": "Medium"
+    },
+    {
+     "lc": 118,
+     "name": "杨辉三角",
+     "diff": "Easy"
+    }
+   ],
+   "essence": "dp[i] 只依赖前面固定的几项，于是三个变量就能滚动推完",
+   "brief": "先写清楚「状态是什么、从哪来」，再考虑能不能把数组压成变量",
+   "stmt": [
+    "输入：台阶数 n",
+    "输出：走法数",
+    "例：n=3 → 3",
+    "要求：O(n) 时间、O(1) 空间"
+   ],
+   "generic": "爬楼梯、打家劫舍、杨辉三角、最长递增子序列、单词拆分",
+   "code": [
+    "class Solution:",
+    "    def climbStairs(self, n: int) -> int:",
+    "        a, b = 1, 1",
+    "        for _ in range(2, n + 1):",
+    "            a, b = b, a + b",
+    "        return b"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "a, b = 1, 1",
+     "opts": [
+      "a, b = 1, 2",
+      "a, b = 0, 0",
+      "a, b = 0, 1",
+      "a, b = 1, 1"
+     ],
+     "why": "dp[0] = 1（不动）、dp[1] = 1（一步），两项都从 1 开始；写 0 会让 n=1 返回 0"
+    },
+    {
+     "l": 3,
+     "text": "for _ in range(2, n + 1):",
+     "opts": [
+      "for _ in range(n):",
+      "for _ in range(2, n):",
+      "for _ in range(2, n + 1):",
+      "for _ in range(1, n):"
+     ],
+     "why": "从第 2 级推到第 n 级，右端必须取到 n；少一层会少算一级"
+    },
+    {
+     "l": 4,
+     "text": "a, b = b, a + b",
+     "opts": [
+      "a, b = a + b, b",
+      "a, b = b, a",
+      "a = b; b = a + b",
+      "a, b = b, a + b"
+     ],
+     "why": "Python 的元组赋值同时生效；拆成两行（第三项）会用到已经改过的 a，结果全错"
+    },
+    {
+     "l": 5,
+     "text": "return b",
+     "opts": [
+      "return b",
+      "return n",
+      "return a + b",
+      "return a"
+     ],
+     "why": "循环结束时 b 才是 dp[n]，a 是 dp[n−1]"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 300,
+     "name": "最长递增子序列",
+     "diff": "Medium",
+     "why": "LIS 的 dp[i] 是「以 i 结尾的最长长度」，所以内层还要扫一遍前面的所有位置",
+     "hint": "为什么 dp[i] 不能表示「前 i 个的答案」"
+    }
+   ]
+  },
+  {
+   "id": "h100-dp-kadane",
+   "cat": "14 动态规划",
+   "title": "Kadane · 以 i 结尾的最大和",
+   "problems": [
+    {
+     "lc": 53,
+     "name": "最大子数组和",
+     "diff": "Medium"
+    },
+    {
+     "lc": 152,
+     "name": "乘积最大子数组",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "dp[i] = max(dp[i−1] + x, x)：要么接着上一段，要么从自己重新开始",
+   "brief": "「连续子数组最大和」的原型，一个变量滚完；负数一出现就要想能不能重开",
+   "stmt": [
+    "输入：整数数组",
+    "输出：连续子数组的最大和",
+    "例：[-2,1,-3,4,-1,2,1,-5,4] → 6",
+    "要求：O(n)"
+   ],
+   "generic": "最大子数组和、乘积最大子数组、买卖股票、环形子数组最大和",
+   "code": [
+    "class Solution:",
+    "    def maxSubArray(self, nums: List[int]) -> int:",
+    "        cur = 0",
+    "        best = nums[0]",
+    "        for x in nums:",
+    "            cur = max(cur + x, x)",
+    "            best = max(best, cur)",
+    "        return best"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "cur = 0",
+     "opts": [
+      "cur = 1",
+      "cur = float('-inf')",
+      "cur = nums[0]",
+      "cur = 0"
+     ],
+     "why": "「以当前位置结尾的和」从 0 开始滚，第一项会被 max(cur+x, x) 自然修正"
+    },
+    {
+     "l": 3,
+     "text": "best = nums[0]",
+     "opts": [
+      "best = float('-inf')",
+      "best = 0",
+      "best = nums[0]",
+      "best = nums[-1]"
+     ],
+     "why": "全局最优必须用数组里的真实值初始化；用 0 在全是负数时会返回 0"
+    },
+    {
+     "l": 5,
+     "text": "cur = max(cur + x, x)",
+     "opts": [
+      "cur = max(cur, x)",
+      "cur = max(cur + x, 0)",
+      "cur = cur + x",
+      "cur = max(cur + x, x)"
+     ],
+     "why": "要么接着上一段、要么从自己重开；少了 max 就无法舍弃前面的负收益"
+    },
+    {
+     "l": 6,
+     "text": "best = max(best, cur)",
+     "opts": [
+      "best += cur",
+      "best = max(best, cur)",
+      "best = cur",
+      "best = max(best, cur + x)"
+     ],
+     "why": "每一步都要和历史上的最优比一次，否则只留下最后一段的结果"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 121,
+     "name": "买卖股票的最佳时机",
+     "diff": "Easy",
+     "why": "买卖股票也能套 Kadane：今天的收益 = 昨天卖 vs 今天卖，减去最低买价",
+     "hint": "为什么这题不需要真的建 dp 数组"
+    }
+   ]
+  },
+  {
+   "id": "h100-dp-knapsack",
+   "cat": "14 动态规划",
+   "title": "0-1 背包 · 一维滚动数组",
+   "problems": [
+    {
+     "lc": 416,
+     "name": "分割等和子集",
+     "diff": "Medium"
+    },
+    {
+     "lc": 322,
+     "name": "零钱兑换",
+     "diff": "Medium"
+    },
+    {
+     "lc": 279,
+     "name": "完全平方数",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "外层物品、内层容量倒序：倒序保证每件物品只用一次",
+   "brief": "「能不能凑出某个和」全是背包；一维写法最大的坑是内层方向",
+   "stmt": [
+    "输入：正整数数组",
+    "输出：能否分成两个等和子集",
+    "例：[1,5,11,5] → true",
+    "要求：O(n·target)"
+   ],
+   "generic": "分割等和子集、零钱兑换、完全平方数、目标和、单词拆分",
+   "code": [
+    "class Solution:",
+    "    def canPartition(self, nums: List[int]) -> bool:",
+    "        total = sum(nums)",
+    "        if total % 2:",
+    "            return False",
+    "        target = total // 2",
+    "        dp = [True] + [False] * target",
+    "        for x in nums:",
+    "            for j in range(target, x - 1, -1):",
+    "                dp[j] = dp[j] or dp[j - x]",
+    "            if dp[target]:",
+    "                return True",
+    "        return dp[target]"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 3,
+     "text": "if total % 2:",
+     "opts": [
+      "if total < 2:",
+      "if total / 2:",
+      "if total % 2 == 0:",
+      "if total % 2:"
+     ],
+     "why": "总和是奇数就不可能对半分，提前返回；条件写反等于把所有奇数当成可行"
+    },
+    {
+     "l": 6,
+     "text": "dp = [True] + [False] * target",
+     "opts": [
+      "dp = [True] + [False] * target",
+      "dp = [False] * (target + 1)",
+      "dp = [0] * target",
+      "dp = [True] * (target + 1)"
+     ],
+     "why": "dp[0] = True（凑 0 一个都不选），其余 False；全 True 就等于所有和都凑得出"
+    },
+    {
+     "l": 8,
+     "text": "for j in range(target, x - 1, -1):",
+     "opts": [
+      "for j in range(x, target + 1):",
+      "for j in range(target, x - 1, -1):",
+      "for j in range(target, 0, -1):",
+      "for j in range(target + 1):"
+     ],
+     "why": "0-1 背包容量必须倒序，否则同一件物品会被重复使用；下界取到 x 才有意义"
+    },
+    {
+     "l": 9,
+     "text": "dp[j] = dp[j] or dp[j - x]",
+     "opts": [
+      "dp[j] += dp[j - x]",
+      "dp[j] = dp[j] and dp[j - x]",
+      "dp[j] = dp[j - x]",
+      "dp[j] = dp[j] or dp[j - x]"
+     ],
+     "why": "「不选 x」和「选了 x」任一成立即可；用 and 会把本来凑得出的方案判掉"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 139,
+     "name": "单词拆分",
+     "diff": "Medium",
+     "why": "单词拆分看成完全背包：物品是单词、容量是前缀长度，内层正序允许重复取",
+     "hint": "为什么完全背包要正序"
+    }
+   ]
+  },
+  {
+   "id": "h100-dp-grid",
+   "cat": "15 多维动态规划",
+   "title": "网格 DP · 从左上往右下填表",
+   "problems": [
+    {
+     "lc": 62,
+     "name": "不同路径",
+     "diff": "Medium"
+    },
+    {
+     "lc": 64,
+     "name": "最小路径和",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "每格只问一句「我从上边来还是左边来」，按行按列顺序填即可",
+   "brief": "网格题先画表、再定初始化、再定转移方向——顺序错了表就填不出来",
+   "stmt": [
+    "输入：m×n 网格",
+    "输出：从左上到右下的路径数",
+    "例：3×7 → 28",
+    "要求：O(mn)"
+   ],
+   "generic": "不同路径、最小路径和、不同路径 II（有障碍）、礼物的最大价值",
+   "code": [
+    "class Solution:",
+    "    def uniquePaths(self, m: int, n: int) -> int:",
+    "        dp = [[1] * n for _ in range(m)]",
+    "        for i in range(1, m):",
+    "            for j in range(1, n):",
+    "                dp[i][j] = dp[i - 1][j] + dp[i][j - 1]",
+    "        return dp[m - 1][n - 1]"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "dp = [[1] * n for _ in range(m)]",
+     "opts": [
+      "dp = [[0] * n for _ in range(m)]",
+      "dp = [[1] * n for _ in range(m)]",
+      "dp = [[1] * n] * m",
+      "dp = [[1] * m for _ in range(n)]"
+     ],
+     "why": "第一行第一列都只有一条路，所以初始化成 1；[[ ]] * m 会让所有行共用同一个列表"
+    },
+    {
+     "l": 3,
+     "text": "for i in range(1, m):",
+     "opts": [
+      "for i in range(1, m):",
+      "for i in range(1, n):",
+      "for i in range(m):",
+      "for i in range(m - 1):"
+     ],
+     "why": "第 0 行第 0 列已经是初始值，从 1 开始填；写成 range(m) 会覆盖初始化"
+    },
+    {
+     "l": 5,
+     "text": "dp[i][j] = dp[i - 1][j] + dp[i][j - 1]",
+     "opts": [
+      "dp[i][j] = dp[i - 1][j] + dp[i][j - 1]",
+      "dp[i][j] = dp[i - 1][j] + dp[i - 1][j - 1]",
+      "dp[i][j] = dp[i + 1][j] + dp[i][j + 1]",
+      "dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])"
+     ],
+     "why": "只能从上面或左边过来，所以是两路相加；取 max 是「最小路径和」才用（那里的含义是代价）"
+    },
+    {
+     "l": 6,
+     "text": "return dp[m - 1][n - 1]",
+     "opts": [
+      "return dp[0][0]",
+      "return dp[m][n]",
+      "return dp[m - 1][n]",
+      "return dp[m - 1][n - 1]"
+     ],
+     "why": "答案是右下角；dp 开的是 m×n，下标最大是 m−1、n−1"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 5,
+     "name": "最长回文子串",
+     "diff": "Medium",
+     "why": "回文子串用区间 DP：dp[i][j] 依赖更内层的 dp[i+1][j−1]，所以 i 要从大到小、j 从小到大",
+     "hint": "为什么 i 要倒序"
+    }
+   ]
+  },
+  {
+   "id": "h100-dp-two-seq",
+   "cat": "15 多维动态规划",
+   "title": "两序列 DP · 队尾对齐",
+   "problems": [
+    {
+     "lc": 1143,
+     "name": "最长公共子序列",
+     "diff": "Medium"
+    },
+    {
+     "lc": 72,
+     "name": "编辑距离",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "i、j 分别指两个串的前缀长度，末尾相同就各退一步 +1，不同就取两个方向的最大",
+   "brief": "编辑距离、最长公共子序列、正则匹配都是这张表，只是「不同时怎么办」不一样",
+   "stmt": [
+    "输入：两个字符串",
+    "输出：最长公共子序列长度",
+    "例：abcde, ace → 3",
+    "要求：O(mn)"
+   ],
+   "generic": "最长公共子序列、编辑距离、最长重复子数组、正则表达式匹配",
+   "code": [
+    "class Solution:",
+    "    def longestCommonSubsequence(self, text1: str, text2: str) -> int:",
+    "        m, n = len(text1), len(text2)",
+    "        dp = [[0] * (n + 1) for _ in range(m + 1)]",
+    "        for i in range(1, m + 1):",
+    "            for j in range(1, n + 1):",
+    "                if text1[i - 1] == text2[j - 1]:",
+    "                    dp[i][j] = dp[i - 1][j - 1] + 1",
+    "                else:",
+    "                    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])",
+    "        return dp[m][n]"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 3,
+     "text": "dp = [[0] * (n + 1) for _ in range(m + 1)]",
+     "opts": [
+      "dp = [[0] * (n + 1) for _ in range(m + 1)]",
+      "dp = [[0] * (n + 1)] * (m + 1)",
+      "dp = [[0] * n for _ in range(m)]",
+      "dp = [[1] * (n + 1) for _ in range(m + 1)]"
+     ],
+     "why": "多开一行一列当哨兵（空串），所以是 (m+1)×(n+1)；用 * 会让所有行共用同一个列表"
+    },
+    {
+     "l": 6,
+     "text": "if text1[i - 1] == text2[j - 1]:",
+     "opts": [
+      "if text1[i - 1] != text2[j - 1]:",
+      "if text1[i] == text2[j]:",
+      "if text1[i] == text2[j - 1]:",
+      "if text1[i - 1] == text2[j - 1]:"
+     ],
+     "why": "dp 的下标是「前 i 个字符」，末尾字符是 i−1；直接用 i 会越界"
+    },
+    {
+     "l": 7,
+     "text": "dp[i][j] = dp[i - 1][j - 1] + 1",
+     "opts": [
+      "dp[i][j] = dp[i - 1][j - 1] + 1",
+      "dp[i][j] = dp[i - 1][j] + 1",
+      "dp[i][j] = dp[i - 1][j - 1]",
+      "dp[i][j] = dp[i][j - 1] + 1"
+     ],
+     "why": "末尾相同，两边各退一步再 +1（这一对字符算进答案）"
+    },
+    {
+     "l": 9,
+     "text": "dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])",
+     "opts": [
+      "dp[i][j] = dp[i - 1][j - 1]",
+      "dp[i][j] = 0",
+      "dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])",
+      "dp[i][j] = min(dp[i - 1][j], dp[i][j - 1])"
+     ],
+     "why": "末尾不同，就只能丢掉一边；取 max 是 LCS，编辑距离在这里是 min 再 +1"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 5,
+     "name": "最长回文子串",
+     "diff": "Medium",
+     "why": "回文串也能看成「原串 vs 逆序串」的最长公共子序列，但要求位置对应，所以还是区间 DP 更稳",
+     "hint": "为什么不能直接用 LCS 求最长回文"
+    }
+   ]
+  },
+  {
+   "id": "h100-dp-interval",
+   "cat": "15 多维动态规划",
+   "title": "区间 DP · 中心扩展看回文",
+   "problems": [
+    {
+     "lc": 5,
+     "name": "最长回文子串",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "从中心往两边扩，扩到不相等就停，记录最长的区间",
+   "brief": "回文类题的两种写法：中心扩展 O(n²) 好写，区间 DP 好讲；本质都是「短区间推长区间」",
+   "stmt": [
+    "输入：字符串",
+    "输出：最长回文子串",
+    "例：babad → bab（或 aba）",
+    "要求：O(n²)"
+   ],
+   "generic": "最长回文子串、回文子串计数、最长回文子序列",
+   "code": [
+    "class Solution:",
+    "    def longestPalindrome(self, s: str) -> str:",
+    "        def expand(l: int, r: int) -> tuple:",
+    "            while l >= 0 and r < len(s) and s[l] == s[r]:",
+    "                l -= 1",
+    "                r += 1",
+    "            return l + 1, r - 1",
+    "        start, end = 0, 0",
+    "        for i in range(len(s)):",
+    "            l1, r1 = expand(i, i)",
+    "            l2, r2 = expand(i, i + 1)",
+    "            if r1 - l1 > end - start:",
+    "                start, end = l1, r1",
+    "            if r2 - l2 > end - start:",
+    "                start, end = l2, r2",
+    "        return s[start:end + 1]"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 3,
+     "text": "while l >= 0 and r < len(s) and s[l] == s[r]:",
+     "opts": [
+      "while l >= 0 and r < len(s):",
+      "while l >= 0 and r < len(s) and s[l] == s[r]:",
+      "while l > 0 and r < len(s) and s[l] == s[r]:",
+      "while s[l] == s[r]:"
+     ],
+     "why": "三个条件缺一不可：不越左界、不越右界、两边字符相等"
+    },
+    {
+     "l": 4,
+     "text": "l -= 1",
+     "opts": [
+      "l += 1",
+      "l -= 1",
+      "r += 1",
+      "r -= 1"
+     ],
+     "why": "中心扩展是「左边往左、右边往右」，写反了就变成往中间收"
+    },
+    {
+     "l": 10,
+     "text": "l2, r2 = expand(i, i + 1)",
+     "opts": [
+      "l2, r2 = expand(i, i)",
+      "l2, r2 = expand(i, i + 1)",
+      "l2, r2 = expand(i + 1, i)",
+      "l2, r2 = expand(i - 1, i + 1)"
+     ],
+     "why": "偶数长度的回文中心是两个字符之间，所以要从 (i, i+1) 起扩"
+    },
+    {
+     "l": 15,
+     "text": "return s[start:end + 1]",
+     "opts": [
+      "return s[:end]",
+      "return s[start:]",
+      "return s[start:end]",
+      "return s[start:end + 1]"
+     ],
+     "why": "end 是闭区间下标，切片要 +1；少一位会截掉最后一个字符"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 1143,
+     "name": "最长公共子序列",
+     "diff": "Medium",
+     "why": "回文子序列也能用两序列的表格想，但回文要求「对称」，所以区间 DP 的 i/j 是从两端往中间夹",
+     "hint": "区间 DP 和两序列 DP 的下标含义差在哪"
+    }
+   ]
+  },
+  {
+   "id": "h100-bit-xor",
+   "cat": "16 技巧",
+   "title": "异或消对",
+   "problems": [
+    {
+     "lc": 136,
+     "name": "只出现一次的数字",
+     "diff": "Easy"
+    }
+   ],
+   "essence": "a ^ a = 0、a ^ 0 = a，所有数异或一遍，成对的自己消掉，剩下的就是落单的",
+   "brief": "看到「其他元素都出现两次，只有一个出现一次」，就是异或，不用哈希表",
+   "stmt": [
+    "输入：只有一个数出现一次、其余两次的数组",
+    "输出：那个数",
+    "例：[4,1,2,1,2] → 4",
+    "要求：O(n) 时间、O(1) 空间"
+   ],
+   "generic": "只出现一次的数字、只出现一次的数字 III（两个落单）、缺失数字、找出不同",
+   "code": [
+    "class Solution:",
+    "    def singleNumber(self, nums: List[int]) -> int:",
+    "        ans = 0",
+    "        for x in nums:",
+    "            ans ^= x",
+    "        return ans"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "ans = 0",
+     "opts": [
+      "ans = 1",
+      "ans = nums[0]",
+      "ans = 0",
+      "ans = -1"
+     ],
+     "why": "0 是异或的单位元，任何数异或 0 还是自己；用 nums[0] 会把它多算一次"
+    },
+    {
+     "l": 3,
+     "text": "for x in nums:",
+     "opts": [
+      "for x in nums:",
+      "for x in set(nums):",
+      "for x in range(len(nums)):",
+      "for x in nums[1]:"
+     ],
+     "why": "每个元素都要参与异或；用 set 会把成对的数先去重，直接破坏前提"
+    },
+    {
+     "l": 4,
+     "text": "ans ^= x",
+     "opts": [
+      "ans &= x",
+      "ans += x",
+      "ans ^= x",
+      "ans |= x"
+     ],
+     "why": "异或才能让成对的数抵消；用 += 或 |= 得到的是和/或，不是落单的数"
+    },
+    {
+     "l": 5,
+     "text": "return ans",
+     "opts": [
+      "return ans",
+      "return 0",
+      "return ans ^ 1",
+      "return nums[0]"
+     ],
+     "why": "异或完的结果就是答案；返回 0 等于白算"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 169,
+     "name": "多数元素",
+     "diff": "Easy",
+     "why": "摩尔投票也是「用一个变量攒结论」：异或是抵消，投票是两两抵消，都是 O(1) 空间的多数派技巧",
+     "hint": "为什么这两种抵消都能保证剩下的就是答案"
+    }
+   ]
+  },
+  {
+   "id": "h100-boyer-moore",
+   "cat": "16 技巧",
+   "title": "摩尔投票 · 两两抵消",
+   "problems": [
+    {
+     "lc": 169,
+     "name": "多数元素",
+     "diff": "Easy"
+    }
+   ],
+   "essence": "候选人相同就 +1、不同就 −1，计数归零就换人，最后剩下的就是多数",
+   "brief": "「出现次数超过一半」才有这个性质；没有多数元素时结果无意义",
+   "stmt": [
+    "输入：数组（保证有多数元素）",
+    "输出：多数元素",
+    "例：[2,2,1,1,1,2,2] → 2",
+    "要求：O(n)、O(1)"
+   ],
+   "generic": "多数元素、求众数、出现次数超过 n/3 的元素（扩展成两个候选人）",
+   "code": [
+    "class Solution:",
+    "    def majorityElement(self, nums: List[int]) -> int:",
+    "        candidate, count = None, 0",
+    "        for x in nums:",
+    "            if count == 0:",
+    "                candidate = x",
+    "            count += 1 if x == candidate else -1",
+    "        return candidate"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "candidate, count = None, 0",
+     "opts": [
+      "candidate, count = 0, 0",
+      "candidate, count = None, 1",
+      "candidate, count = nums[0], 1",
+      "candidate, count = None, 0"
+     ],
+     "why": "一开始没有候选人、票数为 0；直接指定候选人会让第一票凭空多出来"
+    },
+    {
+     "l": 4,
+     "text": "if count == 0:",
+     "opts": [
+      "if count == 1:",
+      "if candidate is None:",
+      "if count == 0:",
+      "if count < 0:"
+     ],
+     "why": "票数归零说明前面的人互相抵消完了，换当前元素当候选人"
+    },
+    {
+     "l": 5,
+     "text": "candidate = x",
+     "opts": [
+      "count = x",
+      "candidate += x",
+      "candidate = nums[0]",
+      "candidate = x"
+     ],
+     "why": "换人只换候选人，票数由下一行统一加；这里顺手把 count 也改就乱了"
+    },
+    {
+     "l": 6,
+     "text": "count += 1 if x == candidate else -1",
+     "opts": [
+      "count -= 1",
+      "count = 1 if x == candidate else 0",
+      "count += 1 if x == candidate else -1",
+      "count += 1 if x != candidate else -1"
+     ],
+     "why": "同票 +1、异票 −1；写反等于把多数元素投成了反对票"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 287,
+     "name": "寻找重复数",
+     "diff": "Medium",
+     "why": "找重复数把数组当下标映射成链表，用快慢指针找环入口，同样是「不带额外空间的抵消/追逐」",
+     "hint": "为什么重复的值一定是环的入口"
+    }
+   ]
+  },
+  {
+   "id": "h100-cycle-array",
+   "cat": "16 技巧",
+   "title": "数组当链表 · 快慢指针找环",
+   "problems": [
+    {
+     "lc": 287,
+     "name": "寻找重复数",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "i → nums[i] 就是一条「指针」，重复的数字就是环的入口",
+   "brief": "要求不能改数组、不能用额外空间时，把下标映射当成链表是唯一出路",
+   "stmt": [
+    "输入：n+1 个数，取值 1..n",
+    "输出：重复的那个数",
+    "例：[1,3,4,2,2] → 2",
+    "要求：O(1) 空间"
+   ],
+   "generic": "寻找重复数、环形链表 II、数组中的重复数字",
+   "code": [
+    "class Solution:",
+    "    def findDuplicate(self, nums: List[int]) -> int:",
+    "        slow = fast = 0",
+    "        while True:",
+    "            slow = nums[slow]",
+    "            fast = nums[nums[fast]]",
+    "            if slow == fast:",
+    "                break",
+    "        slow = 0",
+    "        while slow != fast:",
+    "            slow = nums[slow]",
+    "            fast = nums[fast]",
+    "        return slow"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 2,
+     "text": "slow = fast = 0",
+     "opts": [
+      "slow, fast = 0, 1",
+      "slow = 0, fast = 1",
+      "slow = fast = 0",
+      "slow = fast = nums[0]"
+     ],
+     "why": "从下标 0 出发（不是从 nums[0]），两个指针起点相同才能用「相遇后归零」的套路"
+    },
+    {
+     "l": 5,
+     "text": "fast = nums[nums[fast]]",
+     "opts": [
+      "fast = nums[fast] + 1",
+      "fast = nums[nums[fast]]",
+      "fast = nums[fast]",
+      "fast = fast + 2"
+     ],
+     "why": "快指针走两步 = 连续取两次映射；写成一步就追不上慢指针"
+    },
+    {
+     "l": 8,
+     "text": "slow = 0",
+     "opts": [
+      "slow = 0",
+      "slow -= 1",
+      "slow = nums[0]",
+      "slow = fast"
+     ],
+     "why": "相遇后把一个指针放回起点，两人同速再走，第二次相遇处就是环入口"
+    },
+    {
+     "l": 9,
+     "text": "while slow != fast:",
+     "opts": [
+      "while slow != fast:",
+      "while slow != 0:",
+      "while fast:",
+      "while slow < fast:"
+     ],
+     "why": "两个指针同速前进，相遇在环入口就停；用不等号方向写错会立刻退出"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 141,
+     "name": "环形链表",
+     "diff": "Easy",
+     "why": "链表判环的数组版：下标是节点编号、值是 next，相遇后再从头走一遍就找到入口",
+     "hint": "为什么第二次相遇点就是入口"
+    }
+   ]
+  },
+  {
+   "id": "h100-next-permutation",
+   "cat": "16 技巧",
+   "title": "下一个排列",
+   "problems": [
+    {
+     "lc": 31,
+     "name": "下一个排列",
+     "diff": "Medium"
+    }
+   ],
+   "essence": "从右往左找第一个下降点，再从右边找第一个比它大的数交换，最后把后缀反转成升序",
+   "brief": "「下一个更大的排列」= 尽量靠右地变大，所以先找最靠右的上升机会",
+   "stmt": [
+    "输入：数组（原地改）",
+    "输出：下一个字典序更大的排列",
+    "例：[1,2,3] → [1,3,2]",
+    "要求：O(1) 额外空间"
+   ],
+   "generic": "下一个排列、上一个排列、字典序第 k 个排列、全排列枚举",
+   "code": [
+    "class Solution:",
+    "    def nextPermutation(self, nums: List[int]) -> None:",
+    "        \"\"\"原地修改 nums，不返回。\"\"\"",
+    "        n = len(nums)",
+    "        i = n - 2",
+    "        while i >= 0 and nums[i] >= nums[i + 1]:",
+    "            i -= 1",
+    "        if i >= 0:",
+    "            j = n - 1",
+    "            while nums[j] <= nums[i]:",
+    "                j -= 1",
+    "            nums[i], nums[j] = nums[j], nums[i]",
+    "        left, right = i + 1, n - 1",
+    "        while left < right:",
+    "            nums[left], nums[right] = nums[right], nums[left]",
+    "            left += 1",
+    "            right -= 1"
+   ],
+   "notes": {},
+   "blanks": [
+    {
+     "l": 4,
+     "text": "i = n - 2",
+     "opts": [
+      "i = n - 2",
+      "i = 0",
+      "i = n",
+      "i = n - 1"
+     ],
+     "why": "从倒数第二个位置开始往前找下降点；从 n−1 开始会越界访问 i+1"
+    },
+    {
+     "l": 5,
+     "text": "while i >= 0 and nums[i] >= nums[i + 1]:",
+     "opts": [
+      "while nums[i] >= nums[i + 1]:",
+      "while i >= 0 and nums[i] >= nums[i + 1]:",
+      "while i >= 0 and nums[i] <= nums[i + 1]:",
+      "while i > 0 and nums[i] >= nums[i + 1]:"
+     ],
+     "why": "找的是「左边比右边小」的位置；用 <= 会一路走到最左，等于没找"
+    },
+    {
+     "l": 11,
+     "text": "nums[i], nums[j] = nums[j], nums[i]",
+     "opts": [
+      "nums[i], nums[j] = nums[j], nums[i]",
+      "nums[j] = nums[i]",
+      "nums[i], nums[i + 1] = nums[i + 1], nums[i]",
+      "nums[i] = nums[j]"
+     ],
+     "why": "把「刚好比它大的那个」换上来，这是最小幅度的变大"
+    },
+    {
+     "l": 12,
+     "text": "left, right = i + 1, n - 1",
+     "opts": [
+      "left, right = i, n - 1",
+      "left, right = 0, n - 1",
+      "left, right = i + 1, n",
+      "left, right = i + 1, n - 1"
+     ],
+     "why": "下降点右边一定是降序的，反转成升序才是「下一个」；从 i 开始会把刚换好的数又换走"
+    }
+   ],
+   "apply": [
+    {
+     "lc": 46,
+     "name": "全排列",
+     "diff": "Medium",
+     "why": "全排列枚举和下一排列是一对：next_permutation 就是「枚举字典序」的迭代写法",
+     "hint": "为什么从右往左找第一个下降点"
+    }
+   ]
+  }
+ ]
+}

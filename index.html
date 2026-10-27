@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261027-1132">
+<meta name="build" content="20261027-1146">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -1700,7 +1700,7 @@ function refreshList(){
   if(!TPL.length){
     h='<div class="card" style="padding:6px"><div class="wr-empty">'
       +'<div class="wr-emoji">🗂️</div><h3>还没有模板题库</h3>'
-      +'<p>内置模板已移除。导入一份 JSON 题库即可开始刷——<br>仓库里带着哈希题库 <span class="kbd">algo-templates-hash.json</span></p>'
+      +'<p>内置模板已移除。导入一份 JSON 题库即可开始刷——<br>仓库里带着模板库 <span class="kbd">algo-templates-hot100-38.json</span>（Hot100 · 38 个骨架）</p>'
       +'<button onclick="document.getElementById(\'w-tplimp\').click()">导入模板题库 JSON</button>'
       +'</div></div>';
   }
@@ -1723,7 +1723,8 @@ function tplCard(t){
     if(isDue(p)){ badge='待复习'; cls='warn'; }
     else { badge=(left>0?left+' 天后':'已掌握'); cls='ok'; }
   }else{ badge=done+'/3'; cls=''; }
-  var meta=(pr?'<span class="wr-lc">LC'+pr.lc+'</span>'
+  var np=(t.problems||[]).length;
+  var meta=(pr?'<span class="wr-lc">LC'+pr.lc+(np>1?' 等 '+np+' 道':'')+'</span>'
       +(pr.diff?'<span class="wr-diff '+String(pr.diff).toLowerCase()+'">'+esc(pr.diff)+'</span>':'')
       :'<span class="wr-lc">'+esc(t.cat)+'</span>')
     +'<span class="wr-dot">·</span><span>'+t.blanks.length+' 空 · '+keyLines(t).length+' 行</span>';
@@ -2282,8 +2283,11 @@ function paintApply(){
   var body=$('ap-body'); if(!body) return;
   /* 全局清单模式：AP={index:1} */
   if(AP&&AP.index){
-    var withAp=[], all=TPL.length, tot=0, got=0;
-    TPL.forEach(function(x){ var n=apOf(x).length; if(n){ withAp.push(x); tot+=n; got+=apDoneN(x); } });
+    var withAp=[], zero=[], all=TPL.length, tot=0, got=0;
+    TPL.forEach(function(x){
+      var n=apOf(x).length;
+      if(n){ withAp.push(x); tot+=n; got+=apDoneN(x); } else zero.push(x);
+    });
     setTxt('ap-ttl','同类题 · 全部模板');
     setTxt('ap-sub', all?('已配 '+withAp.length+'/'+all+' 个模板 · 已做 '+got+'/'+tot+' 道'):'还没有模板');
     setTxt('ap-cnt', all?(withAp.length+'/'+all):'');
@@ -2303,9 +2307,15 @@ function paintApply(){
           +'</div>';
       });
       hi+='</div>';
-      if(all>withAp.length){
-        hi+='<div class="ap-foot"><button class="wr-seg-b" onclick="WR.apGuide()">剩下 '
-          +(all-withAp.length)+' 个模板怎么配 ›</button></div>';
+      if(zero.length){
+        hi+='<div class="ap-tip" style="margin-top:14px">还有 '+zero.length+' 个模板没配同类题（点进去有写法说明）：</div><div class="ap-list">';
+        zero.forEach(function(x){
+          hi+='<div class="ap-card" style="padding:10px 13px;cursor:pointer" onclick="WR.apply(\''+x.id+'\')">'
+            +'<div class="ap-name"><span>'+esc(x.title)+'</span>'
+            +'<span class="ap-lc" style="margin-left:auto;color:var(--sub)">未配</span></div></div>';
+        });
+        hi+='</div>';
+        hi+='<div class="ap-foot"><button class="wr-seg-b" onclick="WR.apGuide()">同类题怎么配 ›</button></div>';
       }
     }
     body.innerHTML=hi;
