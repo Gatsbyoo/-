@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261027-0925">
+<meta name="build" content="20261027-0940">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -491,7 +491,7 @@ body.dark input.wr-in{background:rgba(124,92,255,.16)}
         <div class="big" id="w-master">0/0</div>
       </div>
     </div>
-    <div class="small" style="opacity:.88;margin-top:8px">待复习 <b id="w-due">0</b> 个 · 连续默写 <b id="w-streak">0</b> 天 · 已解锁 <span id="w-prog">—</span></div>
+    <div class="small" style="opacity:.88;margin-top:8px">待复习 <b id="w-due">0</b> 个 · 连续默写 <b id="w-streak">0</b> 天 · 三轮已过 <span id="w-prog">—</span></div>
   </div>
 
   <div class="card">
@@ -503,7 +503,7 @@ body.dark input.wr-in{background:rgba(124,92,255,.16)}
       <button class="btn ok" onclick="WR.review()">复习到期 <span id="w-due2">0</span></button>
       <button class="btn" onclick="WR.resume()">继续上次</button>
     </div>
-    <div class="small muted" style="margin-top:8px">每轮<b>一次全对</b>才解锁下一轮：第①轮 选择题 → 第②轮 填空 → 第③轮 整行默写关键行。三轮全过才算掌握，之后按 1/2/4/7/15/30 天复习。</div>
+    <div class="small muted" style="margin-top:8px">三轮任选，想练哪轮点哪轮：<b>①选择</b> 认空 → <b>②填空</b> 写空 → <b>③默写</b> 整行默写关键行。每轮<b>一次全对</b>才算这一轮过；三轮都过 = 掌握，之后按 1/2/4/7/15/30 天复习（只考③默写）。</div>
   </div>
 
   <div id="w-cats"></div>
@@ -1824,8 +1824,8 @@ var MAP={}; for(var _i=0;_i<TPL.length;_i++) MAP[TPL[_i].id]=TPL[_i];
 
 var HINT={
   0:'看模板：代码全给，带底色的就是考点空。看懂了点下面「开始」进入第①轮。',
-  1:'第①轮 · 选择题：点代码里的空位切换，底部选一个填进去。全部选完提交，<b>一次全对</b>才解锁第②轮。',
-  2:'第②轮 · 填空题：直接在空里打字（空格、分号不严格）。<b>一次全对</b>才解锁第③轮。',
+  1:'第①轮 · 选择题：点代码里的空位切换，底部选一个填进去。<b>一次全对</b>这一轮才算过（错了也能看正确答案，回去再点①重刷）。',
+  2:'第②轮 · 填空题：直接在空里打字（空格、分号不严格）。<b>一次全对</b>这一轮才算过。',
   3:'第③轮 · 默写关键行：把被清空的整行写出来，缩进和空格不严格。写不出来点 💡 看提示。'
 };
 
@@ -1846,12 +1846,15 @@ function keyOf(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.ge
 function todayKey(){ return keyOf(new Date()); }
 function dayRec(){ var k=todayKey(); if(!ST.day[k]) ST.day[k]={b:0,sec:0}; return ST.day[k]; }
 function P(id){
+  if(!id) return {u:1,pass:{},lvl:0,due:0,last:0};
   var p=ST.tpl[id];
   if(!p){ p={u:1,pass:{},lvl:0,due:0,last:0}; ST.tpl[id]=p; }
   p.pass=p.pass||{}; if(!p.u)p.u=1; p.lvl=p.lvl||0; p.due=p.due||0;
   return p;
 }
-function isMaster(p){ return !!p.pass[3]; }
+function isMaster(p){ return !!(p.pass[1]&&p.pass[2]&&p.pass[3]); }
+var ROM={1:'①选择',2:'②填空',3:'③默写'};
+function firstOpen(t){ if(!t) return 1; var p=P(t.id); for(var n=1;n<=3;n++) if(!p.pass[n]) return n; return 3; }
 function isDue(p){ return isMaster(p)&&p.due&&p.due<=Date.now(); }
 
 /* ---------- 工具 ---------- */
@@ -1916,14 +1919,14 @@ function holesOfLine(t,li){
 function refreshList(){
   if(!$('w-cats')) return;
   var tot=TPL.length, mas=0, due=0, unlocked=0;
-  TPL.forEach(function(t){ var p=P(t.id); if(isMaster(p)){ mas++; if(isDue(p)) due++; } unlocked+=p.u; });
+  TPL.forEach(function(t){ var p=P(t.id); if(isMaster(p)){ mas++; if(isDue(p)) due++; } for(var n=1;n<=3;n++){ if(p.pass[n]) unlocked++; } });
   setTxt('w-today', dayRec().b);
   setTxt('w-master', mas+'/'+tot);
   setTxt('w-due', due); setTxt('w-due2', due);
   var sk=0, d=new Date();
   while(true){ var r=ST.day[keyOf(d)]; if(r&&r.b>0){ sk++; d.setDate(d.getDate()-1); } else break; }
   setTxt('w-streak', sk);
-  setTxt('w-prog', unlocked+'/'+(tot*3)+' 轮');
+  setTxt('w-prog', unlocked+'/'+(tot*3)+' 轮通过');
 
   var cats=[], cmap={};
   TPL.forEach(function(t){ if(!cmap[t.cat]){ cmap[t.cat]=[]; cats.push(t.cat); } cmap[t.cat].push(t); });
@@ -1944,25 +1947,16 @@ function refreshList(){
 function tplCard(t){
   var p=P(t.id);
   var lc=t.problems.map(function(x){ return 'LC'+x.lc+' '+x.name; }).join(' · ');
-  var dots='';
-  for(var n=1;n<=3;n++){
-    var cls=p.pass[n]?'p':(n===p.u?'c':'');
-    dots+='<i class="'+cls+'"></i>';
-  }
-  var right='', btn='';
+  var done=0, dots='';
+  for(var n=1;n<=3;n++){ if(p.pass[n]) done++; dots+='<i class="'+(p.pass[n]?'p':'')+'"></i>'; }
+  var right='', sub='';
   if(isMaster(p)){
     var left=Math.ceil((p.due-Date.now())/DAY);
-    if(isDue(p)){
-      right='<span class="tag y">待复习</span>';
-      btn='<button class="btn sm ok" onclick="WR.start(\''+t.id+'\',1)">复习 · 第③轮</button>';
-    }else{
-      right='<span class="tag g">已掌握</span>';
-      btn='<button class="btn sm ghost" onclick="WR.start(\''+t.id+'\',1)">提前复习</button>';
-    }
-    right+='<div class="small muted" style="margin-top:4px">'+(isDue(p)?'今天到期':(left+' 天后'))+'</div>';
+    right=isDue(p)?'<span class="tag y">待复习</span>':'<span class="tag g">已掌握</span>';
+    sub=isDue(p)?'今天到期':(left>0?left+' 天后复习':'随时可复习');
   }else{
-    right='<span class="tag">第'+p.u+'轮</span>';
-    btn='<button class="btn sm" onclick="WR.start(\''+t.id+'\')">第'+p.u+'轮 · 开始</button>';
+    right='<span class="tag">'+done+'/3 轮</span>';
+    sub='想练哪轮点哪轮';
   }
   return '<div class="wr-tpl">'
     +'<div class="between"><div style="flex:1;min-width:0">'
@@ -1970,17 +1964,25 @@ function tplCard(t){
     +'<div class="small" style="margin-top:4px;line-height:1.5">'+esc(t.brief||t.essence||'')+'</div>'
     +'<div class="small muted" style="margin-top:4px">'+esc(lc)+' · '+t.blanks.length+' 空 / '+keyLines(t).length+' 行</div>'
     +'</div><div style="text-align:right;flex:0 0 auto">'+right
+    +'<div class="small muted" style="margin-top:4px">'+sub+'</div>'
     +'<div class="wr-dots" style="justify-content:flex-end;margin-top:6px">'+dots+'</div></div></div>'
-    +'<div class="wr-btns"><button class="btn sm ghost" onclick="WR.view(\''+t.id+'\')">看模板</button>'+btn+'</div>'
-    +'</div>';
+    +'<div class="wr-btns"><button class="btn sm gray" onclick="WR.view(\''+t.id+'\')">📖 看模板</button></div>'
+    +'<div class="grid3" style="margin-top:8px">'
+    +'<button class="btn sm'+(p.pass[1]?' ok':' ghost')+'" onclick="WR.start(\''+t.id+'\',0,1)">①选择'+(p.pass[1]?' ✓':'')+'</button>'
+    +'<button class="btn sm'+(p.pass[2]?' ok':' ghost')+'" onclick="WR.start(\''+t.id+'\',0,2)">②填空'+(p.pass[2]?' ✓':'')+'</button>'
+    +'<button class="btn sm'+(p.pass[3]?' ok':' ghost')+'" onclick="WR.start(\''+t.id+'\',0,3)">③默写'+(p.pass[3]?' ✓':'')+'</button>'
+    +'</div></div>';
 }
 
 /* ---------- 打开一轮 ---------- */
-function start(id, review){
+function start(id, review, stage){
   var t=MAP[id]; if(!t) return;
   var p=P(id);
-  var stage=review?3:(p.u||1);
+  var st=stage?+stage:(review?3:(p.u||1));
+  if(!(st>=1&&st<=3)) st=1;
+  var stage=st;
   RUN={id:id,stage:stage,review:!!review,t0:Date.now(),done:false,ans:{},res:null,good:0,total:0};
+  ST.last={id:id,stage:stage}; save();
   ACT=stage===3?keyLines(t)[0]:0;
   $('wr-run').classList.add('on');
   paint();
@@ -1999,7 +2001,7 @@ function back(){
   RUN=null; $('wr-run').classList.remove('on'); refreshList();
 }
 function retry(){ if(!RUN) return; var id=RUN.id; RUN=null; start(id,0); }
-function nextStage(){ if(!RUN) return; var id=RUN.id; RUN=null; start(id); }
+function nextStage(){ if(!RUN) return; var id=RUN.id; RUN=null; start(id,0,firstOpen(P(id))); }
 
 /* ---------- 绘制 ---------- */
 function paint(){
@@ -2039,7 +2041,10 @@ function paint(){
   h+='</div>';
   if(st===0){
     h+='<div class="card" style="margin-top:12px"><div class="small muted">这一轮不用动手，看懂骨架和每个空的考点即可。第①轮开始就靠这些底色空来考你。</div>'
-      +'<div style="margin-top:10px"><button class="btn" onclick="WR.begin()">开始第'+P(RUN.id).u+'轮</button></div></div>';
+      +'<div class="grid3" style="margin-top:10px">'
+      +'<button class="btn sm" onclick="WR.start(\''+RUN.id+'\',0,1)">①选择</button>'
+      +'<button class="btn sm" onclick="WR.start(\''+RUN.id+'\',0,2)">②填空</button>'
+      +'<button class="btn sm" onclick="WR.start(\''+RUN.id+'\',0,3)">③默写</button></div></div>';
   }
   $('wr-body').innerHTML=h;
   if(sc) sc.scrollTop=top;
@@ -2160,23 +2165,33 @@ function submit(){
 function finish(pass){
   var t=MAP[RUN.id], st=RUN.stage, p=P(RUN.id), fb=$('wr-fb'), msg='', btns='';
   if(pass){
-    if(st<3){
-      p.pass[st]=1; p.u=Math.max(p.u,st+1); p.last=Date.now();
-      msg='✅ 第'+st+'轮一次全对（'+RUN.good+'/'+RUN.total+'），已解锁第'+(st+1)+'轮';
-      btns='<button class="btn ok" onclick="WR.nextStage()">练第'+(st+1)+'轮</button>'
-          +'<button class="btn gray" onclick="WR.back()">回列表</button>';
-    }else if(RUN.review){
-      p.lvl=Math.min(GAP.length-1,(p.lvl||1)+1); p.due=Date.now()+GAP[p.lvl]*DAY; p.last=Date.now();
-      msg='✅ 复习通过，下次 '+GAP[p.lvl]+' 天后（第 '+p.lvl+' 级）';
+    var hadMaster=isMaster(p), id=RUN.id;
+    p.pass[st]=1; p.last=Date.now(); p.u=st;
+    var all=isMaster(p);
+    if(RUN.review){
+      p.lvl=Math.min(GAP.length-1,(p.lvl||1)+1); p.due=Date.now()+GAP[p.lvl]*DAY;
+      msg='✅ 复习通过（'+RUN.good+'/'+RUN.total+'），下次 '+GAP[p.lvl]+' 天后（第 '+p.lvl+' 级）';
+      btns='<button class="btn ok" onclick="WR.back()">回列表</button>';
+    }else if(all&&!hadMaster){
+      p.lvl=1; p.due=Date.now()+GAP[1]*DAY;
+      msg='🎉 三轮都过了，已掌握！明天进入第③轮复习';
+      btns='<button class="btn ok" onclick="WR.back()">回列表</button>';
+    }else if(all){
+      msg='✅ '+ROM[st]+' 通过（'+RUN.good+'/'+RUN.total+'），保持掌握状态';
       btns='<button class="btn ok" onclick="WR.back()">回列表</button>';
     }else{
-      p.pass[3]=1; p.lvl=1; p.due=Date.now()+GAP[1]*DAY; p.last=Date.now();
-      msg='🎉 三轮全过，已掌握！明天进入第③轮复习';
+      var left=[]; [1,2,3].forEach(function(n){ if(!p.pass[n]) left.push(ROM[n]); });
+      msg='✅ '+ROM[st]+' 通过（'+RUN.good+'/'+RUN.total+'），还差 '+left.join('、');
       btns='<button class="btn ok" onclick="WR.back()">回列表</button>';
+    }
+    if(!all&&!RUN.review){
+      var nx=firstOpen(t);
+      btns='<button class="btn" onclick="WR.start(\''+id+'\',0,'+nx+')">顺手练'+ROM[nx]+'</button>'+btns;
     }
   }else{
     if(RUN.review){
-      p.u=2; p.lvl=0; p.pass[3]=0; msg='❌ 复习没过（'+RUN.good+'/'+RUN.total+'），退回第②轮重练';
+      p.pass[3]=0; p.lvl=0; p.due=Date.now()+DAY;
+      msg='❌ 复习没过（'+RUN.good+'/'+RUN.total+'），③默写掉回未通过，明天再考';
     }else{
       msg='❌ '+(RUN.total-RUN.good)+' 处没有一次答对（'+RUN.good+'/'+RUN.total+'），这一轮不算过';
     }
@@ -2186,7 +2201,7 @@ function finish(pass){
   save();
   fb.className='wr-fb on';
   fb.innerHTML='<div style="font-weight:700;margin-bottom:2px">'+msg+'</div>'
-    +'<div class="small muted" style="margin-bottom:8px">'+esc(RUN.review?'复习检验模式':'严格模式：必须一次全对')+'</div>'
+    +'<div class="small muted" style="margin-bottom:8px">'+(RUN.review?'复习检验模式':'一次全对才算这一轮通过，任意轮都能反复练')+'</div>'
     +'<div class="wr-btns" style="margin:0">'+btns+'</div>';
   $('wr-submit').style.display='none';
   try{ $('wr-scroll').scrollTop=0; }catch(e){}
@@ -2212,13 +2227,13 @@ function review(){
   start(cand[0].id,1);
 }
 function resume(){
-  var cand=TPL.filter(function(t){ var p=P(t.id); return !isMaster(p)&&p.u>1; });
-  cand.sort(function(a,b){ return (P(b.id).last||0)-(P(a.id).last||0); });
-  if(cand.length) { start(cand[0].id); return; }
-  var fresh=TPL.filter(function(t){ return !isMaster(P(t.id))&&p1(t); });
-  function p1(t){ return !P(t.id).pass[1]&&!P(t.id).pass[2]; }
-  if(fresh.length){ start(fresh[0].id); return; }
-  if(TPL.length) start(TPL[0].id,1);
+  if(ST.last&&MAP[ST.last.id]&&ST.last.stage){ start(ST.last.id,0,ST.last.stage); return; }
+  var open=TPL.filter(function(t){ return !isMaster(P(t.id)); });
+  open.sort(function(a,b){ return (P(b.id).last||0)-(P(a.id).last||0); });
+  if(open.length){ start(open[0].id,0,firstOpen(open[0])); return; }
+  var due=TPL.filter(function(t){ return isDue(P(t.id)); });
+  if(due.length){ start(due[0].id,1); return; }
+  if(TPL.length) start(TPL[0].id,0,3);
 }
 function exp(){
   var blob=new Blob([JSON.stringify(ST,null,1)],{type:'application/json'});
@@ -2244,7 +2259,7 @@ function reset(){
   if(!confirm('清空全部默写进度？（八股刷题进度不受影响）')) return;
   ST={v:1,tpl:{},day:{}}; save(); refreshList(); toast('已清空默写进度');
 }
-function begin(){ var id=RUN.id, m=isMaster(P(id)); RUN=null; start(id, m?1:0); }
+function begin(){ var id=RUN.id; RUN=null; start(id,0,firstOpen(P(id))); }
 
 /* ---------- 回车跳到下一个输入框 ---------- */
 document.addEventListener('keydown',function(e){
