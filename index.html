@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261027-1452">
+<meta name="build" content="20261027-1455">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -391,14 +391,14 @@ body.dark .ap-btn.tpl{background:rgba(124,92,255,.22)}
 .dk-hd{position:relative;z-index:6;display:flex;justify-content:space-between;align-items:center;padding:0 10px 8px;font-size:11px;color:var(--sub)}
 .dk-hd b{color:var(--ink)}
 .dk-stage{position:relative;isolation:isolate;height:clamp(340px,calc(100dvh - 160px),740px);margin:0 6px}
-.dk-card{position:absolute;inset:12px 10px 0;display:flex;flex-direction:column;box-sizing:border-box;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:15px 14px 13px;box-shadow:0 14px 30px rgba(12,18,38,.12);transform-origin:50% 145%;transform:translateX(calc(var(--d) * 18px)) translateY(calc(var(--d) * -7px)) rotate(calc(var(--d) * 3.6deg)) scale(calc(1 - var(--d) * .015));transition:transform .32s cubic-bezier(.2,.9,.3,1),opacity .3s;will-change:transform;overflow:hidden}
+.dk-card{position:absolute;inset:12px 10px 0;display:flex;flex-direction:column;box-sizing:border-box;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:15px 14px 13px;box-shadow:0 14px 30px rgba(12,18,38,.12);transform-origin:50% 145%;transform:translateX(calc(var(--d) * 18px)) translateY(calc(var(--d) * -7px)) rotate(calc(var(--d) * 3.6deg)) scale(calc(1 - var(--d) * .015));transition:transform .32s cubic-bezier(.2,.9,.3,1),opacity .3s;will-change:transform;overflow:hidden;-webkit-user-select:none;user-select:none}
 body.dark .dk-card{box-shadow:0 14px 30px rgba(0,0,0,.5)}
 .dk-card:not(.top){opacity:.97}
-/* 静止时叠在后面的卡只留卡片壳（不露文字碎片），一按下去就全露出来：
-   拖动时顶卡被拖开，底下那张必须是有内容的，否则看到的就是一片白 */
-.dk-card:not(.top):not(.fly-l):not(.fly-r) .dk-c-body,
-.dk-card:not(.top):not(.fly-l):not(.fly-r) .dk-c-acts{visibility:hidden}
-.dk-stage.drag .dk-card:not(.top) .dk-c-body,.dk-stage.drag .dk-card:not(.top) .dk-c-acts{visibility:visible}
+/* 前后两张卡一直带着内容（停下来也看得到），但压一层半透明卡底色，
+   让它们退到后面去，露出来的半截字符也不会抢顶卡的注意力 */
+.dk-card:not(.top):not(.fly-l):not(.fly-r)::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:var(--card);opacity:.4;pointer-events:none}
 .dk-card.top{animation:dkIn .2s ease-out;touch-action:pan-y;cursor:grab}
 .dk-card.top:active{cursor:grabbing}
 .dk-card.fly-l{transform:translateX(-125%) rotate(-16deg)!important;opacity:0;transition:transform .22s ease-out,opacity .22s;z-index:40!important}
@@ -1951,7 +1951,6 @@ function deckBind(stage){
     var c=e.target&&e.target.closest?e.target.closest('.dk-card'):null;
     if(!c||!c.classList.contains('top')) return;
     card=c; drag=true; moved=false; sx=e.clientX; sy=e.clientY; dx=0;
-    stage.classList.add('drag');
     card.style.animation='none'; card.style.transition='none';
     try{ stage.setPointerCapture(e.pointerId); }catch(err){}
   });
@@ -1973,15 +1972,12 @@ function deckBind(stage){
     var to=(moved&&dx<=-70)?1:((moved&&dx>=70)?-1:0);
     if(!to) c.style.transform='';
     if(to) deckGo(to);
-    /* 等飞牌/回弹动画走完再收回「露内容」状态，避免中途闪一下白 */
-    setTimeout(function(){ stage.classList.remove('drag'); },330);
   });
   stage.addEventListener('pointercancel',function(){
     if(!drag||!card) return;
     drag=false;
     var c=card; card=null;
     c.style.transition=''; c.style.transform=''; c.style.animation='';
-    stage.classList.remove('drag');
   });
 }
 
