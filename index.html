@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261027-1025">
+<meta name="build" content="20261027-1036">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -174,70 +174,155 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}
 th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
 th{color:var(--sub);font-size:12px}
 
-/* ---- 代码默写 ---- */
-/* ================= 代码默写（算法模板） ================= */
-.wr-tpl{padding:12px;border-radius:12px;background:var(--bg);margin-top:9px}
-.wr-title{font-weight:700;font-size:14.5px;line-height:1.4}
-.wr-btns{display:flex;gap:8px;margin-top:10px}
-.wr-btns .btn{width:auto;flex:1;min-width:0}
-.wr-dots{display:flex;gap:5px;align-items:center}
-.wr-dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
-.wr-dots i.p{background:var(--ok)}
-.wr-dots i.c{background:var(--brand);box-shadow:0 0 0 3px rgba(79,110,247,.18)}
+/* ================= 代码默写 ================= */
+/* ---- 首页统计 ---- */
+.wr-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.wr-stat{background:var(--card);padding:11px 6px;text-align:center}
+.wr-stat b{display:block;font-size:20px;font-weight:800;letter-spacing:-.4px;line-height:1.25;font-variant-numeric:tabular-nums}
+.wr-stat span{display:block;font-size:10.5px;color:var(--sub);margin-top:2px}
+.wr-stat.acc b{color:var(--brand)}
+.wr-stat.ok b{color:var(--ok)}
+.wr-stat.warn b{color:#b45309}
+.wr-stats-foot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--sub);margin-top:10px}
+.wr-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.wr-quick button{height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.wr-quick button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));border-color:transparent;color:#fff;box-shadow:0 6px 16px rgba(79,110,247,.26)}
+.wr-quick button:active{transform:scale(.985)}
+
+/* ---- 分类标题 ---- */
+.wr-cat-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:4px 2px 0}
+.wr-cat-h h3{font-size:14px;font-weight:800;letter-spacing:.2px}
+.wr-cat-h span{font-size:11px;color:var(--sub)}
+.wr-cat-sub{font-size:11.5px;color:var(--sub);line-height:1.55;padding:4px 2px 0}
+
+/* ---- 模板卡片 ---- */
+.wr-tpl{border:1px solid var(--line);border-radius:14px;padding:13px;margin-top:10px;background:var(--card)}
+.wr-tpl-top{display:flex;align-items:flex-start;gap:10px}
+.wr-tpl-l{flex:1;min-width:0}
+.wr-tpl-meta{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--sub);line-height:1}
+.wr-lc{font-weight:800;color:var(--brand);letter-spacing:.3px}
+.wr-diff{font-weight:800;padding:1.5px 6px;border-radius:5px;background:var(--line);color:var(--sub);font-size:9.5px}
+.wr-diff.easy{background:rgba(22,163,74,.12);color:var(--ok)}
+.wr-diff.medium{background:rgba(245,158,11,.15);color:#b45309}
+.wr-diff.hard{background:rgba(224,69,59,.13);color:var(--bad)}
+.wr-dot{opacity:.4}
+.wr-tpl-title{font-size:14.5px;font-weight:700;line-height:1.45;margin-top:7px}
+.wr-tpl-brief{font-size:11.5px;color:var(--sub);line-height:1.6;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wr-badge{flex:0 0 auto;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--line);color:var(--sub);margin-top:1px}
+.wr-badge.ok{background:rgba(22,163,74,.12);color:var(--ok)}
+.wr-badge.warn{background:rgba(245,158,11,.16);color:#b45309}
+.wr-prog3{display:flex;gap:4px;margin-top:11px}
+.wr-prog3 i{flex:1;height:3px;border-radius:3px;background:var(--line)}
+.wr-prog3 i.on{background:var(--ok)}
+
+/* ---- 四格分段按钮 ---- */
+.wr-seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px}
+.wr-seg-b{height:40px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:2px;padding:0 2px;white-space:nowrap}
+.wr-seg-b.ghost{color:var(--sub);font-weight:600}
+.wr-seg-b.done{border-color:rgba(22,163,74,.45);background:rgba(22,163,74,.08);color:var(--ok)}
+.wr-seg-n{font-size:10px;opacity:.62;font-weight:800;margin-right:1px}
+.wr-seg-t{font-size:10.5px}
+.wr-seg-b:active{transform:scale(.97)}
+
+/* ---- 空态 ---- */
+.wr-empty{border:1px dashed var(--line);border-radius:14px;padding:24px 16px;text-align:center;background:var(--card)}
+.wr-empty .wr-emoji{font-size:26px;line-height:1}
+.wr-empty h3{font-size:15px;margin-top:9px}
+.wr-empty p{font-size:12px;color:var(--sub);line-height:1.7;margin:7px 0 0}
+.wr-empty button{margin-top:14px;height:44px;padding:0 20px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;box-shadow:0 8px 20px rgba(79,110,247,.26)}
+
+/* ---- 练习层 ---- */
 .wr-run{position:fixed;left:0;right:0;top:0;bottom:0;z-index:90;background:var(--bg);display:none;flex-direction:column}
 .wr-run.on{display:flex}
-.wr-top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:var(--card);border-bottom:1px solid var(--line);flex:0 0 auto}
-.wr-ttl{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wr-sub{font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wr-cnt{font-size:12px;font-weight:800;color:var(--brand);flex:0 0 auto}
-.wr-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 20px}
-.wr-keys{display:none;gap:6px;overflow-x:auto;padding:8px 10px;background:var(--card);border-top:1px solid var(--line);flex:0 0 auto}
-.wr-keys button{flex:0 0 auto;min-width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;font-weight:700;cursor:pointer}
-.wr-foot{padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line);flex:0 0 auto}
-.wr-fb{font-size:13.5px;margin-bottom:0;line-height:1.5;display:none}
-.wr-fb.on{display:block}
-.wr-fb .btn{font-size:14px;padding:10px 12px}
-.wr-code{background:var(--card);border-radius:12px;padding:10px 4px;box-shadow:var(--shadow);overflow-x:auto;overscroll-behavior-x:contain}
-.wr-line{display:flex;gap:5px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:2;white-space:pre}
-.wr-ln{flex:0 0 16px;color:var(--sub);opacity:.5;text-align:right;font-size:10.5px;padding-top:3px;user-select:none}
+.wr-hd{display:flex;align-items:center;gap:10px;padding:calc(9px + env(safe-area-inset-top)) 12px 9px;background:var(--card)}
+.wr-back{flex:0 0 34px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 0 2px}
+.wr-hd-m{flex:1;min-width:0}
+.wr-hd-t{font-size:14px;font-weight:800;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wr-hd-s{font-size:11px;color:var(--sub);line-height:1.4;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wr-hd-r{flex:0 0 auto;font-size:11.5px;font-weight:800;color:var(--brand);background:rgba(79,110,247,.1);padding:4px 9px;border-radius:999px;font-variant-numeric:tabular-nums}
+.wr-pbar{height:3px;background:var(--line)}
+.wr-pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .25s}
+.wr-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 26px}
+
+/* ---- 题干卡 ---- */
+.wr-stmt{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin:0 0 10px}
+.wr-stmt-h{display:flex;align-items:center;gap:7px;cursor:pointer}
+.wr-stmt-t{font-size:13.5px;font-weight:800;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wr-stmt-x{font-size:10.5px;color:var(--sub);flex:0 0 auto;padding:3px 8px;border-radius:999px;background:var(--bg)}
+.wr-stmt-b{margin-top:9px}
+.wr-stmt-brief{font-size:12px;line-height:1.65;margin:0 0 8px}
+.wr-io{border-top:1px solid var(--line);padding-top:7px}
+.wr-io-r{display:flex;gap:8px;padding:2px 0;font-size:11.5px;line-height:1.6}
+.wr-io-k{flex:0 0 28px;color:var(--sub);font-weight:800}
+.wr-io-v{flex:1;min-width:0;word-break:break-word}
+.wr-gen{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);font-size:11px;color:var(--sub);line-height:1.65}
+.wr-gen span{display:inline-block;font-weight:800;color:var(--brand);margin-right:6px}
+.wr-hint{font-size:11.5px;color:var(--sub);line-height:1.65;margin:0 0 9px;padding-left:2px}
+
+/* ---- 代码面板 ---- */
+.wr-code{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px;overflow-x:auto;overscroll-behavior-x:contain}
+.wr-line{display:flex;gap:5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:2.05;white-space:pre}
+.wr-ln{flex:0 0 15px;color:var(--sub);opacity:.42;text-align:right;font-size:9.5px;padding-top:4px;user-select:none;font-variant-numeric:tabular-nums}
 .wr-src{flex:1;min-width:0;white-space:pre}
-.wr-note{font-size:11px;color:var(--sub);padding:0 0 3px 22px;line-height:1.5}
-.wr-hole{display:inline-block;min-width:48px;padding:0 6px;margin:0 1px;border-bottom:2px solid var(--brand);border-radius:4px;background:rgba(79,110,247,.10);color:var(--brand);font-weight:700;text-align:center;cursor:pointer}
-.wr-hole.act{background:rgba(79,110,247,.22);box-shadow:0 0 0 2px rgba(79,110,247,.28)}
-.wr-hole.sel{background:rgba(79,110,247,.20)}
-.wr-hole.ok{border-color:var(--ok);color:var(--ok);background:var(--ok-bg)}
-.wr-hole.no{border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
-.wr-opts{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 2px 22px}
-.wr-opts button{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:7px 10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;cursor:pointer}
-.wr-opts button.on{border-color:var(--brand);background:rgba(79,110,247,.12);color:var(--brand);font-weight:700}
-input.wr-in{width:auto;min-width:52px;max-width:100%;padding:1px 5px;border:none;border-bottom:2px solid var(--brand);background:rgba(79,110,247,.09);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;border-radius:4px;outline:none}
-input.wr-in.ok{border-color:var(--ok);background:var(--ok-bg)}
-input.wr-in.no{border-color:var(--bad);background:var(--bad-bg)}
-input.wr-linein{width:100%;padding:2px 6px;border:none;border-bottom:2px dashed var(--brand);background:transparent;color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border-radius:4px;outline:none}
-input.wr-linein.ok{border-bottom-color:var(--ok);background:var(--ok-bg)}
-input.wr-linein.no{border-bottom-color:var(--bad);background:var(--bad-bg)}
-.wr-tip{font-size:11.5px;color:var(--warn);padding:1px 0 3px 0;line-height:1.5}
-.wr-exp{font-size:11.5px;color:var(--ok);padding:2px 0 4px 22px;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;line-height:1.6}
-.wr-bad{font-size:11.5px;color:var(--bad);padding:0 0 4px 22px;line-height:1.55}
-.wr-hint{font-size:12.5px;color:var(--sub);margin:0 0 10px;line-height:1.6}
-.wr-stmt{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:10px 12px;margin:0 0 10px;border-left:4px solid var(--brand)}
-.wr-stmt-h{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer}
-.wr-stmt-t{font-weight:800;font-size:13.5px;line-height:1.4}
-.wr-stmt-x{font-size:11.5px;color:var(--sub);flex:0 0 auto}
-.wr-stmt-b{margin-top:6px}
-.wr-stmt-brief{font-size:13px;line-height:1.6;margin-bottom:6px}
-.wr-stmt-l{font-size:12.5px;color:var(--sub);line-height:1.65;padding-left:2px}
-.wr-stmt-g{margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);font-size:12px;color:var(--sub);line-height:1.6}
+.wr-note{font-size:10.5px;color:var(--sub);padding:0 0 3px 20px;line-height:1.5;opacity:.9}
+.wr-hole{display:inline-block;min-width:46px;padding:0 7px;margin:0 1px;border-radius:7px;background:rgba(79,110,247,.1);color:var(--brand);font-weight:700;text-align:center;cursor:pointer;box-shadow:inset 0 -1.5px 0 rgba(79,110,247,.45);transition:background .15s}
+.wr-hole.act{background:rgba(79,110,247,.2);box-shadow:0 0 0 2px rgba(79,110,247,.28)}
+.wr-hole.sel{background:rgba(79,110,247,.16)}
+.wr-hole.ok{background:var(--ok-bg);color:var(--ok);box-shadow:inset 0 -1.5px 0 var(--ok)}
+.wr-hole.no{background:var(--bad-bg);color:var(--bad);box-shadow:inset 0 -1.5px 0 var(--bad)}
+input.wr-in{width:auto;min-width:52px;max-width:100%;padding:1px 6px;border:none;border-radius:7px;background:rgba(79,110,247,.08);color:var(--ink);font-family:inherit;font-size:12px;outline:none;box-shadow:inset 0 -1.5px 0 rgba(79,110,247,.45)}
+input.wr-in:focus{background:rgba(79,110,247,.14);box-shadow:inset 0 -1.5px 0 var(--brand)}
+input.wr-in.ok{background:var(--ok-bg);box-shadow:inset 0 -1.5px 0 var(--ok)}
+input.wr-in.no{background:var(--bad-bg);box-shadow:inset 0 -1.5px 0 var(--bad)}
+input.wr-linein{width:100%;padding:3px 8px;border:none;border-radius:8px;background:var(--bg);color:var(--ink);font-family:inherit;font-size:12px;outline:none;box-shadow:inset 0 0 0 1px var(--line)}
+input.wr-linein:focus{box-shadow:inset 0 0 0 1.5px var(--brand);background:rgba(79,110,247,.06)}
+input.wr-linein.ok{background:var(--ok-bg);box-shadow:inset 0 0 0 1px var(--ok)}
+input.wr-linein.no{background:var(--bad-bg);box-shadow:inset 0 0 0 1px var(--bad)}
+.wr-tip{font-size:11px;color:#b45309;padding:1px 0 2px}
+.wr-exp{font-size:11px;color:var(--ok);padding:3px 0 3px 20px;line-height:1.6;word-break:break-word}
+.wr-bad{font-size:11px;color:var(--bad);padding:1px 0 4px 20px;line-height:1.6;word-break:break-word}
+
+/* ---- 看模板页底部 ---- */
+.wr-cta{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px}
+.wr-cta p{font-size:11.5px;color:var(--sub);line-height:1.65;margin:0 0 10px}
+
+/* ---- 底部答题区 ---- */
+.wr-keys{display:none;gap:6px;overflow-x:auto;padding:8px 10px;background:var(--card);border-top:1px solid var(--line);flex:0 0 auto}
+.wr-keys button{flex:0 0 auto;min-width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;font-weight:700;cursor:pointer}
+.wr-foot{padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line);flex:0 0 auto}
+.wr-fb{display:none}
+.wr-fb.on{display:block}
+.wr-pick-h{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--sub);margin-bottom:8px}
+.wr-pick-h span:first-child{font-weight:800;color:var(--brand);font-size:11.5px}
+.wr-opts{display:grid;grid-template-columns:1fr 1fr;gap:7px;max-height:33vh;overflow-y:auto}
+.wr-opt{min-height:44px;padding:8px 10px;border-radius:11px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.35;cursor:pointer;text-align:left;word-break:break-word}
+.wr-opt.on{border-color:var(--brand);background:rgba(79,110,247,.1);color:var(--brand);font-weight:700}
+.wr-submit{width:100%;height:48px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-family:inherit;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;box-shadow:0 8px 20px rgba(79,110,247,.26)}
+.wr-submit:active{transform:scale(.99)}
+
+/* ---- 结果 ---- */
+.wr-res{display:flex;gap:10px;align-items:flex-start;padding:2px 0 10px}
+.wr-res-ic{flex:0 0 auto;font-size:20px;line-height:1.2}
+.wr-res-m{flex:1;font-size:13px;font-weight:700;line-height:1.55}
+.wr-res-s{font-size:11px;color:var(--sub);margin-top:3px;font-weight:400}
+.wr-res-btns{display:flex;gap:8px}
+.wr-res-btns button{flex:1;height:44px;border-radius:12px;border:none;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+.wr-res-btns .main{background:var(--ink);color:var(--card)}
+.wr-res-btns .sub{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+
+/* ---- 语法配色 ---- */
 .wr-k{color:#6d4aff;font-weight:700}
 .wr-t{color:#0e7490}
 .wr-n{color:#b45309}
-.wr-p{color:var(--sub)}
+.wr-p{color:#9aa1b4}
 .wr-c{color:var(--sub);font-style:italic}
 body.dark .wr-k{color:#a78bfa}
 body.dark .wr-t{color:#5eead4}
 body.dark .wr-n{color:#fbbf24}
-body.dark .wr-hole{background:rgba(124,92,255,.18)}
-body.dark input.wr-in{background:rgba(124,92,255,.16)}
+body.dark .wr-p{color:#7c8598}
+body.dark .wr-hole{background:rgba(124,92,255,.16)}
+body.dark input.wr-in{background:rgba(124,92,255,.14)}
+body.dark .wr-res-btns .main{background:var(--brand);color:#fff}
 
 </style>
 </head>
@@ -480,54 +565,45 @@ body.dark input.wr-in{background:rgba(124,92,255,.16)}
 
 <!-- ================= 代码默写（算法模板） ================= -->
 <section class="page" id="p-write">
-  <div class="card" style="background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff">
-    <div class="between">
-      <div>
-        <div style="opacity:.85;font-size:13px">今日默写</div>
-        <div class="big"><span id="w-today">0</span><span style="font-size:14px;font-weight:600"> 空</span></div>
-      </div>
-      <div style="text-align:right">
-        <div style="opacity:.85;font-size:13px">已掌握模板</div>
-        <div class="big" id="w-master">0/0</div>
-      </div>
+  <div class="card" style="padding:13px">
+    <div class="wr-stats">
+      <div class="wr-stat acc"><b id="w-today">0</b><span>今日空数</span></div>
+      <div class="wr-stat ok"><b id="w-master">0/0</b><span>已掌握</span></div>
+      <div class="wr-stat warn"><b id="w-due">0</b><span>待复习</span></div>
     </div>
-    <div class="small" style="opacity:.88;margin-top:8px">待复习 <b id="w-due">0</b> 个 · 连续默写 <b id="w-streak">0</b> 天 · 三轮已过 <span id="w-prog">—</span></div>
+    <div class="wr-stats-foot"><span>连续 <b id="w-streak">0</b> 天</span><span id="w-prog">0/0 轮通过</span></div>
+    <div class="wr-quick">
+      <button class="primary" onclick="WR.review()">复习到期 <span id="w-due2">0</span></button>
+      <button onclick="WR.resume()">继续上次</button>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="between" style="margin-bottom:10px">
-      <h3 style="font-size:16px">今日默写</h3>
-      <span class="small muted">三轮任选</span>
-    </div>
-    <div class="grid2">
-      <button class="btn ok" onclick="WR.review()">复习到期 <span id="w-due2">0</span></button>
-      <button class="btn" onclick="WR.resume()">继续上次</button>
-    </div>
-    <div class="small muted" style="margin-top:8px">三轮任选，想练哪轮点哪轮：<b>①选择</b> 认空 → <b>②填空</b> 写空 → <b>③默写</b> 整行默写关键行。每轮<b>一次全对</b>才算这一轮过；三轮都过 = 掌握，之后按 1/2/4/7/15/30 天复习（只考③默写）。</div>
+  <div class="card" style="padding:12px 14px">
+    <div class="small muted" style="line-height:1.75">三轮任选，想练哪轮点哪轮：<b>①选择</b> 认空 → <b>②填空</b> 写空 → <b>③默写</b> 整行默写。每轮一次全对才算过，三轮都过 = 掌握，之后按 1/2/4/7/15/30 天复习（只考 ③）。</div>
   </div>
 
   <div id="w-cats"></div>
 
   <div class="card">
-    <h3 style="font-size:16px;margin-bottom:10px">模板题库</h3>
-    <div class="grid2">
-      <button class="btn ghost" onclick="WR.expTpl()">导出全部模板</button>
-      <button class="btn ghost" onclick="document.getElementById('w-tplimp').click()">导入模板题库</button>
+    <h3 style="font-size:15px;margin-bottom:10px">模板题库</h3>
+    <div class="wr-quick" style="margin-top:0">
+      <button onclick="WR.expTpl()">导出全部模板</button>
+      <button onclick="document.getElementById('w-tplimp').click()">导入模板题库</button>
     </div>
     <input type="file" id="w-tplimp" accept="application/json,.json" style="display:none">
     <div id="w-banks"></div>
-    <div class="small muted" style="margin-top:8px">题库是标准 JSON（<span class="kbd">{"name":"…","templates":[…]}</span>），直接编辑文件也能加载；导入的题库单独一份保存，可整批删除。</div>
+    <div class="small muted" style="margin-top:8px;line-height:1.7">题库是标准 JSON（<span class="kbd">{"name":"…","templates":[…]}</span>），导入的题库单独保存，可整批删除。</div>
   </div>
 
   <div class="card">
-    <h3 style="font-size:16px;margin-bottom:10px">学习进度</h3>
-    <div class="grid2">
-      <button class="btn ghost" onclick="WR.exp()">导出默写进度</button>
-      <button class="btn ghost" onclick="document.getElementById('w-imp').click()">导入默写进度</button>
+    <h3 style="font-size:15px;margin-bottom:10px">学习进度</h3>
+    <div class="wr-quick" style="margin-top:0">
+      <button onclick="WR.exp()">导出进度</button>
+      <button onclick="document.getElementById('w-imp').click()">导入进度</button>
     </div>
     <input type="file" id="w-imp" accept="application/json,.json" style="display:none">
     <div style="margin-top:10px"><button class="btn gray" onclick="WR.reset()">清空默写进度</button></div>
-    <div class="small muted" style="margin-top:8px">进度与题库分开保存，都不影响八股刷题的 318 题；换设备前请先导出。</div>
+    <div class="small muted" style="margin-top:8px;line-height:1.7">进度与题库分开保存，都不影响八股刷题的 318 题；换设备前请先导出。</div>
   </div>
 </section>
 
@@ -550,14 +626,15 @@ body.dark input.wr-in{background:rgba(124,92,255,.16)}
 
 <!-- ================= 代码默写 · 全屏练习层 ================= -->
 <div class="wr-run" id="wr-run">
-  <div class="wr-top">
-    <button class="chip" onclick="WR.back()">← 退出</button>
-    <div style="flex:1;min-width:0">
-      <div class="wr-ttl" id="wr-ttl">—</div>
-      <div class="wr-sub" id="wr-sub">—</div>
+  <div class="wr-hd">
+    <button class="wr-back" onclick="WR.back()">‹</button>
+    <div class="wr-hd-m">
+      <div class="wr-hd-t" id="wr-ttl">—</div>
+      <div class="wr-hd-s" id="wr-sub">—</div>
     </div>
-    <div class="wr-cnt" id="wr-cnt">—</div>
+    <div class="wr-hd-r" id="wr-cnt">0/0</div>
   </div>
+  <div class="wr-pbar"><i id="wr-pbar-i"></i></div>
   <div class="wr-scroll" id="wr-scroll"><div id="wr-body"></div></div>
   <div class="wr-keys" id="wr-keys">
     <button onclick="WR.key('{')">{</button>
@@ -581,7 +658,7 @@ body.dark input.wr-in{background:rgba(124,92,255,.16)}
   </div>
   <div class="wr-foot">
     <div class="wr-fb" id="wr-fb"></div>
-    <button class="btn" id="wr-submit" onclick="WR.submit()">提交</button>
+    <button class="wr-submit" id="wr-submit" onclick="WR.submit()">提交</button>
   </div>
 </div>
 
@@ -1549,50 +1626,51 @@ function refreshList(){
   cats.forEach(function(c){
     var list=cmap[c], m2=0;
     list.forEach(function(t){ if(isMaster(P(t.id))) m2++; });
-    h+='<div class="card">'
-      +'<div class="between" style="margin-bottom:6px"><h3 style="font-size:16px">'+esc(c)+'</h3>'
-      +'<span class="small muted">已掌握 '+m2+'/'+list.length+'</span></div>'
-      +'<div class="small muted" style="margin-bottom:2px">'+esc(list[0].essence||'')+'</div>';
+    h+='<div class="card" style="padding:14px">'
+      +'<div class="wr-cat-h"><h3>'+esc(c)+'</h3><span>'+m2+'/'+list.length+' 已掌握</span></div>'
+      +'<div class="wr-cat-sub">'+esc(list[0].essence||'')+'</div>';
     list.forEach(function(t){ h+=tplCard(t); });
     h+='</div>';
   });
   if(!TPL.length){
-    h='<div class="card"><h3 style="font-size:16px">还没有模板题库</h3>'
-      +'<div class="small muted" style="margin-top:6px;line-height:1.65">内置模板已移除，现在是空的。导入一份 JSON 题库就能开始刷——仓库里带着哈希题库 <span class="kbd">algo-templates-hash.json</span>，也可以先在这里攒好再一起导入。</div>'
-      +'<div style="margin-top:12px"><button class="btn" onclick="document.getElementById(\'w-tplimp\').click()">导入模板题库 JSON</button></div></div>';
+    h='<div class="card" style="padding:6px"><div class="wr-empty">'
+      +'<div class="wr-emoji">🗂️</div><h3>还没有模板题库</h3>'
+      +'<p>内置模板已移除。导入一份 JSON 题库即可开始刷——<br>仓库里带着哈希题库 <span class="kbd">algo-templates-hash.json</span></p>'
+      +'<button onclick="document.getElementById(\'w-tplimp\').click()">导入模板题库 JSON</button>'
+      +'</div></div>';
   }
   $('w-cats').innerHTML=h;
   renderBanks();
 }
 
 function tplCard(t){
-  var p=P(t.id);
-  var lc=t.problems.map(function(x){ return 'LC'+x.lc+' '+x.name; }).join(' · ');
-  if(!lc) lc=t.cat;
-  var done=0, dots='';
-  for(var n=1;n<=3;n++){ if(p.pass[n]) done++; dots+='<i class="'+(p.pass[n]?'p':'')+'"></i>'; }
-  var right='', sub='';
+  var p=P(t.id), pr=t.problems[0], segs='', done=0;
+  for(var n=1;n<=3;n++){ if(p.pass[n]) done++; segs+='<i class="'+(p.pass[n]?'on':'')+'"></i>'; }
+  var badge, cls;
   if(isMaster(p)){
     var left=Math.ceil((p.due-Date.now())/DAY);
-    right=isDue(p)?'<span class="tag y">待复习</span>':'<span class="tag g">已掌握</span>';
-    sub=isDue(p)?'今天到期':(left>0?left+' 天后复习':'随时可复习');
-  }else{
-    right='<span class="tag">'+done+'/3 轮</span>';
-    sub='想练哪轮点哪轮';
+    if(isDue(p)){ badge='待复习'; cls='warn'; }
+    else { badge=(left>0?left+' 天后':'已掌握'); cls='ok'; }
+  }else{ badge=done+'/3'; cls=''; }
+  var meta=(pr?'<span class="wr-lc">LC'+pr.lc+'</span>'
+      +(pr.diff?'<span class="wr-diff '+String(pr.diff).toLowerCase()+'">'+esc(pr.diff)+'</span>':'')
+      :'<span class="wr-lc">'+esc(t.cat)+'</span>')
+    +'<span class="wr-dot">·</span><span>'+t.blanks.length+' 空 · '+keyLines(t).length+' 行</span>';
+  function btn(n,label){
+    var on=!!p.pass[n];
+    return '<button class="wr-seg-b'+(on?' done':'')+'" onclick="WR.start(\''+t.id+'\',0,'+n+')">'
+      +'<span class="wr-seg-n">'+n+'</span>'+label+(on?'<span class="wr-seg-t">✓</span>':'')+'</button>';
   }
   return '<div class="wr-tpl">'
-    +'<div class="between"><div style="flex:1;min-width:0">'
-    +'<div class="wr-title">'+esc(t.title)+'</div>'
-    +'<div class="small" style="margin-top:4px;line-height:1.5">'+esc(t.brief||t.essence||'')+'</div>'
-    +'<div class="small muted" style="margin-top:4px">'+esc(lc)+' · '+t.blanks.length+' 空 / '+keyLines(t).length+' 行</div>'
-    +'</div><div style="text-align:right;flex:0 0 auto">'+right
-    +'<div class="small muted" style="margin-top:4px">'+sub+'</div>'
-    +'<div class="wr-dots" style="justify-content:flex-end;margin-top:6px">'+dots+'</div></div></div>'
-    +'<div class="wr-btns"><button class="btn sm gray" onclick="WR.view(\''+t.id+'\')">📖 看模板</button></div>'
-    +'<div class="grid3" style="margin-top:8px">'
-    +'<button class="btn sm'+(p.pass[1]?' ok':' ghost')+'" onclick="WR.start(\''+t.id+'\',0,1)">①选择'+(p.pass[1]?' ✓':'')+'</button>'
-    +'<button class="btn sm'+(p.pass[2]?' ok':' ghost')+'" onclick="WR.start(\''+t.id+'\',0,2)">②填空'+(p.pass[2]?' ✓':'')+'</button>'
-    +'<button class="btn sm'+(p.pass[3]?' ok':' ghost')+'" onclick="WR.start(\''+t.id+'\',0,3)">③默写'+(p.pass[3]?' ✓':'')+'</button>'
+    +'<div class="wr-tpl-top"><div class="wr-tpl-l">'
+    +'<div class="wr-tpl-meta">'+meta+'</div>'
+    +'<div class="wr-tpl-title">'+esc(t.title)+'</div>'
+    +'<div class="wr-tpl-brief">'+esc(t.brief||'')+'</div>'
+    +'</div><span class="wr-badge '+cls+'">'+badge+'</span></div>'
+    +'<div class="wr-prog3">'+segs+'</div>'
+    +'<div class="wr-seg">'
+    +'<button class="wr-seg-b ghost" onclick="WR.view(\''+t.id+'\')"><span class="wr-seg-n">📖</span>模板</button>'
+    +btn(1,'选择')+btn(2,'填空')+btn(3,'默写')
     +'</div></div>';
 }
 
@@ -1629,10 +1707,9 @@ function nextStage(){ if(!RUN) return; var id=RUN.id; RUN=null; start(id,0,first
 function paint(){
   var t=MAP[RUN.id], st=RUN.stage;
   $('wr-ttl').textContent=t.title;
-  var sub=RUN.review?'复习 · 第③轮':(st===0?'看模板':'第'+st+'轮');
-  if(t.problems[0]) sub+=' / LC'+t.problems[0].lc+' '+t.problems[0].name;
+  var sub=RUN.review?'复习 · ③默写':(st===0?'看模板 · 第0轮':'第'+st+'轮');
+  if(t.problems[0]) sub+=' · LC'+t.problems[0].lc+' '+t.problems[0].name;
   $('wr-sub').textContent=sub;
-  $('wr-cnt').textContent=st===3?keyLines(t).length+' 行':(st===0?t.blanks.length+' 空':t.blanks.length+' 空');
 
   var sc=$('wr-scroll'), top=sc?sc.scrollTop:0;
   var ks=keyLines(t), h=stmtHtml(t)+'<div class="wr-hint">'+HINT[st]+'</div><div class="wr-code">';
@@ -1662,44 +1739,72 @@ function paint(){
   });
   h+='</div>';
   if(st===0){
-    h+='<div class="card" style="margin-top:12px"><div class="small muted">这一轮不用动手，看懂骨架和每个空的考点即可。第①轮开始就靠这些底色空来考你。</div>'
-      +'<div class="grid3" style="margin-top:10px">'
-      +'<button class="btn sm" onclick="WR.start(\''+RUN.id+'\',0,1)">①选择</button>'
-      +'<button class="btn sm" onclick="WR.start(\''+RUN.id+'\',0,2)">②填空</button>'
-      +'<button class="btn sm" onclick="WR.start(\''+RUN.id+'\',0,3)">③默写</button></div></div>';
+    h+='<div class="wr-cta"><p>这一轮不用动手：看懂骨架和每个高亮空，①选择就考这些空。</p><div class="wr-seg">'
+      +'<button class="wr-seg-b" onclick="WR.start(\''+RUN.id+'\',0,1)"><span class="wr-seg-n">1</span>选择</button>'
+      +'<button class="wr-seg-b" onclick="WR.start(\''+RUN.id+'\',0,2)"><span class="wr-seg-n">2</span>填空</button>'
+      +'<button class="wr-seg-b" onclick="WR.start(\''+RUN.id+'\',0,3)"><span class="wr-seg-n">3</span>默写</button>'
+      +'</div></div>';
   }
   $('wr-body').innerHTML=h;
   if(sc) sc.scrollTop=top;
 
-  /* 底部：答题条 / 结果条 */
   var fb=$('wr-fb'), sub2=$('wr-submit'), keys=$('wr-keys');
   fb.className='wr-fb'; fb.innerHTML='';
-  sub2.style.display=(st===0)?'none':'block';
-  sub2.textContent='提交';
+  sub2.textContent=RUN.review?'提交检验':'提交';
+  sub2.style.display=(st>0&&!RUN.done)?'block':'none';
   keys.style.display=(st===2||st===3)?'flex':'none';
   if(st===1) renderPicker();
-  if(st===0) keys.style.display='none';
-  if(!RUN.done&&st>0) sub2.style.display='block';
+  pbar();
+}
+
+/* 顶部细进度条 + 计数 */
+function pbar(){
+  if(!RUN) return;
+  var t=MAP[RUN.id], st=RUN.stage, done=0, tot=0;
+  if(st===1){ tot=t.blanks.length; t.blanks.forEach(function(b,i){ if(RUN.ans[i]!==undefined) done++; }); }
+  else if(st===2){ tot=t.blanks.length; t.blanks.forEach(function(b,i){ var el=$('in-'+i); if(el&&el.value.trim()) done++; }); }
+  else if(st===3){ var ks=keyLines(t); tot=ks.length; ks.forEach(function(li){ var el=$('in-'+li); if(el&&el.value.trim()) done++; }); }
+  var bar=$('wr-pbar-i'); if(bar) bar.style.width=(tot?Math.round(done*100/tot):0)+'%';
+  var cnt=$('wr-cnt'); if(cnt) cnt.textContent=done+'/'+tot;
 }
 
 /* 题干卡：每一轮都显示，可收起 */
 function stmtHtml(t){
-  var lc=t.problems.map(function(x){ return 'LC'+x.lc+' '+x.name+'（'+x.diff+'）'; }).join(' / ');
-  var s='<div class="wr-stmt">'
-    +'<div class="wr-stmt-h" onclick="WR.toggleStmt()">'
-    +'<span class="wr-stmt-t">'+esc(lc||t.title)+'</span>'
-    +'<span class="wr-stmt-x" id="wr-stmt-x">收起 ▲</span></div>'
-    +'<div class="wr-stmt-b" id="wr-stmt-b">';
-  if(t.brief) s+='<div class="wr-stmt-brief">'+esc(t.brief)+'</div>';
-  (t.stmt||[]).forEach(function(x){ s+='<div class="wr-stmt-l">'+esc(x)+'</div>'; });
-  if(t.generic) s+='<div class="wr-stmt-g"><b>这个模板还能解决：</b>'+esc(t.generic)+'</div>';
-  return s+'</div></div>';
+  var pr=t.problems[0], head='', rows='';
+  if(pr){
+    head='<span class="wr-lc">LC'+pr.lc+'</span><span class="wr-stmt-t">'+esc(pr.name)+'</span>'
+      +(pr.diff?'<span class="wr-diff '+String(pr.diff).toLowerCase()+'">'+esc(pr.diff)+'</span>':'');
+  }else{
+    head='<span class="wr-stmt-t">'+esc(t.title)+'</span>';
+  }
+  (t.stmt||[]).forEach(function(line){
+    var m=/^([^：:]{1,6})[：:]\s*(.+)$/.exec(line);
+    if(m){
+      if(m[1]==='题目') return;
+      rows+='<div class="wr-io-r"><span class="wr-io-k">'+esc(m[1])+'</span><span class="wr-io-v">'+esc(m[2])+'</span></div>';
+    }else{
+      rows+='<div class="wr-io-r"><span class="wr-io-v">'+esc(line)+'</span></div>';
+    }
+  });
+  return '<div class="wr-stmt">'
+    +'<div class="wr-stmt-h" onclick="WR.toggleStmt()">'+head
+    +'<span class="wr-stmt-x" id="wr-stmt-x">'+((ST.stmtClosed&&ST.stmtClosed[t.id])?'展开':'收起')+'</span></div>'
+    +'<div class="wr-stmt-b" id="wr-stmt-b"'+(ST.stmtClosed&&ST.stmtClosed[t.id]?' style="display:none"':'')+'>'
+    +(t.brief?'<p class="wr-stmt-brief">'+esc(t.brief)+'</p>':'')
+    +'<div class="wr-io">'+rows+'</div>'
+    +(t.generic?'<div class="wr-gen"><span>还能解决</span>'+esc(t.generic)+'</div>':'')
+    +'</div></div>';
 }
 function toggleStmt(){
   var b=$('wr-stmt-b'), x=$('wr-stmt-x'); if(!b) return;
-  var hidden=b.style.display==='none';
-  b.style.display=hidden?'block':'none';
-  if(x) x.textContent=hidden?'收起 ▲':'展开题干 ▼';
+  var willHide=(b.style.display!=='none');
+  b.style.display=willHide?'none':'block';
+  if(x) x.textContent=willHide?'展开':'收起';
+  if(RUN){
+    ST.stmtClosed=ST.stmtClosed||{};
+    if(willHide) ST.stmtClosed[RUN.id]=1; else delete ST.stmtClosed[RUN.id];
+    save();
+  }
 }
 
 function renderHolesLine(t,line,hs,st){
@@ -1740,13 +1845,12 @@ function renderPicker(){
   var t=MAP[RUN.id], b=t.blanks[ACT], fb=$('wr-fb');
   if(!b) return;
   fb.className='wr-fb on';
-  var h='<div class="small muted" style="margin-bottom:6px">空 '+(ACT+1)+'/'+t.blanks.length
-       +'　第 '+(b.l+1)+' 行　点代码里的空可切换</div><div class="wr-opts" style="padding-left:0">';
+  var h='<div class="wr-pick-h"><span>空 '+(ACT+1)+' / '+t.blanks.length+'</span>'
+    +'<span>第 '+(b.l+1)+' 行 · 点空位可切换</span></div><div class="wr-opts">';
   b.opts.forEach(function(o){
-    h+='<button class="'+(RUN.ans[ACT]===o?'on':'')+'" onclick="WR.choose('+ACT+',\''+esc(o)+'\')">'+esc(o)+'</button>';
+    h+='<button class="wr-opt'+(RUN.ans[ACT]===o?' on':'')+'" onclick="WR.choose('+ACT+',\''+esc(o)+'\')">'+esc(o)+'</button>';
   });
-  h+='</div>';
-  fb.innerHTML=h;
+  fb.innerHTML=h+'</div>';
 }
 
 /* ---------- 提交判分 ---------- */
@@ -1792,39 +1896,40 @@ function finish(pass){
     var all=isMaster(p);
     if(RUN.review){
       p.lvl=Math.min(GAP.length-1,(p.lvl||1)+1); p.due=Date.now()+GAP[p.lvl]*DAY;
-      msg='✅ 复习通过（'+RUN.good+'/'+RUN.total+'），下次 '+GAP[p.lvl]+' 天后（第 '+p.lvl+' 级）';
-      btns='<button class="btn ok" onclick="WR.back()">回列表</button>';
+      msg='复习通过（'+RUN.good+'/'+RUN.total+'），下次 '+GAP[p.lvl]+' 天后（第 '+p.lvl+' 级）';
+      btns='<button class="sub" onclick="WR.back()">回列表</button>';
     }else if(all&&!hadMaster){
       p.lvl=1; p.due=Date.now()+GAP[1]*DAY;
-      msg='🎉 三轮都过了，已掌握！明天进入第③轮复习';
-      btns='<button class="btn ok" onclick="WR.back()">回列表</button>';
+      msg='三轮都过了，已掌握！明天进入 ③默写 复习';
+      btns='<button class="sub" onclick="WR.back()">回列表</button>';
     }else if(all){
-      msg='✅ '+ROM[st]+' 通过（'+RUN.good+'/'+RUN.total+'），保持掌握状态';
-      btns='<button class="btn ok" onclick="WR.back()">回列表</button>';
+      msg=ROM[st]+' 通过（'+RUN.good+'/'+RUN.total+'），保持掌握状态';
+      btns='<button class="sub" onclick="WR.back()">回列表</button>';
     }else{
       var left=[]; [1,2,3].forEach(function(n){ if(!p.pass[n]) left.push(ROM[n]); });
-      msg='✅ '+ROM[st]+' 通过（'+RUN.good+'/'+RUN.total+'），还差 '+left.join('、');
-      btns='<button class="btn ok" onclick="WR.back()">回列表</button>';
+      msg=ROM[st]+' 通过（'+RUN.good+'/'+RUN.total+'），还差 '+left.join('、');
+      btns='<button class="sub" onclick="WR.back()">回列表</button>';
     }
     if(!all&&!RUN.review){
       var nx=firstOpen(t);
-      btns='<button class="btn" onclick="WR.start(\''+id+'\',0,'+nx+')">顺手练'+ROM[nx]+'</button>'+btns;
+      btns='<button class="main" onclick="WR.start(\''+id+'\',0,'+nx+')">顺手练'+ROM[nx]+'</button>'+btns;
     }
   }else{
     if(RUN.review){
       p.pass[3]=0; p.lvl=0; p.due=Date.now()+DAY;
-      msg='❌ 复习没过（'+RUN.good+'/'+RUN.total+'），③默写掉回未通过，明天再考';
+      msg='复习没过（'+RUN.good+'/'+RUN.total+'），③默写掉回未通过，明天再考';
     }else{
-      msg='❌ '+(RUN.total-RUN.good)+' 处没有一次答对（'+RUN.good+'/'+RUN.total+'），这一轮不算过';
+      msg=(RUN.total-RUN.good)+' 处没有一次答对（'+RUN.good+'/'+RUN.total+'），这一轮不算过';
     }
-    btns='<button class="btn" onclick="WR.retry()">重来这一轮</button>'
-        +'<button class="btn gray" onclick="WR.back()">回列表</button>';
+    btns='<button class="main" onclick="WR.retry()">重来这一轮</button>'
+        +'<button class="sub" onclick="WR.back()">回列表</button>';
   }
   save();
   fb.className='wr-fb on';
-  fb.innerHTML='<div style="font-weight:700;margin-bottom:2px">'+msg+'</div>'
-    +'<div class="small muted" style="margin-bottom:8px">'+(RUN.review?'复习检验模式':'一次全对才算这一轮通过，任意轮都能反复练')+'</div>'
-    +'<div class="wr-btns" style="margin:0">'+btns+'</div>';
+  fb.innerHTML='<div class="wr-res"><span class="wr-res-ic">'+(pass?'✅':'❌')+'</span>'
+    +'<div><div class="wr-res-m">'+msg+'</div>'
+    +'<div class="wr-res-s">'+(RUN.review?'复习检验模式':'每轮一次全对才算过，任意轮都能反复练')+'</div></div></div>'
+    +'<div class="wr-res-btns">'+btns+'</div>';
   $('wr-submit').style.display='none';
   try{ $('wr-scroll').scrollTop=0; }catch(e){}
 }
@@ -1979,7 +2084,7 @@ document.addEventListener('keydown',function(e){
 document.addEventListener('DOMContentLoaded',function(){ refreshList(); });
 document.addEventListener('input',function(e){
   if(!RUN||RUN.done) return;
-  if(e.target&&e.target.tagName==='INPUT'&&RUN.stage===3){ /* 预留 */ }
+  if(e.target&&e.target.tagName==='INPUT') pbar();
 });
 var _win;
 (function(){
