@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261027-1050">
+<meta name="build" content="20261027-1056">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -278,6 +278,7 @@ input.wr-linein{width:100%;padding:3px 8px;border:none;border-radius:8px;backgro
 input.wr-linein:focus{box-shadow:inset 0 0 0 1.5px var(--brand);background:rgba(79,110,247,.06)}
 input.wr-linein.ok{background:var(--ok-bg);box-shadow:inset 0 0 0 1px var(--ok)}
 input.wr-linein.no{background:var(--bad-bg);box-shadow:inset 0 0 0 1px var(--bad)}
+.wr-locked{display:block;padding:3px 8px;border-radius:8px;background:var(--ok-bg);color:var(--ok);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.7;box-shadow:inset 0 0 0 1px rgba(22,163,74,.35);white-space:pre;overflow-x:auto}
 .wr-tip{font-size:11px;color:#b45309;padding:1px 0 2px}
 .wr-exp{font-size:11px;color:var(--ok);padding:3px 0 3px 20px;line-height:1.6;word-break:break-word}
 .wr-bad{font-size:11px;color:var(--bad);padding:1px 0 4px 20px;line-height:1.6;word-break:break-word}
@@ -1681,7 +1682,7 @@ function start(id, review, stage){
   var st=stage?+stage:(review?3:(p.u||1));
   if(!(st>=1&&st<=3)) st=1;
   var stage=st;
-  RUN={id:id,stage:stage,review:!!review,t0:Date.now(),done:false,ans:{},res:null,good:0,total:0};
+  RUN={id:id,stage:stage,review:!!review,t0:Date.now(),done:false,ans:{},res:null,fix:null,good:0,total:0};
   ST.last={id:id,stage:stage}; save();
   ACT=stage===3?keyLines(t)[0]:0;
   $('wr-run').classList.add('on');
@@ -1701,6 +1702,25 @@ function back(){
   RUN=null; $('wr-run').classList.remove('on'); refreshList();
 }
 function retry(){ if(!RUN) return; var id=RUN.id, st=RUN.stage; RUN=null; start(id,0,st||1); }
+/* 只改错的：答对的锁成绿块，只留错的那几行/空可编辑 */
+function fixWrong(){
+  if(!RUN||!RUN.res) return;
+  var locked={}, n=0, k;
+  for(k in RUN.res){ if(RUN.res[k]) locked[k]=1; else n++; }
+  if(!n){ toast('没有错的，用「整轮重来」'); return; }
+  RUN.fix=locked; RUN.done=false; RUN.res=null;
+  if(RUN.stage===1){
+    var bl=MAP[RUN.id].blanks;
+    for(var i=0;i<bl.length;i++){ if(!locked[i]){ delete RUN.ans[i]; if(ACT===i||ACT<0) ACT=i; } }
+    for(var i2=0;i2<bl.length;i2++){ if(!locked[i2]){ ACT=i2; break; } }
+  }
+  paint();
+  toast('已锁上答对的，只改这 '+n+' '+(RUN.stage===3?'行':'处'));
+  setTimeout(function(){
+    var el=document.querySelector('#wr-body input.wr-linein, #wr-body input.wr-in');
+    if(el){ try{ el.focus(); el.setSelectionRange(el.value.length,el.value.length); }catch(e){} }
+  },40);
+}
 function nextStage(){ if(!RUN) return; var id=RUN.id; RUN=null; start(id,0,firstOpen(P(id))); }
 
 /* ---------- 绘制 ---------- */
@@ -1709,6 +1729,7 @@ function paint(){
   $('wr-ttl').textContent=t.title;
   var sub=RUN.review?'复习 · ③默写':(st===0?'看模板 · 第0轮':'第'+st+'轮');
   if(t.problems[0]) sub+=' · LC'+t.problems[0].lc+' '+t.problems[0].name;
+  if(RUN.fix) sub+=' · 只改错'+(st===3?'行':'处');
   $('wr-sub').textContent=sub;
 
   var sc=$('wr-scroll'), top=sc?sc.scrollTop:0;
@@ -1716,10 +1737,14 @@ function paint(){
   t.code.forEach(function(line,li){
     var hs=holesOfLine(t,li), src='', dl=disp(line);
     if(st===3&&ks.indexOf(li)>=0){
-      var v=RUN.done?(RUN.ans[li]||''):indentOf(dl);
-      var cl='wr-linein'+(RUN.res?(RUN.res[li]?' ok':' no'):'');
-      src='<input class="'+cl+'" id="in-'+li+'" value="'+esc(v)+'" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="整行默写…">'
-         +'<div class="wr-tip" id="tip-'+li+'"></div>';
+      if(RUN.fix&&RUN.fix[li]){
+        src='<span class="wr-locked">'+esc(dl)+'</span>';
+      }else{
+        var v=(RUN.done||RUN.fix)?(RUN.ans[li]||''):indentOf(dl);
+        var cl='wr-linein'+(RUN.res?(RUN.res[li]?' ok':' no'):'');
+        src='<input class="'+cl+'" id="in-'+li+'" value="'+esc(v)+'" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="整行默写…">'
+           +'<div class="wr-tip" id="tip-'+li+'"></div>';
+      }
     }else if(hs.length){
       src=renderHolesLine(t,dl,hs,st);
     }else{
@@ -1761,9 +1786,9 @@ function paint(){
 function pbar(){
   if(!RUN) return;
   var t=MAP[RUN.id], st=RUN.stage, done=0, tot=0;
-  if(st===1){ tot=t.blanks.length; t.blanks.forEach(function(b,i){ if(RUN.ans[i]!==undefined) done++; }); }
-  else if(st===2){ tot=t.blanks.length; t.blanks.forEach(function(b,i){ var el=$('in-'+i); if(el&&el.value.trim()) done++; }); }
-  else if(st===3){ var ks=keyLines(t); tot=ks.length; ks.forEach(function(li){ var el=$('in-'+li); if(el&&el.value.trim()) done++; }); }
+  if(st===1){ tot=t.blanks.length; t.blanks.forEach(function(b,i){ if(RUN.fix){ if(RUN.fix[i]) done++; } else if(RUN.ans[i]!==undefined) done++; }); }
+  else if(st===2){ tot=t.blanks.length; t.blanks.forEach(function(b,i){ if(RUN.fix){ if(RUN.fix[i]) done++; return; } var el=$('in-'+i); if(el&&el.value.trim()) done++; }); }
+  else if(st===3){ var ks=keyLines(t); tot=ks.length; ks.forEach(function(li){ if(RUN.fix){ if(RUN.fix[li]) done++; return; } var el=$('in-'+li); if(el&&el.value.trim()) done++; }); }
   var bar=$('wr-pbar-i'); if(bar) bar.style.width=(tot?Math.round(done*100/tot):0)+'%';
   var cnt=$('wr-cnt'); if(cnt) cnt.textContent=done+'/'+tot;
 }
@@ -1815,7 +1840,9 @@ function renderHolesLine(t,line,hs,st){
     if(at<0) at=pos;
     out+=hl(line.slice(pos,at));
     pos=at+b.text.length;
-    if(st===0){
+    if((st===1||st===2)&&RUN.fix&&RUN.fix[x.i]){
+      out+='<span class="wr-hole ok">'+esc(b.text)+'</span>';
+    }else if(st===0){
       out+='<span class="wr-hole ok">'+esc(b.text)+'</span>';
     }else if(st===1){
       var a=RUN.ans[x.i], cls='wr-hole';
@@ -1823,7 +1850,7 @@ function renderHolesLine(t,line,hs,st){
       if(ACT===x.i&&!RUN.res) cls+=' act';
       out+='<span class="'+cls+'" onclick="WR.pick('+x.i+')">'+(a!==undefined?esc(a):'（空'+(x.i+1)+'）')+'</span>';
     }else{
-      var v=RUN.done?(RUN.ans[x.i]||''):'';
+      var v=(RUN.done||RUN.fix)?(RUN.ans[x.i]||''):'';
       var cl='wr-in'+(RUN.res?(RUN.res[x.i]?' ok':' no'):'');
       out+='<input class="'+cl+'" id="in-'+x.i+'" value="'+esc(v)+'" size="'+Math.max(6,Math.min(26,b.text.length))+'" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="…">';
     }
@@ -1859,7 +1886,8 @@ function submit(){
   var t=MAP[RUN.id], st=RUN.stage, res={}, good=0, total=0;
   if(st===1){
     for(var i=0;i<t.blanks.length;i++){
-      if(RUN.ans[i]===undefined){ ACT=i; paint(); toast('还有空没选：空'+(i+1)); return; }
+      if(RUN.ans[i]===undefined&&!(RUN.fix&&RUN.fix[i])){ ACT=i; paint(); toast('还有空没选：空'+(i+1)); return; }
+      if(RUN.ans[i]===undefined) RUN.ans[i]=t.blanks[i].text;
     }
     t.blanks.forEach(function(b,i){
       total++;
@@ -1868,16 +1896,20 @@ function submit(){
     });
   }else if(st===2){
     t.blanks.forEach(function(b,i){
-      var el=$('in-'+i), v=el?el.value:'';
-      RUN.ans[i]=v; total++;
+      var v;
+      if(RUN.fix&&RUN.fix[i]) v=RUN.ans[i]||'';
+      else { var el=$('in-'+i); v=el?el.value:''; RUN.ans[i]=v; }
+      total++;
       var ok=norm(v)===norm(b.text);
       if(!ok&&b.alts) ok=b.alts.some(function(a){ return norm(a)===norm(v); });
       res[i]=ok; if(ok) good++;
     });
   }else{
     keyLines(t).forEach(function(li){
-      var el=$('in-'+li), v=el?el.value:'';
-      RUN.ans[li]=v; total++;
+      var v;
+      if(RUN.fix&&RUN.fix[li]) v=RUN.ans[li]||'';
+      else { var el=$('in-'+li); v=el?el.value:''; RUN.ans[li]=v; }
+      total++;
       var ok=norm(v)===norm(t.code[li]);
       res[li]=ok; if(ok) good++;
     });
@@ -1915,14 +1947,15 @@ function finish(pass){
       btns='<button class="main" onclick="WR.start(\''+id+'\',0,'+nx+')">顺手练'+ROM[nx]+'</button>'+btns;
     }
   }else{
+    var wrongN=RUN.total-RUN.good, unit=(st===3?'行':'处');
     if(RUN.review){
       p.pass[3]=0; p.lvl=0; p.due=Date.now()+DAY;
       msg='复习没过（'+RUN.good+'/'+RUN.total+'），③默写掉回未通过，明天再考';
     }else{
-      msg=(RUN.total-RUN.good)+' 处没有一次答对（'+RUN.good+'/'+RUN.total+'），这一轮不算过';
+      msg='有 '+wrongN+' '+unit+'没写对（'+RUN.good+'/'+RUN.total+'），这一轮不算过';
     }
-    btns='<button class="main" onclick="WR.retry()">重来这一轮</button>'
-        +'<button class="sub" onclick="WR.back()">回列表</button>';
+    btns='<button class="main" onclick="WR.fixWrong()">只改错的 '+wrongN+' '+unit+'</button>'
+        +'<button class="sub" onclick="WR.retry()">整轮重来</button>';
   }
   save();
   fb.className='wr-fb on';
@@ -2098,7 +2131,7 @@ window.WR={
   render:refreshList, start:start, view:view, back:back, retry:retry, nextStage:nextStage,
   pick:pick, choose:choose, submit:submit, key:key, begin:begin,
   review:review, resume:resume, exp:exp, imp:imp, reset:reset, toggleStmt:toggleStmt,
-  expTpl:expTpl, impTpl:impTpl, delBank:delBank
+  expTpl:expTpl, impTpl:impTpl, delBank:delBank, fixWrong:fixWrong
 };
 /* 深链：#wr=<模板id> 直接进该模板，#wr=review 进今日复习，#tpl=<id> 看模板 */
 function boot(){
