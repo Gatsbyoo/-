@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>八股刷题 · 重复记忆</title>
 <!-- 构建标记：每次推送到仓库前必须改这个时间戳，否则 App 里的「检查更新」检测不到新版本 -->
-<meta name="build" content="20261027-1036">
+<meta name="build" content="20261027-1050">
 <script>
 /* 版本自愈：本机若已见过更新的构建，说明当前打开的是缓存里的旧壳，直接跳到新构建地址（同一会话只跳一次） */
 (function(){
@@ -1700,7 +1700,7 @@ function back(){
   if(RUN&&!RUN.done&&RUN.stage>0){ /* 中途退出不记分 */ }
   RUN=null; $('wr-run').classList.remove('on'); refreshList();
 }
-function retry(){ if(!RUN) return; var id=RUN.id; RUN=null; start(id,0); }
+function retry(){ if(!RUN) return; var id=RUN.id, st=RUN.stage; RUN=null; start(id,0,st||1); }
 function nextStage(){ if(!RUN) return; var id=RUN.id; RUN=null; start(id,0,firstOpen(P(id))); }
 
 /* ---------- 绘制 ---------- */
